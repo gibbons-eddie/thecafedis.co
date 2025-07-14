@@ -1,0 +1,44 @@
+{%load static%}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href={%static './dist/styles.css'%}/>
+    <title>{% block title %}thecafedisco{% endblock %}</title>
+    <link rel="icon" type="image/x-icon" href={%static './images/alt-cd-favicon.ico'%}/>
+</head>
+
+<body>
+    <div class="min-h-screen bg-deep-tron">
+        <div class="bg-transparent p-1">
+            <div class="bg-tron flex justify-center h-full rounded m-5 p-5">
+                <div class="flex justify-between space-x-7 py-3 px-5 w-[1200px]">
+                    {% comment %} Logo {% endcomment %}
+                    <div class="flex">
+                        <img src={%static './images/alt-cd-apple-touch-icon.png' %} class="w-20 h-20 animate-spin-slow">
+                    </div>
+                    {% comment %} Main Menu {% endcomment %}
+                    <div class="flex">
+                        <a href="/" class="col-span-2 m-2 p-5 rounded-xl text-black hover:bg-black hover:text-white hover:outline-4 hover:outline-black focus:underline focus:outline-black focus:outline-4 focus:text-tron">Home</a>
+            
+                        <a href="/music/" class="col-span-2 m-2 p-5 rounded-xl text-black hover:bg-black hover:text-white hover:outline-4 hover:outline-black focus:underline focus:outline-black focus:outline-4  focus:text-tron">Music</a>
+
+                        <a href="/videos/" class="col-span-2 m-2 p-5 rounded-xl text-black hover:bg-black hover:text-white hover:outline-4 hover:outline-black focus:underline focus:outline-black focus:outline-4 focus:text-tron">Videos</a>
+                    
+                        <a href="/stream/" class="col-span-2 m-2 p-5 rounded-xl text-black hover:bg-black hover:text-white hover:outline-4 hover:outline-black focus:underline focus:outline-black focus:outline-4  focus:text-tron">Stream</a>
+                    </div>
+                    {% comment %} Login {% endcomment %}
+                    <div class="flex">
+                        <a href="/login" class="col-span-2 m-2 p-5 rounded-xl text-black hover:bg-black hover:text-white hover:outline-4 hover:outline-black focus:underline focus:outline-black focus:outline-4 focus:text-tron">Login</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="content">
+            {%block content%}
+            {%endblock%}
+        </div>
+    </div>
+</body>
+</html>
