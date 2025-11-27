@@ -327,9 +327,6 @@
   .whitespace-nowrap {
     white-space: nowrap;
   }
-  .text-black {
-    color: var(--color-black);
-  }
   .lowercase {
     text-transform: lowercase;
   }
@@ -573,6 +570,13 @@ h1 {
   &:focus {
     color: var(--color-blue-tron);
   }
+}
+.menu-bar-gradient-border {
+  background-color: #1a1a1a;
+  background-image: linear-gradient(to right, transparent 0%, oklch(88.716% 0.09711 208.766) 10%, oklch(88.716% 0.09711 208.766) 90%, transparent 100%), linear-gradient(to right, transparent 0%, oklch(88.716% 0.09711 208.766) 10%, oklch(88.716% 0.09711 208.766) 90%, transparent 100%);
+  background-size: 100% 3px, 100% 3px;
+  background-position: top center, bottom center;
+  background-repeat: no-repeat, no-repeat;
 }
 @property --tw-rotate-x {
   syntax: "*";
