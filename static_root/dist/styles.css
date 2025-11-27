@@ -211,9 +211,6 @@
   .m-5 {
     margin: calc(var(--spacing) * 5);
   }
-  .mx-8 {
-    margin-inline: calc(var(--spacing) * 8);
-  }
   .\!hidden {
     display: none !important;
   }
@@ -271,6 +268,9 @@
   .resize {
     resize: both;
   }
+  .flex-nowrap {
+    flex-wrap: nowrap;
+  }
   .items-center {
     align-items: center;
   }
@@ -291,9 +291,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-  .overflow-hidden {
-    overflow: hidden;
   }
   .rounded {
     border-radius: 0.25rem;
@@ -323,9 +320,6 @@
   .text-9xl {
     font-size: var(--text-9xl);
     line-height: var(--tw-leading, var(--text-9xl--line-height));
-  }
-  .whitespace-nowrap {
-    white-space: nowrap;
   }
   .text-black {
     color: var(--color-black);
@@ -399,6 +393,16 @@
       outline-color: var(--color-black);
     }
   }
+  .md\:justify-start {
+    @media (width >= 48rem) {
+      justify-content: flex-start;
+    }
+  }
+  .\[\&_h1\]\:mx-8 {
+    & h1 {
+      margin-inline: calc(var(--spacing) * 8);
+    }
+  }
 }
 @layer properties;
 @layer theme, base, components, utilities;
@@ -420,41 +424,23 @@
     --default-font-family: var(--font-sans);
     --default-mono-font-family: var(--font-mono);
     --animate-spin-slow: spin 60s linear infinite;
-    --animate-infinite-scroll: infinite-scroll 35s linear infinite;
-    --animate-scroll-left: scroll-left 35s linear infinite;
-    --animate-scroll-right: scroll-right 35s linear infinite;
-  }
-}
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-@keyframes infinite-scroll {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
-}
-@keyframes scroll-left {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-4.166%);
-  }
-}
-@keyframes scroll-right {
-  0% {
-    transform: translateX(-4.166%);
-  }
-  100% {
-    transform: translateX(0);
+    --animate-infinite-scroll: 25s linear infinite;
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+    @keyframes infinite-scroll {
+      0% {
+        transform: 'translateX(0)';
+      }
+      100% {
+        transform: 'translateX(-100%)';
+      }
+    }
   }
 }
 @font-face {
@@ -527,47 +513,6 @@ h1 {
 }
 .animate-infinite-scroll {
   animation: var(--animate-infinite-scroll);
-  width: max-content;
-}
-.animate-infinite-scroll h1 {
-  display: inline-block;
-}
-.animate-scroll-left {
-  animation: var(--animate-scroll-left);
-  width: max-content;
-  display: inline-flex;
-}
-.animate-scroll-left span {
-  display: inline-block;
-}
-.animate-scroll-right {
-  animation: var(--animate-scroll-right);
-  width: max-content;
-  display: inline-flex;
-}
-.animate-scroll-right span {
-  display: inline-block;
-}
-.bg-scroller-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  z-index: 0;
-  pointer-events: none;
-}
-.bg-scroller-row {
-  width: 100%;
-  overflow: hidden;
-  padding: 0.5rem 0;
-}
-.bg-scroller-text {
-  color: oklch(22% 0.04 208.734);
-  font-size: 2rem;
-  opacity: 0.3;
-  user-select: none;
 }
 .focus\:text-tron {
   &:focus {

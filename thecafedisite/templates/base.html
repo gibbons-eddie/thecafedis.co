@@ -9,7 +9,121 @@
 </head>
 
 <body>
-    <div class="min-h-screen bg-deep-tron">
+    {% comment %} ==================== CONFIGURE BACKGROUND SCROLLER TEXT HERE ==================== {% endcomment %}
+    {% comment %} To customize: Simply change the text in quotes below {% endcomment %}
+
+    {% comment %} Background Scroller Layer {% endcomment %}
+    <div class="bg-scroller-container">
+
+        {% comment %} Row 1 - Scrolls Right {% endcomment %}
+        <div class="bg-scroller-row">
+            <div class="animate-scroll-right items-center whitespace-nowrap">
+                {% for i in "xxxxxxxxxxxxxxxxxxxxxxxx" %}<span class="bg-scroller-text mx-8">MUSIC</span>{% endfor %}
+            </div>
+        </div>
+
+        {% comment %} Row 2 - Scrolls Left {% endcomment %}
+        <div class="bg-scroller-row">
+            <div class="animate-scroll-left items-center whitespace-nowrap">
+                {% for i in "xxxxxxxxxxxxxxxxxxxxxxxx" %}<span class="bg-scroller-text mx-8">VIDEOS</span>{% endfor %}
+            </div>
+        </div>
+
+        {% comment %} Row 3 - Scrolls Right {% endcomment %}
+        <div class="bg-scroller-row">
+            <div class="animate-scroll-right items-center whitespace-nowrap">
+                {% for i in "xxxxxxxxxxxxxxxxxxxxxxxx" %}<span class="bg-scroller-text mx-8">STREAM</span>{% endfor %}
+            </div>
+        </div>
+
+        {% comment %} Row 4 - Scrolls Left {% endcomment %}
+        <div class="bg-scroller-row">
+            <div class="animate-scroll-left items-center whitespace-nowrap">
+                {% for i in "xxxxxxxxxxxxxxxxxxxxxxxx" %}<span class="bg-scroller-text mx-8">DISCO</span>{% endfor %}
+            </div>
+        </div>
+
+        {% comment %} Row 5 - Scrolls Right {% endcomment %}
+        <div class="bg-scroller-row">
+            <div class="animate-scroll-right items-center whitespace-nowrap">
+                {% for i in "xxxxxxxxxxxxxxxxxxxxxxxx" %}<span class="bg-scroller-text mx-8">CAFE</span>{% endfor %}
+            </div>
+        </div>
+
+        {% comment %} Row 6 - Scrolls Left {% endcomment %}
+        <div class="bg-scroller-row">
+            <div class="animate-scroll-left items-center whitespace-nowrap">
+                {% for i in "xxxxxxxxxxxxxxxxxxxxxxxx" %}<span class="bg-scroller-text mx-8">ELECTRONIC</span>{% endfor %}
+            </div>
+        </div>
+
+        {% comment %} Row 7 - Scrolls Right {% endcomment %}
+        <div class="bg-scroller-row">
+            <div class="animate-scroll-right items-center whitespace-nowrap">
+                {% for i in "xxxxxxxxxxxxxxxxxxxxxxxx" %}<span class="bg-scroller-text mx-8">BEATS</span>{% endfor %}
+            </div>
+        </div>
+
+        {% comment %} Row 8 - Scrolls Left {% endcomment %}
+        <div class="bg-scroller-row">
+            <div class="animate-scroll-left items-center whitespace-nowrap">
+                {% for i in "xxxxxxxxxxxxxxxxxxxxxxxx" %}<span class="bg-scroller-text mx-8">RHYTHM</span>{% endfor %}
+            </div>
+        </div>
+
+        {% comment %} Row 9 - Scrolls Right {% endcomment %}
+        <div class="bg-scroller-row">
+            <div class="animate-scroll-right items-center whitespace-nowrap">
+                {% for i in "xxxxxxxxxxxxxxxxxxxxxxxx" %}<span class="bg-scroller-text mx-8">VIBES</span>{% endfor %}
+            </div>
+        </div>
+
+        {% comment %} Row 10 - Scrolls Left {% endcomment %}
+        <div class="bg-scroller-row">
+            <div class="animate-scroll-left items-center whitespace-nowrap">
+                {% for i in "xxxxxxxxxxxxxxxxxxxxxxxx" %}<span class="bg-scroller-text mx-8">SOUND</span>{% endfor %}
+            </div>
+        </div>
+
+        {% comment %} Row 11 - Scrolls Right {% endcomment %}
+        <div class="bg-scroller-row">
+            <div class="animate-scroll-right items-center whitespace-nowrap">
+                {% for i in "xxxxxxxxxxxxxxxxxxxxxxxx" %}<span class="bg-scroller-text mx-8">GROOVE</span>{% endfor %}
+            </div>
+        </div>
+
+        {% comment %} Row 12 - Scrolls Left {% endcomment %}
+        <div class="bg-scroller-row">
+            <div class="animate-scroll-left items-center whitespace-nowrap">
+                {% for i in "xxxxxxxxxxxxxxxxxxxxxxxx" %}<span class="bg-scroller-text mx-8">PULSE</span>{% endfor %}
+            </div>
+        </div>
+
+        {% comment %} Row 13 - Scrolls Right {% endcomment %}
+        <div class="bg-scroller-row">
+            <div class="animate-scroll-right items-center whitespace-nowrap">
+                {% for i in "xxxxxxxxxxxxxxxxxxxxxxxx" %}<span class="bg-scroller-text mx-8">WAVE</span>{% endfor %}
+            </div>
+        </div>
+
+        {% comment %} Row 14 - Scrolls Left {% endcomment %}
+        <div class="bg-scroller-row">
+            <div class="animate-scroll-left items-center whitespace-nowrap">
+                {% for i in "xxxxxxxxxxxxxxxxxxxxxxxx" %}<span class="bg-scroller-text mx-8">BASS</span>{% endfor %}
+            </div>
+        </div>
+
+        {% comment %} Row 15 - Scrolls Right {% endcomment %}
+        <div class="bg-scroller-row">
+            <div class="animate-scroll-right items-center whitespace-nowrap">
+                {% for i in "xxxxxxxxxxxxxxxxxxxxxxxx" %}<span class="bg-scroller-text mx-8">FLOW</span>{% endfor %}
+            </div>
+        </div>
+
+    </div>
+
+    {% comment %} Main Content Layer (above background) {% endcomment %}
+    <div class="min-h-screen relative" style="z-index: 1; background-color: oklch(19.533% 0.03365 208.734 / 0.95);">
         <div class="bg-transparent p-1">
             <div class="bg-tron flex justify-center h-full rounded m-5 p-5">
                 <div class="flex justify-between space-x-7 py-3 px-5 w-[1200px]">
@@ -20,11 +134,11 @@
                     {% comment %} Main Menu {% endcomment %}
                     <div class="flex">
                         <a href="/" class="col-span-2 m-2 p-5 rounded-xl text-black hover:bg-black hover:text-white hover:outline-4 hover:outline-black focus:underline focus:outline-black focus:outline-4 focus:text-tron">Home</a>
-            
+
                         <a href="/music/" class="col-span-2 m-2 p-5 rounded-xl text-black hover:bg-black hover:text-white hover:outline-4 hover:outline-black focus:underline focus:outline-black focus:outline-4  focus:text-tron">Music</a>
 
                         <a href="/videos/" class="col-span-2 m-2 p-5 rounded-xl text-black hover:bg-black hover:text-white hover:outline-4 hover:outline-black focus:underline focus:outline-black focus:outline-4 focus:text-tron">Videos</a>
-                    
+
                         <a href="/stream/" class="col-span-2 m-2 p-5 rounded-xl text-black hover:bg-black hover:text-white hover:outline-4 hover:outline-black focus:underline focus:outline-black focus:outline-4  focus:text-tron">Stream</a>
                     </div>
                     {% comment %} Login {% endcomment %}
