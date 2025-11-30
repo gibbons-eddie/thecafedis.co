@@ -1,0 +1,80 @@
+Metadata-Version: 2.4
+Name: unpoly
+Version: 3.2.0
+Summary: Framework agnostic implementation of the unpoly server-protocol.
+Project-URL: Homepage, https://gitlab.com/rocketduck/python-unpoly
+Project-URL: Documentation, https://unpoly.readthedocs.io/en/latest
+Author-email: Florian Apolloner <florian@apolloner.eu>
+License: BSD-2-Clause
+License-File: LICENSE
+Classifier: Environment :: Web Environment
+Classifier: Framework :: Django
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3 :: Only
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: 3.13
+Classifier: Programming Language :: Python :: 3.14
+Classifier: Topic :: Internet :: WWW/HTTP
+Classifier: Topic :: Software Development :: Libraries :: Application Frameworks
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Requires-Python: >=3.10
+Requires-Dist: attrs>=21.4.0
+Description-Content-Type: text/markdown
+
+[![version](https://img.shields.io/pypi/v/unpoly.svg)](https://pypi.org/project/unpoly)
+[![python versions](https://img.shields.io/pypi/pyversions/unpoly.svg)](https://pypi.org/project/unpoly)
+[![docs](https://img.shields.io/readthedocs/unpoly)](https://unpoly.readthedocs.io)
+[![pipeline status](https://gitlab.com/rocketduck/python-unpoly/badges/main/pipeline.svg)](https://gitlab.com/rocketduck/python-unpoly/-/commits/main)
+[![coverage report](https://gitlab.com/rocketduck/python-unpoly/badges/main/coverage.svg)](https://gitlab.com/rocketduck/python-unpoly/-/commits/main)
+
+# Unpoly
+
+Unpoly is a framework agnostic python library implementing the [Unpoly server protocol](https://unpoly.com/up.protocol).
+
+## Features
+
+* **Full protocol implementation**: The whole Unpoly server protocol is implemented and well tested.
+* **Django support**: Out of the box we currently ship a middleware for Django support.
+* **Easily extendable**: The library abstracts the actual HTTP stuff via adapters and can easily plugged into frameworks like Flask etc.
+
+## Download & Install
+
+```
+pip install unpoly
+```
+
+### Usage with Django
+
+Add `unpoly.contrib.django.UnpolyMiddleware` to your middlewares and then you can access `request.up`. Details can be found in the usage section of the [docs](https://unpoly.readthedocs.io/en/latest/usage.html).
+
+Example usage:
+
+```py
+def my_view(request):
+    if request.up: # Unpoly request
+        # Send an event down to unpoly
+        request.up.emit("test:event", {"event": "params"})
+        # ... and also clear the cache for certain paths
+        request.up.expire("/users/*")
+    else:
+        ...
+
+def form_view(request):
+    form = MyForm(request.GET)
+    # When unpoly wants to validate a form it sends
+    # along X-Up-Validate which contains the field
+    # being validated.
+    if form.is_valid() and not request.up.validate:
+        form.save()
+    return render(request, "template.html", {"form": form})
+```
+
+### Usage with Flask etc
+
+Subclass `unpoly.adapter.BaseAdapter` and initialize `unpoly.Unpoly` with it for every request (see the [docs](https://unpoly.readthedocs.io/en/latest/adapters.html) for details).

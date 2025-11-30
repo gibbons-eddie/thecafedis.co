@@ -7,8 +7,6 @@
       "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
       "Courier New", monospace;
-    --color-black: #000;
-    --color-white: #fff;
     --spacing: 0.25rem;
     --text-9xl: 8rem;
     --text-9xl--line-height: 1;
@@ -184,9 +182,6 @@
   .sticky {
     position: sticky;
   }
-  .col-span-2 {
-    grid-column: span 2 / span 2;
-  }
   .container {
     width: 100%;
     @media (width >= 40rem) {
@@ -259,9 +254,6 @@
   .w-20 {
     width: calc(var(--spacing) * 20);
   }
-  .w-\[1200px\] {
-    width: 1200px;
-  }
   .w-full {
     width: 100%;
   }
@@ -280,12 +272,11 @@
   .justify-center {
     justify-content: center;
   }
-  .space-x-7 {
-    :where(& > :not(:last-child)) {
-      --tw-space-x-reverse: 0;
-      margin-inline-start: calc(calc(var(--spacing) * 7) * var(--tw-space-x-reverse));
-      margin-inline-end: calc(calc(var(--spacing) * 7) * calc(1 - var(--tw-space-x-reverse)));
-    }
+  .justify-end {
+    justify-content: flex-end;
+  }
+  .justify-start {
+    justify-content: flex-start;
   }
   .truncate {
     overflow: hidden;
@@ -311,14 +302,8 @@
   .p-1 {
     padding: calc(var(--spacing) * 1);
   }
-  .p-5 {
-    padding: calc(var(--spacing) * 5);
-  }
-  .px-5 {
-    padding-inline: calc(var(--spacing) * 5);
-  }
-  .py-3 {
-    padding-block: calc(var(--spacing) * 3);
+  .p-2 {
+    padding: calc(var(--spacing) * 2);
   }
   .text-9xl {
     font-size: var(--text-9xl);
@@ -350,51 +335,6 @@
   }
   .filter {
     filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
-  }
-  .hover\:bg-black {
-    &:hover {
-      @media (hover: hover) {
-        background-color: var(--color-black);
-      }
-    }
-  }
-  .hover\:text-white {
-    &:hover {
-      @media (hover: hover) {
-        color: var(--color-white);
-      }
-    }
-  }
-  .hover\:outline-4 {
-    &:hover {
-      @media (hover: hover) {
-        outline-style: var(--tw-outline-style);
-        outline-width: 4px;
-      }
-    }
-  }
-  .hover\:outline-black {
-    &:hover {
-      @media (hover: hover) {
-        outline-color: var(--color-black);
-      }
-    }
-  }
-  .focus\:underline {
-    &:focus {
-      text-decoration-line: underline;
-    }
-  }
-  .focus\:outline-4 {
-    &:focus {
-      outline-style: var(--tw-outline-style);
-      outline-width: 4px;
-    }
-  }
-  .focus\:outline-black {
-    &:focus {
-      outline-color: var(--color-black);
-    }
   }
 }
 @layer properties;
@@ -571,6 +511,49 @@ h1 {
     color: var(--color-blue-tron);
   }
 }
+.menu-button {
+  position: relative;
+  color: var(--color-blue-tron);
+  transition: color 0.3s ease-in-out;
+  cursor: pointer;
+}
+.menu-button::after {
+  content: '';
+  position: absolute;
+  bottom: 0.25rem;
+  left: 0.5rem;
+  width: calc(100% - 1rem);
+  height: 2px;
+  background-color: white;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease-in-out;
+}
+@media (hover: hover) {
+  .menu-button:hover {
+    color: white;
+  }
+  .menu-button:hover::after {
+    transform: scaleX(1);
+  }
+}
+.menu-button:focus {
+  color: var(--color-blue-tron);
+  outline: none;
+}
+.menu-button:focus::after {
+  background-color: var(--color-blue-tron);
+  transform: scaleX(1);
+}
+.menu-button:focus-visible {
+  color: var(--color-blue-tron);
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-blue-tron);
+}
+.menu-button:focus-visible::after {
+  background-color: var(--color-blue-tron);
+  transform: scaleX(1);
+}
 .menu-bar-gradient-border {
   background-color: #1a1a1a;
   background-image: linear-gradient(to right, transparent 0%, oklch(88.716% 0.09711 208.766) 10%, oklch(88.716% 0.09711 208.766) 90%, transparent 100%), linear-gradient(to right, transparent 0%, oklch(88.716% 0.09711 208.766) 10%, oklch(88.716% 0.09711 208.766) 90%, transparent 100%);
@@ -597,11 +580,6 @@ h1 {
 @property --tw-skew-y {
   syntax: "*";
   inherits: false;
-}
-@property --tw-space-x-reverse {
-  syntax: "*";
-  inherits: false;
-  initial-value: 0;
 }
 @property --tw-border-style {
   syntax: "*";
@@ -726,11 +704,6 @@ h1 {
   syntax: "*";
   inherits: false;
 }
-@property --tw-outline-style {
-  syntax: "*";
-  inherits: false;
-  initial-value: solid;
-}
 @layer properties {
   @supports ((-webkit-hyphens: none) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color:rgb(from red r g b)))) {
     *, ::before, ::after, ::backdrop {
@@ -739,7 +712,6 @@ h1 {
       --tw-rotate-z: initial;
       --tw-skew-x: initial;
       --tw-skew-y: initial;
-      --tw-space-x-reverse: 0;
       --tw-border-style: solid;
       --tw-shadow: 0 0 #0000;
       --tw-shadow-color: initial;
@@ -768,7 +740,6 @@ h1 {
       --tw-drop-shadow-color: initial;
       --tw-drop-shadow-alpha: 100%;
       --tw-drop-shadow-size: initial;
-      --tw-outline-style: solid;
     }
   }
 }

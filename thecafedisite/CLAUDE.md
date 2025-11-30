@@ -13,3 +13,12 @@
 - Animation translation math: 100% ÷ number of copies = translation percentage (e.g., 100/24 = 4.166%)
 - Always compile Tailwind: npx tailwindcss -i static/src/styles.css -o static/dist/styles.css
 - Background text color: oklch(22% 0.04 208.734) with 0.3 opacity
+- Do not use emojis in responses or planning documents or anything else ever.
+
+## Planning File Convention
+- All Claude planning files stored in: /Users/eddiegibbons/.claude/plans/
+- Filename format: YYYY-MM-DD-brief-topic-description.md (e.g., 2025-11-27-menu-btn-hover-impl.md)
+- File header must include: Model name (Claude Sonnet 4.5), full date, and status
+- Header template: # [Plan Title] | **Model:** Claude Sonnet 4.5 (`claude-sonnet-4-5-20250929`) | **Date:** [Month DD, YYYY] | **Status:** [Planning/Implementation/Complete]
+- Keep old plan files as backup when creating consolidated versions
+- Reference examples: 2025-11-27-menu-btn-hover-impl.md (implementation), 2025-11-28-unpoly-persistent-bg-features.md (planning)
