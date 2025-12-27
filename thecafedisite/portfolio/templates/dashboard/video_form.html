@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}{% if action == 'add' %}Upload Video{% else %}Edit Video{% endif %} - Dashboard{% endblock %}
+
+{% block content %}
+<div class="flex justify-center px-4 py-8">
+    <div style="width: 100%; max-width: 600px;">
+        <!-- Header -->
+        <div class="mb-6 pb-4" style="border-bottom: 1px solid oklch(88.716% 0.09711 208.766 / 0.3);">
+            <div class="flex items-center gap-2 mb-2">
+                <span style="color: oklch(88.716% 0.09711 208.766);">$</span>
+                <span class="font-mono text-white text-xl">{% if action == 'add' %}upload --video{% else %}edit --video "{{ video.title }}"{% endif %}</span>
+            </div>
+            <p class="font-mono text-sm text-gray-400">
+                {% if action == 'add' %}Upload a new video to S3{% else %}Update video metadata or replace files{% endif %}
+            </p>
+        </div>
+
+        <!-- Messages -->
+        {% if messages %}
+        <div class="mb-4">
+            {% for message in messages %}
+            <div class="p-3 font-mono text-sm mb-2"
+                 style="background-color: #1a1a1a; border: 1px solid {% if message.tags == 'success' %}oklch(88.716% 0.09711 208.766){% else %}oklch(74.443% 0.17237 51.252){% endif %}; border-radius: 0.5rem; color: {% if message.tags == 'success' %}oklch(88.716% 0.09711 208.766){% else %}oklch(74.443% 0.17237 51.252){% endif %};">
+                > {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Form -->
+        <form method="POST" enctype="multipart/form-data" class="space-y-4">
+            {% csrf_token %}
+
+            <div class="p-6" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
+                <!-- Title -->
+                <div class="mb-4">
+                    <label class="block font-mono text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
+                        title <span style="color: oklch(74.443% 0.17237 51.252);">*</span>
+                    </label>
+                    <input type="text" name="title" required
+                           value="{% if video %}{{ video.title }}{% endif %}"
+                           class="w-full px-3 py-2 font-mono text-white"
+                           style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.5rem; outline: none;"
+                           onfocus="this.style.borderColor='oklch(88.716% 0.09711 208.766)'"
+                           onblur="this.style.borderColor='oklch(88.716% 0.09711 208.766 / 0.3)'"
+                           placeholder="Video title">
+                </div>
+
+                <!-- Category -->
+                <div class="mb-4">
+                    <label class="block font-mono text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
+                        category
+                    </label>
+                    <input type="text" name="category"
+                           value="{% if video %}{{ video.category }}{% endif %}"
+                           class="w-full px-3 py-2 font-mono text-white"
+                           style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.5rem; outline: none;"
+                           onfocus="this.style.borderColor='oklch(88.716% 0.09711 208.766)'"
+                           onblur="this.style.borderColor='oklch(88.716% 0.09711 208.766 / 0.3)'"
+                           placeholder="e.g., Tutorial, Demo, Showcase">
+                </div>
+
+                <!-- Tags -->
+                <div class="mb-4">
+                    <label class="block font-mono text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
+                        tags
+                    </label>
+                    <input type="text" name="tags"
+                           value="{% if video %}{{ video.tags }}{% endif %}"
+                           class="w-full px-3 py-2 font-mono text-white"
+                           style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.5rem; outline: none;"
+                           onfocus="this.style.borderColor='oklch(88.716% 0.09711 208.766)'"
+                           onblur="this.style.borderColor='oklch(88.716% 0.09711 208.766 / 0.3)'"
+                           placeholder="Comma-separated tags">
+                </div>
+
+                <!-- Resolution -->
+                <div class="mb-4">
+                    <label class="block font-mono text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
+                        resolution
+                    </label>
+                    <input type="text" name="resolution"
+                           value="{% if video %}{{ video.resolution }}{% endif %}"
+                           class="w-full px-3 py-2 font-mono text-white"
+                           style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.5rem; outline: none;"
+                           onfocus="this.style.borderColor='oklch(88.716% 0.09711 208.766)'"
+                           onblur="this.style.borderColor='oklch(88.716% 0.09711 208.766 / 0.3)'"
+                           placeholder="e.g., 1920x1080, 2560x1440">
+                </div>
+
+                <!-- Video File -->
+                <div class="mb-4">
+                    <label class="block font-mono text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
+                        video_file {% if action == 'add' %}<span style="color: oklch(74.443% 0.17237 51.252);">*</span>{% endif %}
+                    </label>
+                    {% if video.video_file %}
+                    <div class="mb-2 p-2 font-mono text-sm text-gray-400" style="background-color: #0d0d0d; border-radius: 0.375rem;">
+                        Current: {{ video.video_file.name|slice:"-40:" }}
+                    </div>
+                    {% endif %}
+                    <input type="file" name="video_file" accept=".mp4,.webm"
+                           {% if action == 'add' %}required{% endif %}
+                           class="w-full px-3 py-2 font-mono text-gray-400"
+                           style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.5rem;">
+                    <p class="mt-1 font-mono text-xs text-gray-500">.mp4 or .webm (max 10GB)</p>
+                </div>
+
+                <!-- Thumbnail -->
+                <div class="mb-4">
+                    <label class="block font-mono text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
+                        thumbnail
+                    </label>
+                    {% if video.thumbnail %}
+                    <div class="mb-2 p-2 font-mono text-sm text-gray-400" style="background-color: #0d0d0d; border-radius: 0.375rem;">
+                        Current: {{ video.thumbnail.name|slice:"-40:" }}
+                    </div>
+                    {% endif %}
+                    <input type="file" name="thumbnail" accept="image/*"
+                           class="w-full px-3 py-2 font-mono text-gray-400"
+                           style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.5rem;">
+                    <p class="mt-1 font-mono text-xs text-gray-500">Video thumbnail (optional)</p>
+                </div>
+
+                <!-- Publish Toggle -->
+                <div class="flex items-center gap-3">
+                    <input type="checkbox" name="is_published" id="is_published"
+                           {% if action == 'add' or video.is_published %}checked{% endif %}
+                           class="w-4 h-4 cursor-pointer"
+                           style="accent-color: oklch(88.716% 0.09711 208.766);">
+                    <label for="is_published" class="font-mono text-sm text-white cursor-pointer">
+                        Publish immediately
+                    </label>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex justify-between items-center">
+                <a href="{% url 'portfolio:video_list' %}"
+                   class="px-4 py-2 font-mono text-sm"
+                   style="color: oklch(88.716% 0.09711 208.766); border: 1px solid oklch(88.716% 0.09711 208.766 / 0.5); border-radius: 0.5rem;">
+                    cancel
+                </a>
+                <button type="submit"
+                        class="px-6 py-2 font-mono text-sm cursor-pointer"
+                        style="background-color: oklch(88.716% 0.09711 208.766); color: #000; border: none; border-radius: 0.5rem; transition: background-color 0.2s;"
+                        onmouseover="this.style.backgroundColor='oklch(78.716% 0.09711 208.766)'"
+                        onmouseout="this.style.backgroundColor='oklch(88.716% 0.09711 208.766)'">
+                    {% if action == 'add' %}$ upload{% else %}$ save{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock content %}

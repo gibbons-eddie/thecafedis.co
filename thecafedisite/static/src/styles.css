@@ -14,6 +14,7 @@
     --color-blue-900: oklch(37.9% 0.146 265.522);
     --color-blue-950: oklch(28.2% 0.091 267.935);
     --color-blue-tron: oklch(88.716% 0.09711 208.766);
+    --color-orange-clu: oklch(74.443% 0.17237 51.252);
     --color-blue-deep-tron: oklch(19.533% 0.03365 208.734);
     --spacing: 0.25rem;
     --radius-xl: 0.75rem;
@@ -211,7 +212,21 @@
   cursor: pointer;
 }
 
-/* Underline using ::after pseudo-element (position: absolute = no layout impact) */
+/* TOP underline using ::before pseudo-element (position: absolute = no layout impact) */
+.menu-button::before {
+  content: '';
+  position: absolute;
+  top: 0.45rem;
+  left: 0.5rem;
+  width: calc(100% - 1rem);
+  height: 2px;
+  background-color: white;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease-in-out;
+}
+
+/* BOTTOM underline using ::after pseudo-element (position: absolute = no layout impact) */
 .menu-button::after {
   content: '';
   position: absolute;
@@ -231,6 +246,10 @@
     color: white;
   }
 
+  .menu-button:hover::before {
+    transform: scaleX(1);
+  }
+
   .menu-button:hover::after {
     transform: scaleX(1);
   }
@@ -240,6 +259,11 @@
 .menu-button:focus {
   color: var(--color-blue-tron);
   outline: none;
+}
+
+.menu-button:focus::before {
+  background-color: var(--color-blue-tron);
+  transform: scaleX(1);
 }
 
 .menu-button:focus::after {
@@ -252,6 +276,11 @@
   color: var(--color-blue-tron);
   outline: none;
   box-shadow: 0 0 0 2px var(--color-blue-tron);
+}
+
+.menu-button:focus-visible::before {
+  background-color: var(--color-blue-tron);
+  transform: scaleX(1);
 }
 
 .menu-button:focus-visible::after {

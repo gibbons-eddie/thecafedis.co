@@ -1,10 +1,158 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block title %}thecafedisco - Eddie Gibbons{% endblock %}
 
 {% block content %}
-<div class="text-9xl w-full overflow-hidden">
-    <div class="animate-infinite-scroll inline-flex items-center whitespace-nowrap">
-        <h1 class="mx-8">THIS IS THE CAFEDISCO HOMEPAGE</h1>
-        <h1 class="mx-8">THIS IS THE CAFEDISCO HOMEPAGE</h1>
+<div class="flex justify-center px-4 py-8">
+    <div style="width: 100%; max-width: 1000px;">
+
+        <!-- Hero Section -->
+        <div class="flex flex-col md:flex-row gap-8 mb-12 pb-8" style="border-bottom: 1px solid oklch(88.716% 0.09711 208.766 / 0.3);">
+            <!-- Profile Image -->
+            <div class="flex-shrink-0 flex justify-center md:justify-start">
+                {% if profile_images %}
+                <div id="profile-container" class="relative">
+                    {% for img in profile_images %}
+                    <img src="{{ img.image.url }}"
+                         alt="{{ img.alt_text|default:'Profile photo' }}"
+                         class="profile-image rounded-xl {% if not forloop.first %}hidden{% endif %}"
+                         style="width: 200px; height: 200px; object-fit: cover; border: 2px solid oklch(88.716% 0.09711 208.766);">
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="flex items-center justify-center rounded-xl"
+                     style="width: 200px; height: 200px; background-color: #1a1a1a; border: 2px solid oklch(88.716% 0.09711 208.766);">
+                    <span class="font-mono text-6xl" style="color: oklch(88.716% 0.09711 208.766);">~</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Bio -->
+            <div class="flex-1">
+                <div class="flex items-center gap-2 mb-3">
+                    <span style="color: oklch(88.716% 0.09711 208.766);">$</span>
+                    <span class="font-mono text-white text-3xl">whoami</span>
+                </div>
+                <h1 class="font-mono text-2xl mb-2" style="color: oklch(88.716% 0.09711 208.766);">Eddie Gibbons</h1>
+                <p class="font-mono text-gray-400 mb-4">Software Engineer / Music Producer / Creative</p>
+                <p class="font-mono text-sm text-gray-500 leading-relaxed">
+                    Building things that matter. Writing code by day, making beats by night.
+                    Welcome to my corner of the internet.
+                </p>
+            </div>
+        </div>
+
+        <!-- Skills Section -->
+        {% if skills %}
+        <div class="mb-12">
+            <div class="flex items-center gap-2 mb-6">
+                <span style="color: oklch(88.716% 0.09711 208.766);">$</span>
+                <span class="font-mono text-white text-xl">cat skills.txt</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {% regroup skills by get_category_display as skill_groups %}
+                {% for group in skill_groups %}
+                <div class="p-4" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
+                    <h3 class="font-mono text-sm mb-3" style="color: oklch(88.716% 0.09711 208.766);">
+                        > {{ group.grouper }}
+                    </h3>
+                    <div class="flex flex-wrap gap-2">
+                        {% for skill in group.list %}
+                        <span class="px-2 py-1 font-mono text-xs"
+                              style="background-color: #0d0d0d; color: #fff; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.375rem;">
+                            {{ skill.name }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Career Section -->
+        {% if career_entries %}
+        <div class="mb-12">
+            <div class="flex items-center gap-2 mb-6">
+                <span style="color: oklch(88.716% 0.09711 208.766);">$</span>
+                <span class="font-mono text-white text-xl">history --career</span>
+            </div>
+
+            <div class="space-y-4">
+                {% for entry in career_entries %}
+                <div class="p-5" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
+                    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-2 mb-3">
+                        <div>
+                            <h3 class="font-mono text-lg text-white">{{ entry.title }}</h3>
+                            <p class="font-mono text-sm" style="color: oklch(88.716% 0.09711 208.766);">{{ entry.company }}</p>
+                        </div>
+                        <div class="font-mono text-sm text-gray-400">
+                            {{ entry.start_date|date:"M Y" }} -
+                            {% if entry.is_current %}
+                            <span style="color: oklch(88.716% 0.09711 208.766);">Present</span>
+                            {% else %}
+                            {{ entry.end_date|date:"M Y" }}
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if entry.location %}
+                    <p class="font-mono text-xs text-gray-500 mb-3">{{ entry.location }}</p>
+                    {% endif %}
+
+                    <ul class="space-y-1 font-mono text-sm text-gray-400">
+                        <li class="flex gap-2">
+                            <span style="color: oklch(88.716% 0.09711 208.766);">-</span>
+                            <span>{{ entry.bullet_1 }}</span>
+                        </li>
+                        <li class="flex gap-2">
+                            <span style="color: oklch(88.716% 0.09711 208.766);">-</span>
+                            <span>{{ entry.bullet_2 }}</span>
+                        </li>
+                        <li class="flex gap-2">
+                            <span style="color: oklch(88.716% 0.09711 208.766);">-</span>
+                            <span>{{ entry.bullet_3 }}</span>
+                        </li>
+                    </ul>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Footer Links -->
+        <div class="text-center py-8" style="border-top: 1px solid oklch(88.716% 0.09711 208.766 / 0.3);">
+            <div class="flex justify-center gap-6 font-mono text-sm">
+                <a href="/music/" class="text-gray-400 hover:text-white transition-colors" up-follow>
+                    <span style="color: oklch(88.716% 0.09711 208.766);">></span> music
+                </a>
+                <a href="/videos/" class="text-gray-400 hover:text-white transition-colors" up-follow>
+                    <span style="color: oklch(88.716% 0.09711 208.766);">></span> videos
+                </a>
+                <a href="/stream/" class="text-gray-400 hover:text-white transition-colors" up-follow>
+                    <span style="color: oklch(88.716% 0.09711 208.766);">></span> stream
+                </a>
+            </div>
+        </div>
     </div>
 </div>
+
+{% if profile_images|length > 1 %}
+<!-- Profile Image Rotation -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const images = document.querySelectorAll('.profile-image');
+        if (images.length <= 1) return;
+
+        let currentIndex = 0;
+        setInterval(() => {
+            images[currentIndex].classList.add('hidden');
+            currentIndex = (currentIndex + 1) % images.length;
+            images[currentIndex].classList.remove('hidden');
+        }, 5000); // Rotate every 5 seconds
+    });
+</script>
+{% endif %}
 {% endblock content %}

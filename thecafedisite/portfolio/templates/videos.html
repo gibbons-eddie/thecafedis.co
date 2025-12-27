@@ -1,5 +1,117 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block title %}Videos - thecafedisco{% endblock %}
 
 {% block content %}
-    <h1>This is thecafedisco video page</h1>
+<div class="flex justify-center px-4 py-8">
+    <div style="width: 100%; max-width: 1100px;">
+        <!-- Page Header -->
+        <div class="mb-8 pb-4" style="border-bottom: 1px solid oklch(88.716% 0.09711 208.766 / 0.3);">
+            <div class="flex items-center gap-2 mb-2">
+                <span style="color: oklch(88.716% 0.09711 208.766);">$</span>
+                <span class="font-mono text-white text-2xl">thecafedisco --videos</span>
+            </div>
+            <p class="font-mono text-sm text-gray-400">{{ videos|length }} video{% if videos|length != 1 %}s{% endif %} available</p>
+        </div>
+
+        <!-- Videos Grid -->
+        {% if videos %}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {% for video in videos %}
+            <div class="group" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem; overflow: hidden;">
+                <!-- Video Player -->
+                <div class="relative" style="aspect-ratio: 16/9;">
+                    <video id="video-{{ video.pk }}"
+                           class="w-full h-full object-cover"
+                           controls
+                           preload="metadata"
+                           {% if video.thumbnail %}poster="{{ video.thumbnail.url }}"{% endif %}
+                           onplay="videoPlay({{ video.pk }})">
+                        <source src="{{ video.video_file.url }}" type="video/mp4">
+                        Your browser does not support the video element.
+                    </video>
+                </div>
+
+                <!-- Video Info -->
+                <div class="p-4">
+                    <h2 class="font-mono text-lg text-white mb-2 truncate">{{ video.title }}</h2>
+                    <div class="flex items-center gap-3 font-mono text-sm text-gray-400">
+                        <span style="color: oklch(88.716% 0.09711 208.766);">thecafedisco</span>
+                        {% if video.category %}
+                        <span>{{ video.category }}</span>
+                        {% endif %}
+                        {% if video.resolution %}
+                        <span class="px-2 py-0.5" style="background-color: #0d0d0d; border-radius: 0.25rem;">{{ video.resolution }}</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Tags -->
+                    {% if video.tags %}
+                    <div class="mt-3 flex flex-wrap gap-1">
+                        {% for tag in video.tags.split %}
+                        <span class="px-2 py-0.5 font-mono text-xs" style="background-color: oklch(88.716% 0.09711 208.766 / 0.1); color: oklch(88.716% 0.09711 208.766 / 0.7); border-radius: 0.25rem;">{{ tag }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <!-- View Count -->
+                    <div class="mt-3 font-mono text-xs text-gray-500">
+                        <span>{{ video.view_count }} view{% if video.view_count != 1 %}s{% endif %}</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="p-8 text-center" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
+            <p class="font-mono text-gray-400">No videos available yet.</p>
+            <p class="font-mono text-sm text-gray-500 mt-2">Check back soon for new content.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Custom Video Styling -->
+<style>
+    video {
+        background-color: #0d0d0d;
+    }
+    video::-webkit-media-controls-panel {
+        background-color: rgba(0, 0, 0, 0.7);
+    }
+</style>
+
+<!-- View Count Tracking -->
+<script>
+    const viewedVideos = new Set();
+
+    function videoPlay(videoId) {
+        if (!viewedVideos.has(videoId)) {
+            viewedVideos.add(videoId);
+            fetch(`/videos/${videoId}/view/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                }
+            });
+        }
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
 {% endblock content %}

@@ -1,5 +1,126 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block title %}Music - thecafedisco{% endblock %}
 
 {% block content %}
-    <h1>This is thecafedisco music page</h1>
+<div class="flex justify-center px-4 py-8">
+    <div style="width: 100%; max-width: 900px;">
+        <!-- Page Header -->
+        <div class="mb-8 pb-4" style="border-bottom: 1px solid oklch(88.716% 0.09711 208.766 / 0.3);">
+            <div class="flex items-center gap-2 mb-2">
+                <span style="color: oklch(88.716% 0.09711 208.766);">$</span>
+                <span class="font-mono text-white text-2xl">thecafedisco --music</span>
+            </div>
+            <p class="font-mono text-sm text-gray-400">{{ tracks|length }} track{% if tracks|length != 1 %}s{% endif %} available</p>
+        </div>
+
+        <!-- Tracks List -->
+        {% if tracks %}
+        <div class="space-y-6">
+            {% for track in tracks %}
+            <div class="p-5" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
+                <div class="flex gap-5">
+                    <!-- Cover Art -->
+                    <div class="flex-shrink-0">
+                        {% if track.cover_art %}
+                        <img src="{{ track.cover_art.url }}" alt="{{ track.title }}"
+                             class="rounded-lg"
+                             style="width: 120px; height: 120px; object-fit: cover; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3);">
+                        {% else %}
+                        <div class="flex items-center justify-center rounded-lg"
+                             style="width: 120px; height: 120px; background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3);">
+                            <span class="font-mono text-4xl" style="color: oklch(88.716% 0.09711 208.766 / 0.5);">~</span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Track Info & Player -->
+                    <div class="flex-1 min-w-0">
+                        <!-- Title & Metadata -->
+                        <div class="mb-3">
+                            <h2 class="font-mono text-xl text-white mb-1 truncate">{{ track.title }}</h2>
+                            <div class="flex items-center gap-3 font-mono text-sm text-gray-400">
+                                <span style="color: oklch(88.716% 0.09711 208.766);">thecafedisco</span>
+                                {% if track.genre %}
+                                <span>{{ track.genre }}</span>
+                                {% endif %}
+                                {% if track.release_date %}
+                                <span>{{ track.release_date|date:"Y" }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Audio Player -->
+                        <div class="mt-4">
+                            <audio id="audio-{{ track.pk }}" controls preload="metadata" class="w-full"
+                                   style="height: 40px;"
+                                   onplay="trackPlay({{ track.pk }})">
+                                <source src="{{ track.audio_file.url }}" type="audio/mpeg">
+                                Your browser does not support the audio element.
+                            </audio>
+                        </div>
+
+                        <!-- Play Count -->
+                        <div class="mt-2 font-mono text-xs text-gray-500">
+                            <span>{{ track.play_count }} play{% if track.play_count != 1 %}s{% endif %}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="p-8 text-center" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
+            <p class="font-mono text-gray-400">No tracks available yet.</p>
+            <p class="font-mono text-sm text-gray-500 mt-2">Check back soon for new music.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Custom Audio Styling -->
+<style>
+    audio {
+        filter: sepia(20%) saturate(70%) grayscale(1) contrast(99%) invert(12%);
+        width: 100%;
+        border-radius: 0.5rem;
+    }
+    audio::-webkit-media-controls-panel {
+        background-color: #0d0d0d;
+    }
+</style>
+
+<!-- Play Count Tracking -->
+<script>
+    const playedTracks = new Set();
+
+    function trackPlay(trackId) {
+        if (!playedTracks.has(trackId)) {
+            playedTracks.add(trackId);
+            fetch(`/music/track/${trackId}/play/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                }
+            });
+        }
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
 {% endblock content %}

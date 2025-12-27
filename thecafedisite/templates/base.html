@@ -1,4 +1,4 @@
-{%load static%}
+{%load static background_scroller_extras%}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -9,9 +9,25 @@
       // Configure main fragment target to #content (instead of default <body>)
       up.fragment.config.mainTargets = ['#content'];
 
-      // Configure cross-fade transition (old fades out while new fades in)
-      up.fragment.config.navigateOptions.transition = 'cross-fade';
-      up.fragment.config.navigateOptions.duration = 300;
+      // Define custom sequential fade transition (fade-out THEN fade-in)
+      up.transition('fade-sequential', async (oldElement, newElement, options) => {
+        // Ensure new element starts invisible
+        newElement.style.opacity = '0';
+
+        await up.animate(oldElement, 'fade-out', {
+          duration: options.duration,
+          easing: options.easing
+        });
+
+        await up.animate(newElement, 'fade-in', {
+          duration: options.duration,
+          easing: options.easing
+        });
+      });
+
+      // Configure sequential fade transition (old fades out, THEN new fades in)
+      up.fragment.config.navigateOptions.transition = 'fade-sequential';
+      up.fragment.config.navigateOptions.duration = 300; // 300ms per phase (600ms total)
       up.fragment.config.navigateOptions.easing = 'ease-in-out';
     </script>
 
@@ -21,122 +37,25 @@
 </head>
 
 <body>
-    {% comment %} ==================== CONFIGURE BACKGROUND SCROLLER TEXT HERE ==================== {% endcomment %}
-    {% comment %} To customize: Simply change the text in quotes below {% endcomment %}
+    {% comment %} ==================== DYNAMIC BACKGROUND SCROLLER ==================== {% endcomment %}
 
     {% comment %} Background Scroller Layer {% endcomment %}
     <div id="persistent-background-wrapper" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 0; pointer-events: none;" up-keep>
         <div class="bg-scroller-container">
 
-        {% comment %} Row 1 - Scrolls Right {% endcomment %}
-        <div class="bg-scroller-row">
-            <div class="animate-scroll-right items-center whitespace-nowrap">
-                {% for i in "xxxxxxxxxxxxxxxxxxxxxxxx" %}<span class="bg-scroller-text mx-8">EDDIE GIBBONS</span>{% endfor %}
+            {% comment %} Loop through scroller_names with alternating directions {% endcomment %}
+            {% for name in scroller_names %}
+            <div class="bg-scroller-row">
+                <div class="animate-scroll-{% if forloop.counter0|divisibleby:2 %}right{% else %}left{% endif %} items-center whitespace-nowrap">
+                    {% for i in "xxxxxxxxxxxxxxxxxxxxxxxx" %}<span class="bg-scroller-text mx-8">{{ name }}</span>{% endfor %}
+                </div>
             </div>
-        </div>
-
-        {% comment %} Row 2 - Scrolls Left {% endcomment %}
-        <div class="bg-scroller-row">
-            <div class="animate-scroll-left items-center whitespace-nowrap">
-                {% for i in "xxxxxxxxxxxxxxxxxxxxxxxx" %}<span class="bg-scroller-text mx-8">DANIEL ROSENFELD</span>{% endfor %}
-            </div>
-        </div>
-
-        {% comment %} Row 3 - Scrolls Right {% endcomment %}
-        <div class="bg-scroller-row">
-            <div class="animate-scroll-right items-center whitespace-nowrap">
-                {% for i in "xxxxxxxxxxxxxxxxxxxxxxxx" %}<span class="bg-scroller-text mx-8">FRANKIE KNUCKLES</span>{% endfor %}
-            </div>
-        </div>
-
-        {% comment %} Row 4 - Scrolls Left {% endcomment %}
-        <div class="bg-scroller-row">
-            <div class="animate-scroll-left items-center whitespace-nowrap">
-                {% for i in "xxxxxxxxxxxxxxxxxxxxxxxx" %}<span class="bg-scroller-text mx-8">ALEX BEACHUM</span>{% endfor %}
-            </div>
-        </div>
-
-        {% comment %} Row 5 - Scrolls Right {% endcomment %}
-        <div class="bg-scroller-row">
-            <div class="animate-scroll-right items-center whitespace-nowrap">
-                {% for i in "xxxxxxxxxxxxxxxxxxxxxxxx" %}<span class="bg-scroller-text mx-8">CHRISTOPHER PAOLINI</span>{% endfor %}
-            </div>
-        </div>
-
-        {% comment %} Row 6 - Scrolls Left {% endcomment %}
-        <div class="bg-scroller-row">
-            <div class="animate-scroll-left items-center whitespace-nowrap">
-                {% for i in "xxxxxxxxxxxxxxxxxxxxxxxx" %}<span class="bg-scroller-text mx-8">KEVIN PARKER</span>{% endfor %}
-            </div>
-        </div>
-
-        {% comment %} Row 7 - Scrolls Right {% endcomment %}
-        <div class="bg-scroller-row">
-            <div class="animate-scroll-right items-center whitespace-nowrap">
-                {% for i in "xxxxxxxxxxxxxxxxxxxxxxxx" %}<span class="bg-scroller-text mx-8">MARK BAGLEY</span>{% endfor %}
-            </div>
-        </div>
-
-        {% comment %} Row 8 - Scrolls Left {% endcomment %}
-        <div class="bg-scroller-row">
-            <div class="animate-scroll-left items-center whitespace-nowrap">
-                {% for i in "xxxxxxxxxxxxxxxxxxxxxxxx" %}<span class="bg-scroller-text mx-8">EDISON GIBBONS</span>{% endfor %}
-            </div>
-        </div>
-
-        {% comment %} Row 9 - Scrolls Right {% endcomment %}
-        <div class="bg-scroller-row">
-            <div class="animate-scroll-right items-center whitespace-nowrap">
-                {% for i in "xxxxxxxxxxxxxxxxxxxxxxxx" %}<span class="bg-scroller-text mx-8">CHRISTOPHER NOLAN</span>{% endfor %}
-            </div>
-        </div>
-
-        {% comment %} Row 10 - Scrolls Left {% endcomment %}
-        <div class="bg-scroller-row">
-            <div class="animate-scroll-left items-center whitespace-nowrap">
-                {% for i in "xxxxxxxxxxxxxxxxxxxxxxxx" %}<span class="bg-scroller-text mx-8">JOHN WILLIAMS</span>{% endfor %}
-            </div>
-        </div>
-
-        {% comment %} Row 11 - Scrolls Right {% endcomment %}
-        <div class="bg-scroller-row">
-            <div class="animate-scroll-right items-center whitespace-nowrap">
-                {% for i in "xxxxxxxxxxxxxxxxxxxxxxxx" %}<span class="bg-scroller-text mx-8">THOMAS BANGALTER</span>{% endfor %}
-            </div>
-        </div>
-
-        {% comment %} Row 12 - Scrolls Left {% endcomment %}
-        <div class="bg-scroller-row">
-            <div class="animate-scroll-left items-center whitespace-nowrap">
-                {% for i in "xxxxxxxxxxxxxxxxxxxxxxxx" %}<span class="bg-scroller-text mx-8">STEVE JOBS</span>{% endfor %}
-            </div>
-        </div>
-
-        {% comment %} Row 13 - Scrolls Right {% endcomment %}
-        <div class="bg-scroller-row">
-            <div class="animate-scroll-right items-center whitespace-nowrap">
-                {% for i in "xxxxxxxxxxxxxxxxxxxxxxxx" %}<span class="bg-scroller-text mx-8">JENS BERGENSTEN</span>{% endfor %}
-            </div>
-        </div>
-
-        {% comment %} Row 14 - Scrolls Left {% endcomment %}
-        <div class="bg-scroller-row">
-            <div class="animate-scroll-left items-center whitespace-nowrap">
-                {% for i in "xxxxxxxxxxxxxxxxxxxxxxxx" %}<span class="bg-scroller-text mx-8">PAUL MCCARTNEY</span>{% endfor %}
-            </div>
-        </div>
-
-        {% comment %} Row 15 - Scrolls Right {% endcomment %}
-        <div class="bg-scroller-row">
-            <div class="animate-scroll-right items-center whitespace-nowrap">
-                {% for i in "xxxxxxxxxxxxxxxxxxxxxxxx" %}<span class="bg-scroller-text mx-8">CRISTIANO RONALDO</span>{% endfor %}
-            </div>
-        </div>
+            {% endfor %}
 
         </div>
     </div>
 
-    {% comment %} Menu Bar - Kept Persistent {% endcomment %}
+    {% comment %} Menu Bar {% endcomment %}
     <div id="menu-bar" class="p-1" style="position: relative; z-index: 2; background-color: oklch(19.533% 0.03365 208.734 / 0.95);" up-keep>
         <div class="flex justify-center h-full m-5" style="background-color: #1a1a1a; border: 3px solid oklch(88.716% 0.09711 208.766); border-radius: 9999px; position: relative; padding: 0.375rem;">
             <div class="flex items-center justify-between w-full" style="padding: 0.5rem 2rem;">
@@ -153,7 +72,7 @@
                 </div>
                 {% comment %} Login - Right Side {% endcomment %}
                 <div class="flex justify-end">
-                    <a href="/login" class="menu-button m-2 p-2 rounded-xl" up-follow>Login</a>
+                    <a href="/login/" class="menu-button m-2 p-2 rounded-xl" up-follow>Login</a>
                 </div>
             </div>
         </div>

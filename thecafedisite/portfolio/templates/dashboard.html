@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - thecafedisco{% endblock %}
+
+{% block content %}
+<div class="flex justify-center px-4 py-8">
+    <div style="width: 100%; max-width: 800px;">
+        <!-- Dashboard Header -->
+        <div class="mb-8 pb-4" style="border-bottom: 1px solid oklch(88.716% 0.09711 208.766 / 0.3);">
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span style="color: oklch(88.716% 0.09711 208.766);">$</span>
+                        <span class="font-mono text-white text-xl">thecafedisco --dashboard</span>
+                    </div>
+                    <p class="font-mono text-sm text-gray-400">Welcome, {{ user.username }}. Session active.</p>
+                </div>
+                <form method="POST" action="{% url 'portfolio:logout' %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit"
+                       class="px-4 py-2 font-mono text-sm cursor-pointer"
+                       style="color: oklch(88.716% 0.09711 208.766); border: 1px solid oklch(88.716% 0.09711 208.766); border-radius: 0.5rem; background: transparent; transition: all 0.2s;"
+                       onmouseover="this.style.backgroundColor='oklch(88.716% 0.09711 208.766)'; this.style.color='#000'"
+                       onmouseout="this.style.backgroundColor='transparent'; this.style.color='oklch(88.716% 0.09711 208.766)'"
+                    >
+                        $ logout
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Content Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <!-- Career Entries -->
+            <div class="p-5" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
+                <div class="flex items-center gap-3 mb-3">
+                    <span class="text-xl" style="color: oklch(88.716% 0.09711 208.766);">></span>
+                    <h3 class="font-mono text-base" style="color: oklch(88.716% 0.09711 208.766);">Career Entries</h3>
+                </div>
+                <p class="font-mono text-3xl text-white mb-3">{{ career_count }}</p>
+                <a href="/admin/portfolio/careerentry/" class="font-mono text-sm text-gray-400 hover:text-white transition-colors">
+                    Manage in admin >
+                </a>
+            </div>
+
+            <!-- Skills -->
+            <div class="p-5" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
+                <div class="flex items-center gap-3 mb-3">
+                    <span class="text-xl" style="color: oklch(88.716% 0.09711 208.766);">></span>
+                    <h3 class="font-mono text-base" style="color: oklch(88.716% 0.09711 208.766);">Skills</h3>
+                </div>
+                <p class="font-mono text-3xl text-white mb-3">{{ skill_count }}</p>
+                <a href="/admin/portfolio/skill/" class="font-mono text-sm text-gray-400 hover:text-white transition-colors">
+                    Manage in admin >
+                </a>
+            </div>
+
+            <!-- Profile Images -->
+            <div class="p-5" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
+                <div class="flex items-center gap-3 mb-3">
+                    <span class="text-xl" style="color: oklch(88.716% 0.09711 208.766);">></span>
+                    <h3 class="font-mono text-base" style="color: oklch(88.716% 0.09711 208.766);">Profile Images</h3>
+                </div>
+                <p class="font-mono text-3xl text-white mb-3">{{ profile_image_count }}</p>
+                <a href="/admin/portfolio/profileimage/" class="font-mono text-sm text-gray-400 hover:text-white transition-colors">
+                    Manage in admin >
+                </a>
+            </div>
+
+            <!-- Music Tracks -->
+            <div class="p-5" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
+                <div class="flex items-center gap-3 mb-3">
+                    <span class="text-xl" style="color: oklch(88.716% 0.09711 208.766);">></span>
+                    <h3 class="font-mono text-base" style="color: oklch(88.716% 0.09711 208.766);">Music Tracks</h3>
+                </div>
+                <p class="font-mono text-3xl text-white mb-3">{{ track_count }}</p>
+                <a href="{% url 'portfolio:music_list' %}" class="font-mono text-sm text-gray-400 hover:text-white transition-colors">
+                    Manage tracks >
+                </a>
+            </div>
+
+            <!-- Videos -->
+            <div class="p-5" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
+                <div class="flex items-center gap-3 mb-3">
+                    <span class="text-xl" style="color: oklch(88.716% 0.09711 208.766);">></span>
+                    <h3 class="font-mono text-base" style="color: oklch(88.716% 0.09711 208.766);">Videos</h3>
+                </div>
+                <p class="font-mono text-3xl text-white mb-3">{{ video_count }}</p>
+                <a href="{% url 'portfolio:video_list' %}" class="font-mono text-sm text-gray-400 hover:text-white transition-colors">
+                    Manage videos >
+                </a>
+            </div>
+
+            <!-- Django Admin -->
+            <div class="p-5" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
+                <div class="flex items-center gap-3 mb-3">
+                    <span class="text-xl" style="color: oklch(88.716% 0.09711 208.766);">></span>
+                    <h3 class="font-mono text-base" style="color: oklch(88.716% 0.09711 208.766);">Admin Panel</h3>
+                </div>
+                <p class="font-mono text-sm text-gray-400 mb-3">Full access to all models</p>
+                <a href="/admin/" class="inline-block px-4 py-2 font-mono text-sm"
+                   style="background-color: oklch(88.716% 0.09711 208.766); color: #000; border-radius: 0.5rem; transition: background-color 0.2s;"
+                   onmouseover="this.style.backgroundColor='oklch(78.716% 0.09711 208.766)'"
+                   onmouseout="this.style.backgroundColor='oklch(88.716% 0.09711 208.766)'"
+                >
+                    $ open admin
+                </a>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="p-5" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
+            <h3 class="font-mono text-base mb-4" style="color: oklch(88.716% 0.09711 208.766);">
+                <span class="text-gray-400">></span> Quick Actions
+            </h3>
+            <div class="flex flex-wrap gap-3">
+                <a href="/admin/portfolio/careerentry/add/" class="px-3 py-2 font-mono text-sm text-white"
+                   style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.5); border-radius: 0.5rem; transition: border-color 0.2s;"
+                   onmouseover="this.style.borderColor='oklch(88.716% 0.09711 208.766)'"
+                   onmouseout="this.style.borderColor='oklch(88.716% 0.09711 208.766 / 0.5)'"
+                >
+                    + Career Entry
+                </a>
+                <a href="/admin/portfolio/skill/add/" class="px-3 py-2 font-mono text-sm text-white"
+                   style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.5); border-radius: 0.5rem; transition: border-color 0.2s;"
+                   onmouseover="this.style.borderColor='oklch(88.716% 0.09711 208.766)'"
+                   onmouseout="this.style.borderColor='oklch(88.716% 0.09711 208.766 / 0.5)'"
+                >
+                    + Skill
+                </a>
+                <a href="/admin/portfolio/profileimage/add/" class="px-3 py-2 font-mono text-sm text-white"
+                   style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.5); border-radius: 0.5rem; transition: border-color 0.2s;"
+                   onmouseover="this.style.borderColor='oklch(88.716% 0.09711 208.766)'"
+                   onmouseout="this.style.borderColor='oklch(88.716% 0.09711 208.766 / 0.5)'"
+                >
+                    + Profile Image
+                </a>
+                <a href="{% url 'portfolio:music_add' %}" class="px-3 py-2 font-mono text-sm text-white"
+                   style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.5); border-radius: 0.5rem; transition: border-color 0.2s;"
+                   onmouseover="this.style.borderColor='oklch(88.716% 0.09711 208.766)'"
+                   onmouseout="this.style.borderColor='oklch(88.716% 0.09711 208.766 / 0.5)'"
+                >
+                    + Music Track
+                </a>
+                <a href="{% url 'portfolio:video_add' %}" class="px-3 py-2 font-mono text-sm text-white"
+                   style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.5); border-radius: 0.5rem; transition: border-color 0.2s;"
+                   onmouseover="this.style.borderColor='oklch(88.716% 0.09711 208.766)'"
+                   onmouseout="this.style.borderColor='oklch(88.716% 0.09711 208.766 / 0.5)'"
+                >
+                    + Video
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
