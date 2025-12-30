@@ -10,10 +10,10 @@
             <div class="flex items-center justify-between">
                 <div>
                     <div class="flex items-center gap-2 mb-2">
-                        <span style="color: oklch(88.716% 0.09711 208.766);">$</span>
-                        <span class="font-mono text-white text-xl">thecafedisco --dashboard</span>
+                        <span style="color: oklch(88.716% 0.09711 208.766);">%</span>
+                        <span class="typewriter-header font-mono text-white text-xl">thecafedisco --dashboard</span>
                     </div>
-                    <p class="font-mono text-sm text-gray-400">Welcome, {{ user.username }}. Session active.</p>
+                    <p class="typewriter-header font-mono text-sm text-gray-400">Welcome, {{ user.username }}. Session active.</p>
                 </div>
                 <form method="POST" action="{% url 'portfolio:logout' %}" style="display: inline;">
                     {% csrf_token %}
@@ -29,6 +29,7 @@
             </div>
         </div>
 
+        <div class="typewriter-body">
         <!-- Content Stats Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <!-- Career Entries -->
@@ -38,8 +39,8 @@
                     <h3 class="font-mono text-base" style="color: oklch(88.716% 0.09711 208.766);">Career Entries</h3>
                 </div>
                 <p class="font-mono text-3xl text-white mb-3">{{ career_count }}</p>
-                <a href="/admin/portfolio/careerentry/" class="font-mono text-sm text-gray-400 hover:text-white transition-colors">
-                    Manage in admin >
+                <a href="{% url 'portfolio:career_list' %}" class="font-mono text-sm text-gray-400 hover:text-white transition-colors">
+                    Manage entries >
                 </a>
             </div>
 
@@ -50,8 +51,8 @@
                     <h3 class="font-mono text-base" style="color: oklch(88.716% 0.09711 208.766);">Skills</h3>
                 </div>
                 <p class="font-mono text-3xl text-white mb-3">{{ skill_count }}</p>
-                <a href="/admin/portfolio/skill/" class="font-mono text-sm text-gray-400 hover:text-white transition-colors">
-                    Manage in admin >
+                <a href="{% url 'portfolio:skill_list' %}" class="font-mono text-sm text-gray-400 hover:text-white transition-colors">
+                    Manage skills >
                 </a>
             </div>
 
@@ -62,8 +63,8 @@
                     <h3 class="font-mono text-base" style="color: oklch(88.716% 0.09711 208.766);">Profile Images</h3>
                 </div>
                 <p class="font-mono text-3xl text-white mb-3">{{ profile_image_count }}</p>
-                <a href="/admin/portfolio/profileimage/" class="font-mono text-sm text-gray-400 hover:text-white transition-colors">
-                    Manage in admin >
+                <a href="{% url 'portfolio:profile_list' %}" class="font-mono text-sm text-gray-400 hover:text-white transition-colors">
+                    Manage images >
                 </a>
             </div>
 
@@ -91,6 +92,18 @@
                 </a>
             </div>
 
+            <!-- Comments Moderation -->
+            <div class="p-5" style="background-color: #1a1a1a; border: 1px solid {% if pending_comment_count > 0 %}oklch(74.443% 0.17237 51.252){% else %}oklch(88.716% 0.09711 208.766 / 0.3){% endif %}; border-radius: 0.75rem;">
+                <div class="flex items-center gap-3 mb-3">
+                    <span class="text-xl" style="color: {% if pending_comment_count > 0 %}oklch(74.443% 0.17237 51.252){% else %}oklch(88.716% 0.09711 208.766){% endif %};">></span>
+                    <h3 class="font-mono text-base" style="color: {% if pending_comment_count > 0 %}oklch(74.443% 0.17237 51.252){% else %}oklch(88.716% 0.09711 208.766){% endif %};">Pending Comments</h3>
+                </div>
+                <p class="font-mono text-3xl text-white mb-3">{{ pending_comment_count }}</p>
+                <a href="{% url 'portfolio:comment_list' %}" class="font-mono text-sm text-gray-400 hover:text-white transition-colors">
+                    Moderate comments >
+                </a>
+            </div>
+
             <!-- Django Admin -->
             <div class="p-5" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
                 <div class="flex items-center gap-3 mb-3">
@@ -114,21 +127,21 @@
                 <span class="text-gray-400">></span> Quick Actions
             </h3>
             <div class="flex flex-wrap gap-3">
-                <a href="/admin/portfolio/careerentry/add/" class="px-3 py-2 font-mono text-sm text-white"
+                <a href="{% url 'portfolio:career_add' %}" class="px-3 py-2 font-mono text-sm text-white"
                    style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.5); border-radius: 0.5rem; transition: border-color 0.2s;"
                    onmouseover="this.style.borderColor='oklch(88.716% 0.09711 208.766)'"
                    onmouseout="this.style.borderColor='oklch(88.716% 0.09711 208.766 / 0.5)'"
                 >
                     + Career Entry
                 </a>
-                <a href="/admin/portfolio/skill/add/" class="px-3 py-2 font-mono text-sm text-white"
+                <a href="{% url 'portfolio:skill_add' %}" class="px-3 py-2 font-mono text-sm text-white"
                    style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.5); border-radius: 0.5rem; transition: border-color 0.2s;"
                    onmouseover="this.style.borderColor='oklch(88.716% 0.09711 208.766)'"
                    onmouseout="this.style.borderColor='oklch(88.716% 0.09711 208.766 / 0.5)'"
                 >
                     + Skill
                 </a>
-                <a href="/admin/portfolio/profileimage/add/" class="px-3 py-2 font-mono text-sm text-white"
+                <a href="{% url 'portfolio:profile_add' %}" class="px-3 py-2 font-mono text-sm text-white"
                    style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.5); border-radius: 0.5rem; transition: border-color 0.2s;"
                    onmouseover="this.style.borderColor='oklch(88.716% 0.09711 208.766)'"
                    onmouseout="this.style.borderColor='oklch(88.716% 0.09711 208.766 / 0.5)'"
@@ -150,6 +163,7 @@
                     + Video
                 </a>
             </div>
+        </div>
         </div>
     </div>
 </div>

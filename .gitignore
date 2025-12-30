@@ -1,0 +1,57 @@
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Node modules
+node_modules/
+
+# Database
+*.sqlite3
+*.db
+
+# Generated static files
+static_root/
+
+# Environment and secrets
+.env
+*.env
+thecafedisite/.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs and backups
+*.log
+*.bak
+*.backup
+*.old
+
+# Security sensitive
+*.pem
+*.key
+*.crt
+credentials.json
+media/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Claude
+thecafedisite/CLAUDE.md
+thecafedisite/.claude/

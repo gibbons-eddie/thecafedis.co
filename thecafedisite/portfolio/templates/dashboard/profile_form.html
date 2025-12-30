@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}{% if action == 'add' %}Upload Profile Image{% else %}Edit Profile Image{% endif %} - Dashboard{% endblock %}
+
+{% block content %}
+<div class="flex justify-center px-4 py-8">
+    <div style="width: 100%; max-width: 600px;">
+        <!-- Header -->
+        <div class="mb-6 pb-4" style="border-bottom: 1px solid oklch(88.716% 0.09711 208.766 / 0.3);">
+            <div class="flex items-center gap-2 mb-2">
+                <span style="color: oklch(88.716% 0.09711 208.766);">%</span>
+                <span class="font-mono text-white text-xl">{% if action == 'add' %}profile --upload{% else %}profile --edit{% endif %}</span>
+            </div>
+            <p class="font-mono text-sm text-gray-400">
+                {% if action == 'add' %}Upload a new profile image{% else %}Update profile image details{% endif %}
+            </p>
+        </div>
+
+        <!-- Messages -->
+        {% if messages %}
+        <div class="mb-4">
+            {% for message in messages %}
+            <div class="p-3 font-mono text-sm mb-2"
+                 style="background-color: #1a1a1a; border: 1px solid {% if message.tags == 'success' %}oklch(88.716% 0.09711 208.766){% else %}oklch(74.443% 0.17237 51.252){% endif %}; border-radius: 0.5rem; color: {% if message.tags == 'success' %}oklch(88.716% 0.09711 208.766){% else %}oklch(74.443% 0.17237 51.252){% endif %};">
+                > {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Form -->
+        <form method="POST" enctype="multipart/form-data" class="space-y-4">
+            {% csrf_token %}
+
+            <div class="p-6" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
+                <!-- Current Image Preview (edit mode) -->
+                {% if profile.image %}
+                <div class="mb-4">
+                    <label class="block font-mono text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
+                        current_image
+                    </label>
+                    <img src="{{ profile.image.url }}"
+                         alt="{{ profile.alt_text|default:'Current profile image' }}"
+                         class="rounded-lg"
+                         style="width: 120px; height: 120px; object-fit: cover; border: 2px solid oklch(88.716% 0.09711 208.766);">
+                </div>
+                {% endif %}
+
+                <!-- Image Upload -->
+                <div class="mb-4">
+                    <label class="block font-mono text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
+                        image {% if action == 'add' %}<span style="color: oklch(74.443% 0.17237 51.252);">*</span>{% endif %}
+                    </label>
+                    <input type="file" name="image" accept="image/*"
+                           {% if action == 'add' %}required{% endif %}
+                           class="w-full px-3 py-2 font-mono text-gray-400"
+                           style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.5rem;">
+                    <p class="mt-1 font-mono text-xs text-gray-500">Square image recommended (min 400x400px)</p>
+                </div>
+
+                <!-- Alt Text -->
+                <div class="mb-4">
+                    <label class="block font-mono text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
+                        alt_text
+                    </label>
+                    <input type="text" name="alt_text"
+                           value="{% if profile %}{{ profile.alt_text }}{% endif %}"
+                           class="w-full px-3 py-2 font-mono text-white"
+                           style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.5rem; outline: none;"
+                           placeholder="e.g., Eddie at a music studio">
+                    <p class="mt-1 font-mono text-xs text-gray-500">Description for accessibility</p>
+                </div>
+
+                <!-- Order -->
+                <div class="mb-4">
+                    <label class="block font-mono text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
+                        order
+                    </label>
+                    <input type="number" name="order"
+                           value="{% if profile %}{{ profile.order }}{% else %}0{% endif %}"
+                           class="w-full px-3 py-2 font-mono text-white"
+                           style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.5rem; outline: none;">
+                    <p class="mt-1 font-mono text-xs text-gray-500">Lower numbers appear first in rotation</p>
+                </div>
+
+                <!-- Active Toggle -->
+                <div class="flex items-center gap-3">
+                    <input type="checkbox" name="is_active" id="is_active"
+                           {% if action == 'add' or profile.is_active %}checked{% endif %}
+                           class="w-4 h-4 cursor-pointer"
+                           style="accent-color: oklch(88.716% 0.09711 208.766);">
+                    <label for="is_active" class="font-mono text-sm text-white cursor-pointer">
+                        Include in rotation
+                    </label>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex justify-between items-center">
+                <a href="{% url 'portfolio:profile_list' %}"
+                   class="px-4 py-2 font-mono text-sm"
+                   style="color: oklch(88.716% 0.09711 208.766); border: 1px solid oklch(88.716% 0.09711 208.766 / 0.5); border-radius: 0.5rem;">
+                    cancel
+                </a>
+                <button type="submit"
+                        class="px-6 py-2 font-mono text-sm cursor-pointer"
+                        style="background-color: oklch(88.716% 0.09711 208.766); color: #000; border: none; border-radius: 0.5rem;">
+                    {% if action == 'add' %}$ upload{% else %}$ save{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock content %}

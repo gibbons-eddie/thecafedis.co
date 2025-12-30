@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Comment Moderation - thecafedisco{% endblock %}
+
+{% block content %}
+<div class="flex justify-center px-4 py-8">
+    <div style="width: 100%; max-width: 900px;">
+        <!-- Header -->
+        <div class="mb-8 pb-4" style="border-bottom: 1px solid oklch(88.716% 0.09711 208.766 / 0.3);">
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span style="color: oklch(88.716% 0.09711 208.766);">%</span>
+                        <span class="font-mono text-white text-xl">moderate --comments</span>
+                    </div>
+                    <p class="font-mono text-sm text-gray-400">Review and approve user comments</p>
+                </div>
+                <a href="{% url 'portfolio:dashboard' %}" class="font-mono text-sm" style="color: oklch(88.716% 0.09711 208.766);">
+                    < Back to Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        {% if messages %}
+        <div class="mb-6">
+            {% for message in messages %}
+            <div class="p-3 mb-2 font-mono text-sm" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.5); border-radius: 0.5rem; color: oklch(88.716% 0.09711 208.766);">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Pending Comments Section -->
+        <div class="mb-8">
+            <h2 class="font-mono text-lg mb-4" style="color: oklch(74.443% 0.17237 51.252);">
+                > Pending Review ({{ pending_comments|length }})
+            </h2>
+
+            {% if pending_comments %}
+            <div class="space-y-4">
+                {% for comment in pending_comments %}
+                <div class="p-4" style="background-color: #1a1a1a; border: 1px solid oklch(74.443% 0.17237 51.252 / 0.5); border-radius: 0.75rem;">
+                    <div class="flex items-start justify-between gap-4 mb-3">
+                        <div>
+                            <span class="font-mono text-sm font-bold text-white">{{ comment.username }}</span>
+                            <span class="font-mono text-xs text-gray-500 ml-2">{{ comment.created_at|timesince }} ago</span>
+                        </div>
+                        <span class="font-mono text-xs px-2 py-1" style="background-color: #0d0d0d; color: oklch(88.716% 0.09711 208.766); border-radius: 0.25rem;">
+                            {% if comment.track %}Track: {{ comment.track.title }}{% else %}Video: {{ comment.video.title }}{% endif %}
+                        </span>
+                    </div>
+                    <p class="font-mono text-sm text-gray-300 mb-4" style="white-space: pre-wrap;">{{ comment.comment_text }}</p>
+                    <div class="flex gap-3">
+                        <form method="POST" action="{% url 'portfolio:comment_approve' comment.pk %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="px-3 py-1 font-mono text-sm cursor-pointer"
+                                    style="background-color: oklch(88.716% 0.09711 208.766); color: #000; border: none; border-radius: 0.375rem; transition: opacity 0.2s;"
+                                    onmouseover="this.style.opacity='0.8'"
+                                    onmouseout="this.style.opacity='1'">
+                                Approve
+                            </button>
+                        </form>
+                        <form method="POST" action="{% url 'portfolio:comment_reject' comment.pk %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="px-3 py-1 font-mono text-sm cursor-pointer"
+                                    style="background-color: transparent; color: #ef4444; border: 1px solid #ef4444; border-radius: 0.375rem; transition: all 0.2s;"
+                                    onmouseover="this.style.backgroundColor='#ef4444'; this.style.color='#000'"
+                                    onmouseout="this.style.backgroundColor='transparent'; this.style.color='#ef4444'">
+                                Reject
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="p-6 text-center" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
+                <p class="font-mono text-gray-400">No pending comments to review.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Recently Approved Section -->
+        <div>
+            <h2 class="font-mono text-lg mb-4" style="color: oklch(88.716% 0.09711 208.766);">
+                > Recently Approved
+            </h2>
+
+            {% if approved_comments %}
+            <div class="space-y-3">
+                {% for comment in approved_comments %}
+                <div class="p-3" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.2); border-radius: 0.5rem;">
+                    <div class="flex items-center justify-between mb-2">
+                        <div>
+                            <span class="font-mono text-sm text-white">{{ comment.username }}</span>
+                            <span class="font-mono text-xs text-gray-500 ml-2">{{ comment.created_at|timesince }} ago</span>
+                        </div>
+                        <span class="font-mono text-xs text-gray-500">
+                            {% if comment.track %}{{ comment.track.title }}{% else %}{{ comment.video.title }}{% endif %}
+                        </span>
+                    </div>
+                    <p class="font-mono text-xs text-gray-400 truncate">{{ comment.comment_text|truncatewords:20 }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="p-4 text-center" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.2); border-radius: 0.5rem;">
+                <p class="font-mono text-sm text-gray-500">No approved comments yet.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock content %}

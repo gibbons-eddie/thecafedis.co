@@ -9,26 +9,252 @@
       // Configure main fragment target to #content (instead of default <body>)
       up.fragment.config.mainTargets = ['#content'];
 
-      // Define custom sequential fade transition (fade-out THEN fade-in)
-      up.transition('fade-sequential', async (oldElement, newElement, options) => {
-        // Ensure new element starts invisible
+      // ==================== TYPEWRITER TRANSITION ENGINE ====================
+      const TypewriterEngine = {
+        config: {
+          charDelay: 30,           // ms per character (fast)
+          headerStagger: 150,      // ms between headers starting
+          cursorChar: '|',         // cursor character
+          bodyFadeDuration: 300    // ms for body content fade
+        },
+
+        originalTexts: new WeakMap(),
+        lastAnimatedUrl: null,     // Track last URL to prevent same-page replay
+
+        getHeaders(container) {
+          return Array.from(container.querySelectorAll('.typewriter-header, .typewriter-section'));
+        },
+
+        getBodies(container) {
+          return Array.from(container.querySelectorAll('.typewriter-body'));
+        },
+
+        storeOriginalText(el) {
+          if (!this.originalTexts.has(el)) {
+            this.originalTexts.set(el, el.textContent);
+          }
+        },
+
+        createCursor() {
+          const cursor = document.createElement('span');
+          cursor.className = 'typewriter-cursor';
+          cursor.textContent = this.config.cursorChar;
+          return cursor;
+        },
+
+        delay(ms) {
+          return new Promise(resolve => setTimeout(resolve, ms));
+        },
+
+        async typeIn(el) {
+          this.storeOriginalText(el);
+          const text = this.originalTexts.get(el);
+          el.textContent = '';
+          el.style.visibility = 'visible';
+
+          const cursor = this.createCursor();
+          el.appendChild(cursor);
+
+          for (let i = 0; i < text.length; i++) {
+            el.insertBefore(document.createTextNode(text[i]), cursor);
+            await this.delay(this.config.charDelay);
+          }
+
+          cursor.remove();
+        },
+
+        async backspace(el) {
+          const text = el.textContent;
+          if (!text) return;
+
+          const cursor = this.createCursor();
+          el.appendChild(cursor);
+
+          for (let i = text.length; i > 0; i--) {
+            el.textContent = text.substring(0, i - 1);
+            el.appendChild(cursor);
+            await this.delay(this.config.charDelay);
+          }
+
+          cursor.remove();
+        },
+
+        async typeAllHeaders(container) {
+          const headers = this.getHeaders(container);
+          if (headers.length === 0) return;
+
+          // Store and hide all headers initially
+          headers.forEach(h => {
+            this.storeOriginalText(h);
+            h.textContent = '';
+            h.style.visibility = 'visible';
+          });
+
+          // Type each header with stagger
+          const promises = headers.map((header, index) => {
+            return new Promise(resolve => {
+              setTimeout(async () => {
+                await this.typeIn(header);
+                resolve();
+              }, index * this.config.headerStagger);
+            });
+          });
+
+          await Promise.all(promises);
+        },
+
+        async backspaceAllHeaders(container) {
+          const headers = this.getHeaders(container);
+          if (headers.length === 0) return;
+
+          // Backspace all headers with stagger (reverse order)
+          const reversedHeaders = [...headers].reverse();
+          const promises = reversedHeaders.map((header, index) => {
+            return new Promise(resolve => {
+              setTimeout(async () => {
+                await this.backspace(header);
+                resolve();
+              }, index * this.config.headerStagger);
+            });
+          });
+
+          await Promise.all(promises);
+        },
+
+        async fadeInBodies(container) {
+          const bodies = this.getBodies(container);
+          if (bodies.length === 0) return;
+
+          bodies.forEach(body => {
+            body.style.opacity = '0';
+            body.offsetHeight; // Force reflow
+          });
+
+          // Fade all bodies in together
+          bodies.forEach(body => {
+            body.style.opacity = '1';
+          });
+
+          await this.delay(this.config.bodyFadeDuration);
+        },
+
+        async fadeOutBodies(container) {
+          const bodies = this.getBodies(container);
+          if (bodies.length === 0) return;
+
+          bodies.forEach(body => {
+            body.style.opacity = '0';
+          });
+
+          await this.delay(this.config.bodyFadeDuration);
+        },
+
+        // Check if should skip animation (same page reload)
+        shouldSkipAnimation(url) {
+          const normalizedUrl = url.replace(/\/$/, '') || '/';
+          if (this.lastAnimatedUrl === normalizedUrl) {
+            return true;
+          }
+          this.lastAnimatedUrl = normalizedUrl;
+          return false;
+        }
+      };
+
+      // Define typewriter transition
+      up.transition('typewriter', (oldElement, newElement, options) => {
+        const targetUrl = window.location.pathname;
+        // console.log('[typewriter] Transition started', { targetUrl, oldElement, newElement });
+
+        // === IMMEDIATELY hide new element (synchronous, before any async) ===
         newElement.style.opacity = '0';
 
-        await up.animate(oldElement, 'fade-out', {
-          duration: options.duration,
-          easing: options.easing
-        });
+        // Prepare new element: store header texts and clear them, hide bodies
+        const newHeaders = TypewriterEngine.getHeaders(newElement);
+        const newBodies = TypewriterEngine.getBodies(newElement);
+        // console.log('[typewriter] Found headers:', newHeaders.length, 'bodies:', newBodies.length);
 
-        await up.animate(newElement, 'fade-in', {
-          duration: options.duration,
-          easing: options.easing
+        newHeaders.forEach(h => {
+          TypewriterEngine.storeOriginalText(h);
+          h.textContent = '';
+        });
+        newBodies.forEach(b => b.style.opacity = '0');
+
+        // Check if same page - skip animation
+        if (TypewriterEngine.shouldSkipAnimation(targetUrl)) {
+          // console.log('[typewriter] Same page, skipping animation');
+          oldElement.style.opacity = '0';
+          newElement.style.opacity = '1';
+          // Restore headers for same-page
+          newHeaders.forEach(h => {
+            const text = TypewriterEngine.originalTexts.get(h);
+            if (text) h.textContent = text;
+          });
+          newBodies.forEach(b => b.style.opacity = '1');
+          return Promise.resolve();
+        }
+
+        // Return a promise that handles the full transition sequence
+        return new Promise(async (resolve) => {
+          // console.log('[typewriter] Starting EXIT phase');
+          // === EXIT PHASE (on old element) ===
+          await Promise.all([
+            TypewriterEngine.fadeOutBodies(oldElement),
+            TypewriterEngine.backspaceAllHeaders(oldElement)
+          ]);
+          // console.log('[typewriter] EXIT phase complete');
+
+          // Hide old, show new container (headers empty, bodies hidden)
+          oldElement.style.opacity = '0';
+          newElement.style.opacity = '1';
+          // console.log('[typewriter] Swapped visibility, starting ENTRY phase');
+
+          // === ENTRY PHASE (on new element) ===
+          await TypewriterEngine.typeAllHeaders(newElement);
+          // console.log('[typewriter] Headers typed');
+          await TypewriterEngine.fadeInBodies(newElement);
+          // console.log('[typewriter] Bodies faded in, transition complete');
+
+          resolve();
         });
       });
 
-      // Configure sequential fade transition (old fades out, THEN new fades in)
-      up.fragment.config.navigateOptions.transition = 'fade-sequential';
-      up.fragment.config.navigateOptions.duration = 300; // 300ms per phase (600ms total)
+      // Keep fade-sequential as fallback
+      up.transition('fade-sequential', async (oldElement, newElement, options) => {
+        newElement.style.opacity = '0';
+        await up.animate(oldElement, 'fade-out', { duration: options.duration, easing: options.easing });
+        await up.animate(newElement, 'fade-in', { duration: options.duration, easing: options.easing });
+      });
+
+      // Use typewriter transition by default (fallback to fade for reduced motion)
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        up.fragment.config.navigateOptions.transition = 'fade-sequential';
+      } else {
+        up.fragment.config.navigateOptions.transition = 'typewriter';
+      }
+      up.fragment.config.navigateOptions.duration = 300;
       up.fragment.config.navigateOptions.easing = 'ease-in-out';
+
+      // Initial page load animation (non-Unpoly)
+      document.addEventListener('DOMContentLoaded', async () => {
+        const content = document.getElementById('content');
+        if (!content) return;
+
+        // Track initial URL
+        TypewriterEngine.lastAnimatedUrl = window.location.pathname.replace(/\/$/, '') || '/';
+
+        // Check if this is a fresh page load (not Unpoly navigation)
+        if (!window.isUnpolyNavigation && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          const bodies = TypewriterEngine.getBodies(content);
+          bodies.forEach(body => body.style.opacity = '0');
+
+          await TypewriterEngine.typeAllHeaders(content);
+          await TypewriterEngine.fadeInBodies(content);
+        }
+      });
+
+      // Track Unpoly navigation state
+      document.addEventListener('up:link:follow', () => { window.isUnpolyNavigation = true; });
+      document.addEventListener('up:fragment:inserted', () => { window.isUnpolyNavigation = false; });
     </script>
 
     <link rel="stylesheet" href={%static './dist/styles.css'%}/>
@@ -66,13 +292,26 @@
                     <a href="/videos/" class="menu-button m-2 p-2 rounded-xl" up-follow>Videos</a>
                     <a href="/stream/" class="menu-button m-2 p-2 rounded-xl" up-follow>Stream</a>
                 </div>
-                {% comment %} Logo - Absolutely Centered {% endcomment %}
-                <div style="position: absolute; left: 50%; transform: translateX(-50%);">
+                {% comment %} Logo + Mini Terminal - Absolutely Centered {% endcomment %}
+                <div class="flex items-center gap-4" style="position: absolute; left: 50%; transform: translateX(-50%);">
                     <img src={%static './images/alt-cd-apple-touch-icon.png' %} class="w-20 h-20 animate-spin-slow">
+                    {% comment %} Mini Terminal - Hidden on mobile {% endcomment %}
+                    <div id="mini-terminal" class="hidden md:flex items-center gap-2 px-3 py-2" style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.5); border-radius: 0.5rem; min-width: 220px;">
+                        <span class="font-mono text-sm" style="color: oklch(88.716% 0.09711 208.766);">%</span>
+                        <input type="text" id="terminal-input"
+                               class="font-mono text-sm bg-transparent border-none outline-none w-full"
+                               style="color: white;"
+                               spellcheck="false"
+                               autocomplete="off">
+                    </div>
                 </div>
-                {% comment %} Login - Right Side {% endcomment %}
+                {% comment %} Login/Dashboard - Right Side {% endcomment %}
                 <div class="flex justify-end">
+                    {% if user.is_authenticated %}
+                    <a href="/dashboard/" class="menu-button m-2 p-2 rounded-xl" style="color: oklch(74.443% 0.17237 51.252);" up-follow>DASHBOARD</a>
+                    {% else %}
                     <a href="/login/" class="menu-button m-2 p-2 rounded-xl" up-follow>Login</a>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -85,5 +324,386 @@
             {%endblock%}
         </div>
     </div>
+
+    {% comment %} Mini Terminal Navigation Script {% endcomment %}
+    <script>
+    (function() {
+        // Check if user is authenticated (passed from Django)
+        const isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
+
+        // Command to URL mapping
+        const commands = {
+            'whoami': '/',
+            '--music': '/music/',
+            '--videos': '/videos/',
+            '--stream': '/stream/',
+            '--login': '/login/',
+            '--dashboard': '/dashboard/'  // Only works if authenticated
+        };
+
+        // URL to command mapping (reverse lookup)
+        const urlToCommand = {
+            '/': 'whoami',
+            '/music/': '--music',
+            '/videos/': '--videos',
+            '/stream/': '--stream',
+            '/login/': '--login',
+            '/dashboard/': '--dashboard'
+        };
+
+        // Update terminal display based on current URL
+        function updateTerminalDisplay() {
+            const input = document.getElementById('terminal-input');
+            if (!input) return;
+
+            const currentPath = window.location.pathname;
+            const currentCommand = urlToCommand[currentPath] || 'whoami';
+            input.value = currentCommand;
+
+            // Start white, fade to gray
+            input.style.color = 'white';
+            input.style.transition = 'color 2s ease-out';
+            setTimeout(() => {
+                input.style.color = '#6b7280'; // gray-500
+            }, 100);
+        }
+
+        function initTerminal() {
+            const input = document.getElementById('terminal-input');
+            if (!input) return;
+
+            // Prevent adding duplicate event listeners
+            if (input.dataset.terminalInitialized) return;
+            input.dataset.terminalInitialized = 'true';
+
+            // Set initial display
+            updateTerminalDisplay();
+
+            // Track if user has started typing
+            let userTyping = false;
+
+            // Handle keydown events
+            input.addEventListener('keydown', function(e) {
+                // Backspace or Delete clears the input
+                if ((e.key === 'Backspace' || e.key === 'Delete') && !userTyping) {
+                    e.preventDefault();
+                    input.value = '';
+                    input.style.color = 'white';
+                    input.style.transition = 'none';
+                    userTyping = true;
+                }
+
+                // Enter to navigate
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    const cmd = input.value.toLowerCase().trim();
+                    const url = commands[cmd];
+
+                    // Check if dashboard command and user not authenticated
+                    if (cmd === 'thecafedisco --dashboard' && !isAuthenticated) {
+                        // Flash red - not authorized
+                        input.style.color = '#ef4444';
+                        setTimeout(() => {
+                            input.style.color = 'white';
+                        }, 300);
+                        return;
+                    }
+
+                    if (url) {
+                        // Prevent double navigation - check if already navigating
+                        if (window.typewriterNavigating) {
+                            return;
+                        }
+                        window.typewriterNavigating = true;
+
+                        // Valid command - navigate with Unpoly
+                        up.navigate({
+                            url: url,
+                            target: '#content',
+                            transition: 'typewriter'
+                        }).then(() => {
+                            window.typewriterNavigating = false;
+                        }).catch(() => {
+                            window.typewriterNavigating = false;
+                        });
+                    } else {
+                        // Invalid command - flash red
+                        input.style.color = '#ef4444';
+                        setTimeout(() => {
+                            input.style.color = 'white';
+                        }, 300);
+                    }
+                }
+            });
+
+            // When user starts typing, ensure white text
+            input.addEventListener('input', function() {
+                userTyping = true;
+                input.style.color = 'white';
+                input.style.transition = 'none';
+            });
+
+            // On focus, clear input and prepare for typing
+            input.addEventListener('focus', function() {
+                input.value = '';
+                input.style.color = 'white';
+                input.style.transition = 'none';
+                userTyping = true;
+            });
+        }
+
+        // Initialize on DOM ready
+        document.addEventListener('DOMContentLoaded', initTerminal);
+
+        // Update terminal display after Unpoly navigation
+        document.addEventListener('up:fragment:inserted', function(event) {
+            // Small delay to ensure DOM is updated
+            setTimeout(updateTerminalDisplay, 50);
+        });
+    })();
+    </script>
+
+    <!-- Floating Mini Player (appears when navigating away from playing media) -->
+    <div id="mini-player" up-keep style="display: none; position: fixed; top: 120px; right: 20px; z-index: 200; width: 280px; background-color: #0d0d0d; border: 2px solid oklch(88.716% 0.09711 208.766); border-radius: 0.75rem; padding: 0.75rem; cursor: move; user-select: none;">
+        <!-- Header with drag handle and close -->
+        <div class="flex items-center justify-between mb-2" id="mini-player-header">
+            <span class="font-mono text-xs" style="color: oklch(88.716% 0.09711 208.766);">Now Playing</span>
+            <button onclick="closeMiniPlayer()" class="cursor-pointer" style="background: none; border: none; padding: 2px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#666">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Track/Video Info -->
+        <div class="flex items-center gap-3 mb-3">
+            <div id="mini-player-cover" class="flex-shrink-0" style="width: 48px; height: 48px; background-color: #1a1a1a; border-radius: 0.375rem; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                <span class="font-mono text-xl" style="color: oklch(88.716% 0.09711 208.766 / 0.5);">~</span>
+            </div>
+            <div class="min-w-0 flex-1">
+                <p id="mini-player-title" class="font-mono text-sm text-white truncate">No media</p>
+                <p id="mini-player-type" class="font-mono text-xs" style="color: oklch(88.716% 0.09711 208.766);">thecafedisco</p>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="flex items-center gap-2 mb-2">
+            <span id="mini-player-time" class="font-mono text-xs text-gray-400" style="min-width: 35px;">0:00</span>
+            <div class="flex-1 relative cursor-pointer" style="height: 4px; background-color: #1a1a1a; border-radius: 2px;" onclick="seekMiniPlayer(event)">
+                <div id="mini-player-progress" style="width: 0%; height: 100%; background-color: oklch(88.716% 0.09711 208.766); border-radius: 2px;"></div>
+            </div>
+            <span id="mini-player-duration" class="font-mono text-xs text-gray-400" style="min-width: 35px;">0:00</span>
+        </div>
+
+        <!-- Controls -->
+        <div class="flex items-center justify-center gap-3">
+            <button onclick="miniPlayerSeek(-10)" class="cursor-pointer" style="background: none; border: none; padding: 4px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="oklch(88.716% 0.09711 208.766)">
+                    <path d="M12.5 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9h-2c0 3.86-3.14 7-7 7s-7-3.14-7-7 3.14-7 7-7v4l5-5-5-5v4zm-1.5 8v3h2v-3h2l-2.5-2.5L10 11h1z"/>
+                </svg>
+            </button>
+            <button id="mini-player-play-btn" onclick="toggleMiniPlayer()" class="cursor-pointer"
+                    style="width: 36px; height: 36px; background-color: oklch(88.716% 0.09711 208.766); border: none; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <svg id="mini-play-icon" width="14" height="14" viewBox="0 0 24 24" fill="#000">
+                    <path d="M8 5v14l11-7z"/>
+                </svg>
+                <svg id="mini-pause-icon" width="14" height="14" viewBox="0 0 24 24" fill="#000" style="display: none;">
+                    <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                </svg>
+            </button>
+            <button onclick="miniPlayerSeek(10)" class="cursor-pointer" style="background: none; border: none; padding: 4px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="oklch(88.716% 0.09711 208.766)">
+                    <path d="M11.5 3c4.97 0 9 4.03 9 9s-4.03 9-9 9-9-4.03-9-9h2c0 3.86 3.14 7 7 7s7-3.14 7-7-3.14-7-7-7v4L6.5 4l5-5v4zm1.5 8v3h-2v-3H9l2.5-2.5L14 11h-1z"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Hidden Audio Element -->
+        <audio id="mini-player-audio"></audio>
+    </div>
+
+    <!-- Mini Player Script -->
+    <script>
+    (function() {
+        const miniPlayer = document.getElementById('mini-player');
+        const audio = document.getElementById('mini-player-audio');
+        const playIcon = document.getElementById('mini-play-icon');
+        const pauseIcon = document.getElementById('mini-pause-icon');
+        const progress = document.getElementById('mini-player-progress');
+        const timeEl = document.getElementById('mini-player-time');
+        const durationEl = document.getElementById('mini-player-duration');
+        const titleEl = document.getElementById('mini-player-title');
+        const coverEl = document.getElementById('mini-player-cover');
+        const typeEl = document.getElementById('mini-player-type');
+
+        // Current corner position
+        let currentCorner = 'top-right';
+
+        // Dragging state
+        let isDragging = false;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+
+        // Track currently playing media on page
+        let activePageMedia = null;
+        let activeMediaInfo = null;
+
+        // Format time
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return '0:00';
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return m + ':' + (s < 10 ? '0' : '') + s;
+        }
+
+        // Update progress
+        audio.addEventListener('timeupdate', function() {
+            if (audio.duration) {
+                progress.style.width = (audio.currentTime / audio.duration * 100) + '%';
+                timeEl.textContent = formatTime(audio.currentTime);
+            }
+        });
+
+        audio.addEventListener('loadedmetadata', function() {
+            durationEl.textContent = formatTime(audio.duration);
+        });
+
+        audio.addEventListener('play', function() {
+            playIcon.style.display = 'none';
+            pauseIcon.style.display = 'block';
+        });
+
+        audio.addEventListener('pause', function() {
+            playIcon.style.display = 'block';
+            pauseIcon.style.display = 'none';
+        });
+
+        audio.addEventListener('ended', function() {
+            playIcon.style.display = 'block';
+            pauseIcon.style.display = 'none';
+        });
+
+        // Dragging functionality
+        const header = document.getElementById('mini-player-header');
+        header.addEventListener('mousedown', function(e) {
+            if (e.target.tagName === 'BUTTON' || e.target.tagName === 'SVG' || e.target.tagName === 'path') return;
+            isDragging = true;
+            const rect = miniPlayer.getBoundingClientRect();
+            dragOffsetX = e.clientX - rect.left;
+            dragOffsetY = e.clientY - rect.top;
+            miniPlayer.style.transition = 'none';
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (!isDragging) return;
+            const x = e.clientX - dragOffsetX;
+            const y = e.clientY - dragOffsetY;
+            miniPlayer.style.left = x + 'px';
+            miniPlayer.style.top = y + 'px';
+            miniPlayer.style.right = 'auto';
+            miniPlayer.style.bottom = 'auto';
+        });
+
+        document.addEventListener('mouseup', function() {
+            if (!isDragging) return;
+            isDragging = false;
+            // Snap to nearest corner
+            const rect = miniPlayer.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const midX = window.innerWidth / 2;
+            const midY = window.innerHeight / 2;
+
+            miniPlayer.style.transition = 'all 0.3s ease-out';
+
+            if (centerX < midX && centerY < midY) {
+                // Top-left
+                miniPlayer.style.top = '120px';
+                miniPlayer.style.left = '20px';
+                miniPlayer.style.right = 'auto';
+                miniPlayer.style.bottom = 'auto';
+            } else if (centerX >= midX && centerY < midY) {
+                // Top-right
+                miniPlayer.style.top = '120px';
+                miniPlayer.style.right = '20px';
+                miniPlayer.style.left = 'auto';
+                miniPlayer.style.bottom = 'auto';
+            } else if (centerX < midX && centerY >= midY) {
+                // Bottom-left
+                miniPlayer.style.bottom = '20px';
+                miniPlayer.style.left = '20px';
+                miniPlayer.style.top = 'auto';
+                miniPlayer.style.right = 'auto';
+            } else {
+                // Bottom-right
+                miniPlayer.style.bottom = '20px';
+                miniPlayer.style.right = '20px';
+                miniPlayer.style.top = 'auto';
+                miniPlayer.style.left = 'auto';
+            }
+        });
+
+        // Global functions
+        window.toggleMiniPlayer = function() {
+            if (audio.paused) {
+                audio.play();
+            } else {
+                audio.pause();
+            }
+        };
+
+        window.seekMiniPlayer = function(e) {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const pct = (e.clientX - rect.left) / rect.width;
+            audio.currentTime = pct * audio.duration;
+        };
+
+        window.miniPlayerSeek = function(seconds) {
+            audio.currentTime = Math.max(0, Math.min(audio.duration, audio.currentTime + seconds));
+        };
+
+        window.closeMiniPlayer = function() {
+            audio.pause();
+            audio.src = '';
+            miniPlayer.style.display = 'none';
+            activeMediaInfo = null;
+        };
+
+        // Register media from page (called by music/video pages)
+        window.registerPageMedia = function(mediaEl, title, coverUrl, type) {
+            activePageMedia = mediaEl;
+            activeMediaInfo = { title, coverUrl, type, src: mediaEl.currentSrc || mediaEl.src };
+        };
+
+        window.unregisterPageMedia = function() {
+            activePageMedia = null;
+        };
+
+        // Listen for Unpoly navigation - transfer playback to mini player
+        document.addEventListener('up:link:follow', function(event) {
+            if (activePageMedia && !activePageMedia.paused && activeMediaInfo) {
+                // Media is playing, transfer to mini player
+                const currentTime = activePageMedia.currentTime;
+                activePageMedia.pause();
+
+                audio.src = activeMediaInfo.src;
+                titleEl.textContent = activeMediaInfo.title;
+                typeEl.textContent = activeMediaInfo.type === 'video' ? 'Video' : 'thecafedisco';
+
+                if (activeMediaInfo.coverUrl) {
+                    coverEl.innerHTML = '<img src="' + activeMediaInfo.coverUrl + '" style="width: 100%; height: 100%; object-fit: cover; border-radius: 0.375rem;">';
+                } else {
+                    coverEl.innerHTML = '<span class="font-mono text-xl" style="color: oklch(88.716% 0.09711 208.766 / 0.5);">~</span>';
+                }
+
+                audio.currentTime = currentTime;
+                miniPlayer.style.display = 'block';
+                audio.play();
+            }
+        });
+    })();
+    </script>
 </body>
 </html>

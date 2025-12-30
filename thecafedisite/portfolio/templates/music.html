@@ -9,12 +9,13 @@
         <!-- Page Header -->
         <div class="mb-8 pb-4" style="border-bottom: 1px solid oklch(88.716% 0.09711 208.766 / 0.3);">
             <div class="flex items-center gap-2 mb-2">
-                <span style="color: oklch(88.716% 0.09711 208.766);">$</span>
-                <span class="font-mono text-white text-2xl">thecafedisco --music</span>
+                <span style="color: oklch(88.716% 0.09711 208.766);">%</span>
+                <span class="typewriter-header font-mono text-white text-2xl">thecafedisco --music</span>
             </div>
-            <p class="font-mono text-sm text-gray-400">{{ tracks|length }} track{% if tracks|length != 1 %}s{% endif %} available</p>
+            <p class="typewriter-header font-mono text-sm text-gray-400">{{ tracks|length }} track{% if tracks|length != 1 %}s{% endif %} available</p>
         </div>
 
+        <div class="typewriter-body">
         <!-- Tracks List -->
         {% if tracks %}
         <div class="space-y-6">
@@ -55,7 +56,7 @@
                         <div class="mt-4">
                             <audio id="audio-{{ track.pk }}" controls preload="metadata" class="w-full"
                                    style="height: 40px;"
-                                   onplay="trackPlay({{ track.pk }})">
+                                   onplay="trackPlay({{ track.pk }}); registerPageMedia(this, '{{ track.title|escapejs }}', {% if track.cover_art %}'{{ track.cover_art.url }}'{% else %}null{% endif %}, 'audio');">
                                 <source src="{{ track.audio_file.url }}" type="audio/mpeg">
                                 Your browser does not support the audio element.
                             </audio>
@@ -67,6 +68,58 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Comments Section -->
+                <div class="mt-5 pt-5" style="border-top: 1px solid oklch(88.716% 0.09711 208.766 / 0.2);">
+                    <!-- Approved Comments -->
+                    {% if track.approved_comments %}
+                    <div class="mb-4">
+                        <h4 class="font-mono text-sm text-gray-400 mb-3">Comments ({{ track.approved_comments|length }})</h4>
+                        <div class="space-y-3">
+                            {% for comment in track.approved_comments %}
+                            <div class="p-3" style="background-color: #0d0d0d; border-radius: 0.5rem;">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="font-mono text-sm text-white">{{ comment.username }}</span>
+                                    <span class="font-mono text-xs text-gray-500">{{ comment.created_at|timesince }} ago</span>
+                                </div>
+                                <p class="font-mono text-sm text-gray-300" style="white-space: pre-wrap;">{{ comment.comment_text }}</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Comment Form -->
+                    <div class="comment-form-container" id="comment-form-track-{{ track.pk }}">
+                        <h4 class="font-mono text-sm text-gray-400 mb-3">Leave a comment</h4>
+                        <form class="comment-form" data-url="{% url 'portfolio:submit_track_comment' track.pk %}">
+                            {% csrf_token %}
+                            <!-- Honeypot field (hidden) -->
+                            <input type="text" name="website" style="display: none;" tabindex="-1" autocomplete="off">
+                            <div class="mb-3">
+                                <input type="text" name="username" placeholder="Your name" required maxlength="50"
+                                       class="w-full p-2 font-mono text-sm"
+                                       style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.375rem; color: white; outline: none;"
+                                       onfocus="this.style.borderColor='oklch(88.716% 0.09711 208.766)'"
+                                       onblur="this.style.borderColor='oklch(88.716% 0.09711 208.766 / 0.3)'">
+                            </div>
+                            <div class="mb-3">
+                                <textarea name="comment_text" placeholder="Your comment..." required maxlength="1000" rows="3"
+                                          class="w-full p-2 font-mono text-sm resize-none"
+                                          style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.375rem; color: white; outline: none;"
+                                          onfocus="this.style.borderColor='oklch(88.716% 0.09711 208.766)'"
+                                          onblur="this.style.borderColor='oklch(88.716% 0.09711 208.766 / 0.3)'"></textarea>
+                            </div>
+                            <button type="submit" class="px-4 py-2 font-mono text-sm cursor-pointer"
+                                    style="background-color: oklch(88.716% 0.09711 208.766); color: #000; border: none; border-radius: 0.375rem; transition: opacity 0.2s;"
+                                    onmouseover="this.style.opacity='0.8'"
+                                    onmouseout="this.style.opacity='1'">
+                                Submit Comment
+                            </button>
+                            <span class="comment-status font-mono text-sm ml-3" style="display: none;"></span>
+                        </form>
+                    </div>
+                </div>
             </div>
             {% endfor %}
         </div>
@@ -76,6 +129,7 @@
             <p class="font-mono text-sm text-gray-500 mt-2">Check back soon for new music.</p>
         </div>
         {% endif %}
+        </div>
     </div>
 </div>
 
@@ -122,5 +176,53 @@
         }
         return cookieValue;
     }
+
+    // Comment form handling
+    document.querySelectorAll('.comment-form').forEach(form => {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const url = this.dataset.url;
+            const formData = new FormData(this);
+            const statusEl = this.querySelector('.comment-status');
+            const submitBtn = this.querySelector('button[type="submit"]');
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    statusEl.style.display = 'inline';
+                    statusEl.style.color = 'oklch(88.716% 0.09711 208.766)';
+                    statusEl.textContent = 'Comment submitted for review!';
+                    this.reset();
+                } else {
+                    statusEl.style.display = 'inline';
+                    statusEl.style.color = '#ef4444';
+                    statusEl.textContent = data.message || 'Error submitting comment.';
+                }
+            } catch (err) {
+                statusEl.style.display = 'inline';
+                statusEl.style.color = '#ef4444';
+                statusEl.textContent = 'Network error. Please try again.';
+            }
+
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit Comment';
+
+            setTimeout(() => {
+                statusEl.style.display = 'none';
+            }, 5000);
+        });
+    });
 </script>
 {% endblock content %}

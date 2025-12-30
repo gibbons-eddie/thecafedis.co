@@ -175,3 +175,50 @@ class Video(models.Model):
     def increment_view_count(self):
         self.view_count += 1
         self.save(update_fields=['view_count'])
+
+
+# ============ COMMENTS ============
+
+class Comment(models.Model):
+    """User comments on music tracks or videos"""
+    # Can be associated with either a track or video (one must be set)
+    track = models.ForeignKey(
+        MusicTrack,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='comments'
+    )
+    video = models.ForeignKey(
+        Video,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='comments'
+    )
+
+    # Comment content
+    username = models.CharField(max_length=50, help_text="Display name")
+    comment_text = models.TextField(max_length=1000)
+
+    # Moderation
+    is_approved = models.BooleanField(default=False)
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        target = self.track.title if self.track else self.video.title if self.video else "Unknown"
+        return f"{self.username} on {target}"
+
+    @property
+    def content_type(self):
+        """Returns 'track' or 'video' based on which FK is set"""
+        if self.track:
+            return 'track'
+        elif self.video:
+            return 'video'
+        return None

@@ -8,16 +8,16 @@
     <div style="width: 100%; max-width: 1000px;">
 
         <!-- Hero Section -->
-        <div class="flex flex-col md:flex-row gap-8 mb-12 pb-8" style="border-bottom: 1px solid oklch(88.716% 0.09711 208.766 / 0.3);">
+        <div class="flex flex-col md:flex-row gap-8 mb-16 pb-8" style="border-bottom: 1px solid oklch(88.716% 0.09711 208.766 / 0.3);">
             <!-- Profile Image -->
             <div class="flex-shrink-0 flex justify-center md:justify-start">
                 {% if profile_images %}
-                <div id="profile-container" class="relative">
+                <div id="profile-container" class="relative rounded-xl" style="width: 200px; height: 200px; border: 2px solid oklch(88.716% 0.09711 208.766); overflow: hidden;">
                     {% for img in profile_images %}
                     <img src="{{ img.image.url }}"
                          alt="{{ img.alt_text|default:'Profile photo' }}"
-                         class="profile-image rounded-xl {% if not forloop.first %}hidden{% endif %}"
-                         style="width: 200px; height: 200px; object-fit: cover; border: 2px solid oklch(88.716% 0.09711 208.766);">
+                         class="profile-image absolute top-0 left-0"
+                         style="width: 100%; height: 100%; object-fit: cover; opacity: {% if forloop.first %}1{% else %}0{% endif %};">
                     {% endfor %}
                 </div>
                 {% else %}
@@ -30,32 +30,57 @@
 
             <!-- Bio -->
             <div class="flex-1">
-                <div class="flex items-center gap-2 mb-3">
-                    <span style="color: oklch(88.716% 0.09711 208.766);">$</span>
-                    <span class="font-mono text-white text-3xl">whoami</span>
+                <div class="flex items-center gap-2 mb-4">
+                    <span style="color: oklch(88.716% 0.09711 208.766);">%</span>
+                    <span class="typewriter-header font-mono text-white text-3xl">whoami</span>
                 </div>
-                <h1 class="font-mono text-2xl mb-2" style="color: oklch(88.716% 0.09711 208.766);">Eddie Gibbons</h1>
-                <p class="font-mono text-gray-400 mb-4">Software Engineer / Music Producer / Creative</p>
-                <p class="font-mono text-sm text-gray-500 leading-relaxed">
-                    Building things that matter. Writing code by day, making beats by night.
-                    Welcome to my corner of the internet.
-                </p>
+                <h1 class="typewriter-header text-6xl md:text-7xl mb-6 uppercase" style="color: oklch(74.443% 0.17237 51.252); font-family: 'nb_architektbold', sans-serif;">Eddie Gibbons</h1>
+                <!-- Social Media Icons -->
+                <div class="typewriter-body">
+                <div class="flex items-center gap-4">
+                    <a href="https://www.linkedin.com/in/eddie-gibbons-703759172/" target="_blank" rel="noopener noreferrer"
+                       class="social-icon" title="LinkedIn">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" style="color: oklch(88.716% 0.09711 208.766); image-rendering: pixelated;">
+                            <path d="M4 4H8V8H4V4ZM4 10H8V20H4V10ZM10 10H14V12C14.5 11 16 10 18 10C20 10 20 12 20 14V20H16V15C16 13 15 13 14 13C13 13 13 14 13 15V20H10V10Z"/>
+                        </svg>
+                    </a>
+                    <a href="https://youtube.com/@thecafedisco" target="_blank" rel="noopener noreferrer"
+                       class="social-icon" title="YouTube">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" style="color: oklch(88.716% 0.09711 208.766); image-rendering: pixelated;">
+                            <path d="M2 6H22V18H2V6ZM10 9V15L15 12L10 9Z"/>
+                        </svg>
+                    </a>
+                    <a href="https://soundcloud.com/thecafedisco" target="_blank" rel="noopener noreferrer"
+                       class="social-icon" title="SoundCloud">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" style="color: oklch(88.716% 0.09711 208.766); image-rendering: pixelated;">
+                            <path d="M2 14V16H4V14H2ZM5 12V16H7V12H5ZM8 10V16H10V10H8ZM11 8V16H13V8H11ZM14 10V16H22V14C22 12 20 10 18 10H14Z"/>
+                        </svg>
+                    </a>
+                    <a href="https://twitch.tv/thecafedisco" target="_blank" rel="noopener noreferrer"
+                       class="social-icon" title="Twitch">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" style="color: oklch(88.716% 0.09711 208.766); image-rendering: pixelated;">
+                            <path d="M4 2L2 6V20H6V22H10L12 20H16L22 14V2H4ZM20 13L17 16H13L10 19V16H6V4H20V13ZM17 7V12H15V7H17ZM12 7V12H10V7H12Z"/>
+                        </svg>
+                    </a>
+                </div>
+                </div>
             </div>
         </div>
 
         <!-- Skills Section -->
         {% if skills %}
-        <div class="mb-12">
+        <div class="mb-16">
             <div class="flex items-center gap-2 mb-6">
-                <span style="color: oklch(88.716% 0.09711 208.766);">$</span>
-                <span class="font-mono text-white text-xl">cat skills.txt</span>
+                <span style="color: oklch(88.716% 0.09711 208.766);">%</span>
+                <span class="typewriter-header font-mono text-white text-xl">cat skills.txt</span>
             </div>
 
+            <div class="typewriter-body">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {% regroup skills by get_category_display as skill_groups %}
                 {% for group in skill_groups %}
                 <div class="p-4" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
-                    <h3 class="font-mono text-sm mb-3" style="color: oklch(88.716% 0.09711 208.766);">
+                    <h3 class="font-mono text-sm mb-4" style="color: oklch(88.716% 0.09711 208.766);">
                         > {{ group.grouper }}
                     </h3>
                     <div class="flex flex-wrap gap-2">
@@ -69,26 +94,28 @@
                 </div>
                 {% endfor %}
             </div>
+            </div>
         </div>
         {% endif %}
 
         <!-- Career Section -->
         {% if career_entries %}
-        <div class="mb-12">
+        <div class="mb-16">
             <div class="flex items-center gap-2 mb-6">
-                <span style="color: oklch(88.716% 0.09711 208.766);">$</span>
-                <span class="font-mono text-white text-xl">history --career</span>
+                <span style="color: oklch(88.716% 0.09711 208.766);">%</span>
+                <span class="typewriter-header font-mono text-white text-xl">history --career</span>
             </div>
 
-            <div class="space-y-4">
+            <div class="typewriter-body">
+            <div class="space-y-6">
                 {% for entry in career_entries %}
                 <div class="p-5" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
-                    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-2 mb-3">
+                    <div class="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-2 mb-4">
                         <div>
-                            <h3 class="font-mono text-lg text-white">{{ entry.title }}</h3>
+                            <h3 class="font-mono text-lg text-white mb-1">{{ entry.title }}</h3>
                             <p class="font-mono text-sm" style="color: oklch(88.716% 0.09711 208.766);">{{ entry.company }}</p>
                         </div>
-                        <div class="font-mono text-sm text-gray-400">
+                        <div class="font-mono text-sm text-gray-400 md:text-right md:whitespace-nowrap">
                             {{ entry.start_date|date:"M Y" }} -
                             {% if entry.is_current %}
                             <span style="color: oklch(88.716% 0.09711 208.766);">Present</span>
@@ -99,10 +126,10 @@
                     </div>
 
                     {% if entry.location %}
-                    <p class="font-mono text-xs text-gray-500 mb-3">{{ entry.location }}</p>
+                    <p class="font-mono text-xs text-gray-500 mb-4">{{ entry.location }}</p>
                     {% endif %}
 
-                    <ul class="space-y-1 font-mono text-sm text-gray-400">
+                    <ul class="space-y-2 font-mono text-sm text-gray-400">
                         <li class="flex gap-2">
                             <span style="color: oklch(88.716% 0.09711 208.766);">-</span>
                             <span>{{ entry.bullet_1 }}</span>
@@ -119,39 +146,83 @@
                 </div>
                 {% endfor %}
             </div>
+            </div>
         </div>
         {% endif %}
 
-        <!-- Footer Links -->
-        <div class="text-center py-8" style="border-top: 1px solid oklch(88.716% 0.09711 208.766 / 0.3);">
-            <div class="flex justify-center gap-6 font-mono text-sm">
-                <a href="/music/" class="text-gray-400 hover:text-white transition-colors" up-follow>
-                    <span style="color: oklch(88.716% 0.09711 208.766);">></span> music
-                </a>
-                <a href="/videos/" class="text-gray-400 hover:text-white transition-colors" up-follow>
-                    <span style="color: oklch(88.716% 0.09711 208.766);">></span> videos
-                </a>
-                <a href="/stream/" class="text-gray-400 hover:text-white transition-colors" up-follow>
-                    <span style="color: oklch(88.716% 0.09711 208.766);">></span> stream
-                </a>
-            </div>
-        </div>
     </div>
 </div>
 
 {% if profile_images|length > 1 %}
-<!-- Profile Image Rotation -->
+<!-- SVG Pixelation Filters -->
+<svg width="0" height="0" style="position: absolute;">
+    <defs>
+        <filter id="pixelate-1"><feFlood x="2" y="2" width="1" height="1"/><feComposite width="4" height="4"/><feTile result="a"/><feComposite in="SourceGraphic" in2="a" operator="in"/><feMorphology operator="dilate" radius="2"/></filter>
+        <filter id="pixelate-2"><feFlood x="3" y="3" width="1" height="1"/><feComposite width="6" height="6"/><feTile result="a"/><feComposite in="SourceGraphic" in2="a" operator="in"/><feMorphology operator="dilate" radius="3"/></filter>
+        <filter id="pixelate-3"><feFlood x="4" y="4" width="1" height="1"/><feComposite width="8" height="8"/><feTile result="a"/><feComposite in="SourceGraphic" in2="a" operator="in"/><feMorphology operator="dilate" radius="4"/></filter>
+        <filter id="pixelate-4"><feFlood x="6" y="6" width="1" height="1"/><feComposite width="12" height="12"/><feTile result="a"/><feComposite in="SourceGraphic" in2="a" operator="in"/><feMorphology operator="dilate" radius="6"/></filter>
+        <filter id="pixelate-5"><feFlood x="8" y="8" width="1" height="1"/><feComposite width="16" height="16"/><feTile result="a"/><feComposite in="SourceGraphic" in2="a" operator="in"/><feMorphology operator="dilate" radius="8"/></filter>
+        <filter id="pixelate-6"><feFlood x="12" y="12" width="1" height="1"/><feComposite width="24" height="24"/><feTile result="a"/><feComposite in="SourceGraphic" in2="a" operator="in"/><feMorphology operator="dilate" radius="12"/></filter>
+    </defs>
+</svg>
+
+<!-- Profile Image Rotation with Pixelation Transition -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const images = document.querySelectorAll('.profile-image');
         if (images.length <= 1) return;
 
+        const pixelLevels = [null, 'url(#pixelate-1)', 'url(#pixelate-2)', 'url(#pixelate-3)', 'url(#pixelate-4)', 'url(#pixelate-5)', 'url(#pixelate-6)'];
+        const stepDuration = 80; // ms per pixelation step
         let currentIndex = 0;
-        setInterval(() => {
-            images[currentIndex].classList.add('hidden');
-            currentIndex = (currentIndex + 1) % images.length;
-            images[currentIndex].classList.remove('hidden');
-        }, 5000); // Rotate every 5 seconds
+
+        function applyPixelation(img, level) {
+            img.style.filter = level || 'none';
+        }
+
+        async function pixelateOut(img) {
+            // Progressive pixelation (de-resolution)
+            for (let i = 1; i < pixelLevels.length; i++) {
+                applyPixelation(img, pixelLevels[i]);
+                await new Promise(r => setTimeout(r, stepDuration));
+            }
+        }
+
+        async function pixelateIn(img) {
+            // Progressive de-pixelation (re-resolution)
+            for (let i = pixelLevels.length - 1; i >= 0; i--) {
+                applyPixelation(img, pixelLevels[i]);
+                await new Promise(r => setTimeout(r, stepDuration));
+            }
+        }
+
+        async function transitionImages() {
+            const currentImg = images[currentIndex];
+            const nextIndex = (currentIndex + 1) % images.length;
+            const nextImg = images[nextIndex];
+
+            // Phase 1: Pixelate out current image
+            await pixelateOut(currentImg);
+
+            // Swap visibility at max pixelation
+            currentImg.style.opacity = '0';
+            applyPixelation(currentImg, null);
+
+            // Prepare next image at max pixelation
+            applyPixelation(nextImg, pixelLevels[pixelLevels.length - 1]);
+            nextImg.style.opacity = '1';
+
+            // Small pause at peak pixelation
+            await new Promise(r => setTimeout(r, 100));
+
+            // Phase 2: De-pixelate next image
+            await pixelateIn(nextImg);
+
+            currentIndex = nextIndex;
+        }
+
+        // Rotate every 30 seconds
+        setInterval(transitionImages, 30000);
     });
 </script>
 {% endif %}
