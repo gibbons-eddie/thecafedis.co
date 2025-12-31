@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# thecafedisco development server stop script
-# Stops Django dev server and Tailwind watch
-
 # Kill Django dev server (port 8000)
 lsof -ti:8000 | xargs kill -9 2>/dev/null
 

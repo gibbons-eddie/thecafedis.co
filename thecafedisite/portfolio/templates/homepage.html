@@ -23,7 +23,7 @@
                 {% else %}
                 <div class="flex items-center justify-center rounded-xl"
                      style="width: 200px; height: 200px; background-color: #1a1a1a; border: 2px solid oklch(88.716% 0.09711 208.766);">
-                    <span class="font-mono text-6xl" style="color: oklch(88.716% 0.09711 208.766);">~</span>
+                    <span class="font-monocraft text-6xl" style="color: oklch(88.716% 0.09711 208.766);">~</span>
                 </div>
                 {% endif %}
             </div>
@@ -31,10 +31,10 @@
             <!-- Bio -->
             <div class="flex-1">
                 <div class="flex items-center gap-2 mb-4">
-                    <span style="color: oklch(88.716% 0.09711 208.766);">%</span>
-                    <span class="typewriter-header font-mono text-white text-3xl">whoami</span>
+                    <span style="color: oklch(88.716% 0.09711 208.766); font-family: 'Monocraft-SemiBold', monospace;">%</span>
+                    <span class="typewriter-header text-white text-3xl">whoami</span>
                 </div>
-                <h1 class="typewriter-header text-6xl md:text-7xl mb-6 uppercase" style="color: oklch(74.443% 0.17237 51.252); font-family: 'nb_architektbold', sans-serif;">Eddie Gibbons</h1>
+                <h1 class="typewriter-header text-6xl md:text-7xl mb-6 uppercase" style="color: var(--color-gold-clu); font-family: 'nb_architektbold', sans-serif;">Eddie Gibbons</h1>
                 <!-- Social Media Icons -->
                 <div class="typewriter-body">
                 <div class="flex items-center gap-4">
@@ -71,8 +71,8 @@
         {% if skills %}
         <div class="mb-16">
             <div class="flex items-center gap-2 mb-6">
-                <span style="color: oklch(88.716% 0.09711 208.766);">%</span>
-                <span class="typewriter-header font-mono text-white text-xl">cat skills.txt</span>
+                <span style="color: oklch(88.716% 0.09711 208.766); font-family: 'Monocraft-SemiBold', monospace;">%</span>
+                <span class="typewriter-header text-white text-xl">cat skills.txt</span>
             </div>
 
             <div class="typewriter-body">
@@ -80,12 +80,12 @@
                 {% regroup skills by get_category_display as skill_groups %}
                 {% for group in skill_groups %}
                 <div class="p-4" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
-                    <h3 class="font-mono text-sm mb-4" style="color: oklch(88.716% 0.09711 208.766);">
+                    <h3 class="font-monocraft text-sm mb-4" style="color: oklch(88.716% 0.09711 208.766);">
                         > {{ group.grouper }}
                     </h3>
                     <div class="flex flex-wrap gap-2">
                         {% for skill in group.list %}
-                        <span class="px-2 py-1 font-mono text-xs"
+                        <span class="px-2 py-1 font-monocraft text-xs"
                               style="background-color: #0d0d0d; color: #fff; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.375rem;">
                             {{ skill.name }}
                         </span>
@@ -102,8 +102,8 @@
         {% if career_entries %}
         <div class="mb-16">
             <div class="flex items-center gap-2 mb-6">
-                <span style="color: oklch(88.716% 0.09711 208.766);">%</span>
-                <span class="typewriter-header font-mono text-white text-xl">history --career</span>
+                <span style="color: oklch(88.716% 0.09711 208.766); font-family: 'Monocraft-SemiBold', monospace;">%</span>
+                <span class="typewriter-header text-white text-xl">history --career</span>
             </div>
 
             <div class="typewriter-body">
@@ -112,10 +112,10 @@
                 <div class="p-5" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
                     <div class="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-2 mb-4">
                         <div>
-                            <h3 class="font-mono text-lg text-white mb-1">{{ entry.title }}</h3>
-                            <p class="font-mono text-sm" style="color: oklch(88.716% 0.09711 208.766);">{{ entry.company }}</p>
+                            <h3 class="font-monocraft text-lg text-white mb-1">{{ entry.title }}</h3>
+                            <p class="font-monocraft text-sm" style="color: oklch(88.716% 0.09711 208.766);">{{ entry.company }}</p>
                         </div>
-                        <div class="font-mono text-sm text-gray-400 md:text-right md:whitespace-nowrap">
+                        <div class="font-monocraft text-sm text-gray-400 md:text-right md:whitespace-nowrap">
                             {{ entry.start_date|date:"M Y" }} -
                             {% if entry.is_current %}
                             <span style="color: oklch(88.716% 0.09711 208.766);">Present</span>
@@ -126,10 +126,10 @@
                     </div>
 
                     {% if entry.location %}
-                    <p class="font-mono text-xs text-gray-500 mb-4">{{ entry.location }}</p>
+                    <p class="font-monocraft text-xs text-gray-500 mb-4">{{ entry.location }}</p>
                     {% endif %}
 
-                    <ul class="space-y-2 font-mono text-sm text-gray-400">
+                    <ul class="space-y-2 font-monocraft-light text-sm text-gray-400">
                         <li class="flex gap-2">
                             <span style="color: oklch(88.716% 0.09711 208.766);">-</span>
                             <span>{{ entry.bullet_1 }}</span>

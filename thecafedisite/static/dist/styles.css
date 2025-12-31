@@ -4,9 +4,9 @@
 @layer theme {
   :root, :host {
     --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
-      "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
-      "Courier New", monospace;
+    "Courier New", monospace;
     --color-gray-300: oklch(87.2% 0.01 258.338);
     --color-gray-400: oklch(70.7% 0.022 261.325);
     --color-gray-500: oklch(55.1% 0.027 264.364);
@@ -43,6 +43,13 @@
     --default-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     --default-font-family: var(--font-sans);
     --default-mono-font-family: var(--font-mono);
+    --color-blue-tron: oklch(88.716% 0.09711 208.766);
+    --color-gold-clu: oklch(0.9308 0.1389 101.54);
+    --color-blue-deep-tron: oklch(19.533% 0.03365 208.734);
+    --animate-spin-slow: spin 60s linear infinite;
+    --animate-infinite-scroll: infinite-scroll 35s linear infinite;
+    --animate-scroll-left: scroll-left 35s linear infinite;
+    --animate-scroll-right: scroll-right 35s linear infinite;
   }
 }
 @layer base {
@@ -359,8 +366,14 @@
   .flex-shrink-0 {
     flex-shrink: 0;
   }
+  .shrink {
+    flex-shrink: 1;
+  }
   .transform {
     transform: var(--tw-rotate-x,) var(--tw-rotate-y,) var(--tw-rotate-z,) var(--tw-skew-x,) var(--tw-skew-y,);
+  }
+  .animate-spin-slow {
+    animation: var(--animate-spin-slow);
   }
   .cursor-pointer {
     cursor: pointer;
@@ -550,9 +563,6 @@
   .text-center {
     text-align: center;
   }
-  .font-mono {
-    font-family: var(--font-mono);
-  }
   .text-2xl {
     font-size: var(--text-2xl);
     line-height: var(--tw-leading, var(--text-2xl--line-height));
@@ -714,31 +724,40 @@
     }
   }
 }
-@layer properties;
-@layer theme, base, components, utilities;
-@layer theme {
-  :root, :host {
-    --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
-      "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
-      "Courier New", monospace;
-    --color-blue-500: oklch(62.3% 0.214 259.815);
-    --color-blue-600: oklch(54.6% 0.245 262.881);
-    --color-blue-800: oklch(42.4% 0.199 265.638);
-    --color-blue-900: oklch(37.9% 0.146 265.522);
-    --color-blue-950: oklch(28.2% 0.091 267.935);
-    --color-blue-tron: oklch(88.716% 0.09711 208.766);
-    --color-orange-clu: oklch(74.443% 0.17237 51.252);
-    --color-blue-deep-tron: oklch(19.533% 0.03365 208.734);
-    --spacing: 0.25rem;
-    --radius-xl: 0.75rem;
-    --default-font-family: var(--font-sans);
-    --default-mono-font-family: var(--font-mono);
-    --animate-spin-slow: spin 60s linear infinite;
-    --animate-infinite-scroll: infinite-scroll 35s linear infinite;
-    --animate-scroll-left: scroll-left 35s linear infinite;
-    --animate-scroll-right: scroll-right 35s linear infinite;
-  }
+@font-face {
+  font-family: 'nb_architektbold';
+  src: url('/static/fonts/nb_architekt_bold-webfont.woff2') format('woff2'), url('/static/fonts/nb_architekt_bold-webfont.woff') format('woff'), url('/static/fonts/nb_architekt_bold-webfont.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'nb_architektlight';
+  src: url('/static/fonts/nb_architekt_light-webfont.woff2') format('woff2'), url('/static/fonts/nb_architekt_light-webfont.woff') format('woff'), url('/static/fonts/nb_architekt_light-webfont.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'nb_architektregular';
+  src: url('/static/fonts/nb_architekt_regular-webfont.woff2') format('woff2'), url('/static/fonts/nb_architekt_regular-webfont.woff') format('woff'), url('/static/fonts/nb_architekt_regular-webfont.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Monocraft-SemiBold';
+  src: url('/static/fonts/Monocraft-SemiBold.woff2') format('woff2'), url('/static/fonts/Monocraft-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Monocraft-Light';
+  src: url('/static/fonts/Monocraft-Light.woff2') format('woff2'), url('/static/fonts/Monocraft-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
 }
 @keyframes spin {
   0% {
@@ -790,45 +809,16 @@
 .typewriter-header, .typewriter-section {
   display: inline-block;
   position: relative;
+  font-family: 'Monocraft-SemiBold', monospace;
 }
 .typewriter-body {
   transition: opacity 300ms ease-in-out;
 }
-@font-face {
-  font-family: 'nb_architektbold';
-  src: url('../../fonts/nb_architekt_bold-webfont.eot');
-  src: url('../../fonts/nb_architekt_bold-webfont.eot?#iefix') format('embedded-opentype'), url('../../fonts/nb_architekt_bold-webfont.woff2') format('woff2'), url('../../fonts/nb_architekt_bold-webfont.woff') format('woff'), url('../../fonts/nb_architekt_bold-webfont.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
+.font-monocraft {
+  font-family: 'Monocraft-SemiBold', monospace;
 }
-@font-face {
-  font-family: 'nb_architektlight';
-  src: url('../../fonts/nb_architekt_light-webfont.eot');
-  src: url('../../fonts/nb_architekt_light-webfont.eot?#iefix') format('embedded-opentype'), url('../../fonts/nb_architekt_light-webfont.woff2') format('woff2'), url('../../fonts/nb_architekt_light-webfont.woff') format('woff'), url('../../fonts/nb_architekt_light-webfont.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-}
-@font-face {
-  font-family: 'nb_architektregular';
-  src: url('../../fonts/nb_architekt_regular-webfont.eot');
-  src: url('../../fonts/nb_architekt_regular-webfont.eot?#iefix') format('embedded-opentype'), url('../../fonts/nb_architekt_regular-webfont.woff2') format('woff2'), url('../../fonts/nb_architekt_regular-webfont.woff') format('woff'), url('../../fonts/nb_architekt_regular-webfont.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-}
-@layer theme {
-  :root, :host {
-    --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
-        "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
-        "Courier New", monospace;
-    --color-gray-600: oklch(44.6% 0.03 256.802);
-    --color-gray-950: oklch(13% 0.028 261.692);
-    --spacing: 0.25rem;
-    --font-weight-normal: 400;
-    --radius-md: 0.375rem;
-    --default-font-family: "nb_architektregular";
-    --default-mono-font-family: var(--font-mono);
-  }
+.font-monocraft-light {
+  font-family: 'Monocraft-Light', monospace;
 }
 h1 {
   color: var(--color-blue-tron);
@@ -905,6 +895,7 @@ h1 {
   font-size: 2rem;
   opacity: 0.3;
   user-select: none;
+  font-family: 'nb_architektbold', sans-serif;
 }
 .focus\:text-tron {
   &:focus {
@@ -916,6 +907,7 @@ h1 {
   color: var(--color-blue-tron);
   transition: color 0.3s ease-in-out;
   cursor: pointer;
+  font-family: 'nb_architektbold', sans-serif;
 }
 .menu-button::before {
   content: '';
@@ -1039,6 +1031,12 @@ input[type="file"]::-webkit-file-upload-button {
 input[type="file"]::-webkit-file-upload-button:hover {
   background-color: var(--color-blue-tron);
   color: #000;
+}
+.menu-bar-inner {
+  overflow: hidden;
+}
+#menu-bar .logo-container img {
+  cursor: pointer;
 }
 .social-icon {
   display: inline-flex;
@@ -1211,6 +1209,11 @@ input[type="file"]::-webkit-file-upload-button:hover {
 @property --tw-ease {
   syntax: "*";
   inherits: false;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 @layer properties {
   @supports ((-webkit-hyphens: none) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color:rgb(from red r g b)))) {

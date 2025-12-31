@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# thecafedisco development server startup script
-# Activates venv, starts Django dev server and Tailwind watch
-
 cd "$(dirname "$0")"
 
 # Activate virtual environment
