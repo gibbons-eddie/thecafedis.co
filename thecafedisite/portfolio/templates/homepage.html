@@ -7,10 +7,8 @@
 <div class="flex justify-center px-4 py-8">
     <div style="width: 100%; max-width: 1000px;">
 
-        <!-- Hero Section -->
-        <div class="flex flex-col md:flex-row gap-8 mb-16 pb-8" style="border-bottom: 1px solid oklch(88.716% 0.09711 208.766 / 0.3);">
-            <!-- Profile Image -->
-            <div class="flex-shrink-0 flex justify-center md:justify-start">
+<div class="flex flex-col md:flex-row gap-8 mb-16 pb-8" style="border-bottom: 1px solid oklch(88.716% 0.09711 208.766 / 0.3);">
+<div class="flex-shrink-0 flex justify-center md:justify-start">
                 {% if profile_images %}
                 <div id="profile-container" class="relative rounded-xl" style="width: 200px; height: 200px; border: 2px solid oklch(88.716% 0.09711 208.766); overflow: hidden;">
                     {% for img in profile_images %}
@@ -23,52 +21,57 @@
                 {% else %}
                 <div class="flex items-center justify-center rounded-xl"
                      style="width: 200px; height: 200px; background-color: #1a1a1a; border: 2px solid oklch(88.716% 0.09711 208.766);">
-                    <span class="font-monocraft text-6xl" style="color: oklch(88.716% 0.09711 208.766);">~</span>
+                    <span class="font-monocraft-semibold text-6xl" style="color: oklch(88.716% 0.09711 208.766);">~</span>
                 </div>
                 {% endif %}
             </div>
 
-            <!-- Bio -->
-            <div class="flex-1">
+<div class="flex-1">
                 <div class="flex items-center gap-2 mb-4">
                     <span style="color: oklch(88.716% 0.09711 208.766); font-family: 'Monocraft-SemiBold', monospace;">%</span>
                     <span class="typewriter-header text-white text-3xl">whoami</span>
                 </div>
                 <h1 class="typewriter-header text-6xl md:text-7xl mb-6 uppercase" style="color: var(--color-gold-clu); font-family: 'nb_architektbold', sans-serif;">Eddie Gibbons</h1>
-                <!-- Social Media Icons -->
-                <div class="typewriter-body">
+<div class="typewriter-body">
                 <div class="flex items-center gap-4">
                     <a href="https://www.linkedin.com/in/eddie-gibbons-703759172/" target="_blank" rel="noopener noreferrer"
                        class="social-icon" title="LinkedIn">
                         <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" style="color: oklch(88.716% 0.09711 208.766); image-rendering: pixelated;">
-                            <path d="M4 4H8V8H4V4ZM4 10H8V20H4V10ZM10 10H14V12C14.5 11 16 10 18 10C20 10 20 12 20 14V20H16V15C16 13 15 13 14 13C13 13 13 14 13 15V20H10V10Z"/>
+                            <path d="M 4 4 H 8 V 8 H 4 V 4 Z M 4 10 H 8 V 20 H 4 V 10 Z M 10 10 H 12 V 11 H 14 V 10 H 14 H 14 V 20 V 20 H 10 L 10 10 V 10 Z M 14 10 H 18 V 12 H 14 M 18 10 H 22 V 20 H 18 V 10"/>
                         </svg>
                     </a>
                     <a href="https://youtube.com/@thecafedisco" target="_blank" rel="noopener noreferrer"
                        class="social-icon" title="YouTube">
                         <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" style="color: oklch(88.716% 0.09711 208.766); image-rendering: pixelated;">
-                            <path d="M2 6H22V18H2V6ZM10 9V15L15 12L10 9Z"/>
+                            <path d="M 2 6 H 22 V 18 H 2 V 6 Z M 10 8 V 16 L 11 16 V 8 Z M 11 9 V 15 H 12 V 9 M 12 10 V 14 H 13 V 10 M 13 11 V 13 H 14 V 11"/>
                         </svg>
                     </a>
                     <a href="https://soundcloud.com/thecafedisco" target="_blank" rel="noopener noreferrer"
                        class="social-icon" title="SoundCloud">
                         <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" style="color: oklch(88.716% 0.09711 208.766); image-rendering: pixelated;">
-                            <path d="M2 14V16H4V14H2ZM5 12V16H7V12H5ZM8 10V16H10V10H8ZM11 8V16H13V8H11ZM14 10V16H22V14C22 12 20 10 18 10H14Z"/>
+                            <path d="M 2 14 V 16 H 4 V 14 H 2 Z M 5 12 V 16 H 7 V 12 H 5 Z M 8 10 V 16 H 10 V 10 H 8 Z M 11 8 V 16 H 13 V 8 H 11 Z M 14 10 V 16 H 18 V 8 H 14 Z M 18 11 V 16 H 22 V 11"/>
                         </svg>
                     </a>
                     <a href="https://twitch.tv/thecafedisco" target="_blank" rel="noopener noreferrer"
                        class="social-icon" title="Twitch">
                         <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" style="color: oklch(88.716% 0.09711 208.766); image-rendering: pixelated;">
-                            <path d="M4 2L2 6V20H6V22H10L12 20H16L22 14V2H4ZM20 13L17 16H13L10 19V16H6V4H20V13ZM17 7V12H15V7H17ZM12 7V12H10V7H12Z"/>
+                            <path d="M 4 2 L 4 3 H 4 V 20 H 6 V 22 H 9 V 21 H 11 V 20 L 13 20 H 16 H 17 V 19 H 18 V 18 H 19 V 17 H 20 V 16 H 21 V 15 H 22 L 22 14 V 2 H 4 Z M 20 13 L 20 14 H 19 V 15 H 18 V 16 H 17 V 17 H 13 V 18 H 11 V 19 L 9 19 V 17 H 6 V 4 H 20 V 13 Z M 17 7 V 12 H 15 V 7 H 17 Z M 12 7 V 12 H 10 V 7 H 12 Z M 3 4 V 20 H 4 V 4 M 2 6 V 20 H 3 V 6"/>
                         </svg>
                     </a>
+                    <button type="button" class="social-icon" title="Apple Music"
+                            @click="$dispatch('open-apple-music-modal')">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" style="color: oklch(88.716% 0.09711 208.766); image-rendering: pixelated;">
+                            <!-- Beamed eighth notes (Apple Music style) -->
+                            {% comment %} <path d="M12 4H18V6H12V4ZM6 6H18V8H6V6ZM6 8H8V16H6V8ZM16 6H18V14H16V6ZM4 16H8V18H4V16ZM4 18H10V20H4V18ZM6 20H8V22H6V20ZM12 12H16V14H12V12ZM12 14H18V16H12V14ZM14 16H16V18H14V16Z"/> {% endcomment %}
+                            <path d="M 12 4 H 18 V 6 H 12 V 4 Z M 6 6 H 18 V 8 H 6 V 6 Z M 6 8 H 8 V 16 H 6 V 8 Z M 16 6 H 18 V 19 H 16 H 14 V 15 H 16 V 8 H 16 V 15 V 6 Z M 4 16 H 8 V 20 H 4 V 16 Z M 4 18 H 8 H 4 V 18 Z M 6 20 H 8 H 6 V 20 Z Z Z V 20 Z"/>
+                        </svg>
+                    </button>
                 </div>
                 </div>
             </div>
         </div>
 
-        <!-- Skills Section -->
-        {% if skills %}
+{% if skills %}
         <div class="mb-16">
             <div class="flex items-center gap-2 mb-6">
                 <span style="color: oklch(88.716% 0.09711 208.766); font-family: 'Monocraft-SemiBold', monospace;">%</span>
@@ -80,12 +83,12 @@
                 {% regroup skills by get_category_display as skill_groups %}
                 {% for group in skill_groups %}
                 <div class="p-4" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
-                    <h3 class="font-monocraft text-sm mb-4" style="color: oklch(88.716% 0.09711 208.766);">
+                    <h3 class="font-monocraft-semibold text-sm mb-4" style="color: oklch(88.716% 0.09711 208.766);">
                         > {{ group.grouper }}
                     </h3>
                     <div class="flex flex-wrap gap-2">
                         {% for skill in group.list %}
-                        <span class="px-2 py-1 font-monocraft text-xs"
+                        <span class="px-2 py-1 font-monocraft-semibold text-xs"
                               style="background-color: #0d0d0d; color: #fff; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.375rem;">
                             {{ skill.name }}
                         </span>
@@ -98,8 +101,7 @@
         </div>
         {% endif %}
 
-        <!-- Career Section -->
-        {% if career_entries %}
+{% if career_entries %}
         <div class="mb-16">
             <div class="flex items-center gap-2 mb-6">
                 <span style="color: oklch(88.716% 0.09711 208.766); font-family: 'Monocraft-SemiBold', monospace;">%</span>
@@ -112,10 +114,10 @@
                 <div class="p-5" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
                     <div class="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-2 mb-4">
                         <div>
-                            <h3 class="font-monocraft text-lg text-white mb-1">{{ entry.title }}</h3>
-                            <p class="font-monocraft text-sm" style="color: oklch(88.716% 0.09711 208.766);">{{ entry.company }}</p>
+                            <h3 class="font-monocraft-semibold text-lg text-white mb-1">{{ entry.title }}</h3>
+                            <p class="font-monocraft-semibold text-sm" style="color: oklch(88.716% 0.09711 208.766);">{{ entry.company }}</p>
                         </div>
-                        <div class="font-monocraft text-sm text-gray-400 md:text-right md:whitespace-nowrap">
+                        <div class="font-monocraft-semibold text-sm text-gray-400 md:text-right md:whitespace-nowrap">
                             {{ entry.start_date|date:"M Y" }} -
                             {% if entry.is_current %}
                             <span style="color: oklch(88.716% 0.09711 208.766);">Present</span>
@@ -126,10 +128,10 @@
                     </div>
 
                     {% if entry.location %}
-                    <p class="font-monocraft text-xs text-gray-500 mb-4">{{ entry.location }}</p>
+                    <p class="font-monocraft-semibold text-xs text-gray-500 mb-4">{{ entry.location }}</p>
                     {% endif %}
 
-                    <ul class="space-y-2 font-monocraft-light text-sm text-gray-400">
+                    <ul class="space-y-2 font-miracode text-sm text-gray-400">
                         <li class="flex gap-2">
                             <span style="color: oklch(88.716% 0.09711 208.766);">-</span>
                             <span>{{ entry.bullet_1 }}</span>
@@ -166,7 +168,6 @@
     </defs>
 </svg>
 
-<!-- Profile Image Rotation with Pixelation Transition -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const images = document.querySelectorAll('.profile-image');
@@ -181,7 +182,6 @@
         }
 
         async function pixelateOut(img) {
-            // Progressive pixelation (de-resolution)
             for (let i = 1; i < pixelLevels.length; i++) {
                 applyPixelation(img, pixelLevels[i]);
                 await new Promise(r => setTimeout(r, stepDuration));
@@ -189,7 +189,6 @@
         }
 
         async function pixelateIn(img) {
-            // Progressive de-pixelation (re-resolution)
             for (let i = pixelLevels.length - 1; i >= 0; i--) {
                 applyPixelation(img, pixelLevels[i]);
                 await new Promise(r => setTimeout(r, stepDuration));
@@ -201,27 +200,21 @@
             const nextIndex = (currentIndex + 1) % images.length;
             const nextImg = images[nextIndex];
 
-            // Phase 1: Pixelate out current image
             await pixelateOut(currentImg);
 
-            // Swap visibility at max pixelation
             currentImg.style.opacity = '0';
             applyPixelation(currentImg, null);
 
-            // Prepare next image at max pixelation
             applyPixelation(nextImg, pixelLevels[pixelLevels.length - 1]);
             nextImg.style.opacity = '1';
 
-            // Small pause at peak pixelation
             await new Promise(r => setTimeout(r, 100));
 
-            // Phase 2: De-pixelate next image
             await pixelateIn(nextImg);
 
             currentIndex = nextIndex;
         }
 
-        // Rotate every 30 seconds
         setInterval(transitionImages, 30000);
     });
 </script>

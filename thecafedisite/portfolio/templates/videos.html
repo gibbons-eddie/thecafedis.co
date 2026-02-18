@@ -6,7 +6,6 @@
 {% block content %}
 <div class="flex justify-center px-4 py-8">
     <div style="width: 100%; max-width: 1100px;">
-        <!-- Page Header -->
         <div class="mb-8 pb-4" style="border-bottom: 1px solid oklch(88.716% 0.09711 208.766 / 0.3);">
             <div class="flex items-center gap-2 mb-2">
                 <span style="color: oklch(88.716% 0.09711 208.766); font-family: 'Monocraft-SemiBold', monospace;">%</span>
@@ -16,100 +15,177 @@
         </div>
 
         <div class="typewriter-body">
-        <!-- Videos Grid -->
         {% if videos %}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="space-y-8">
             {% for video in videos %}
             <div class="group" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem; overflow: hidden;">
-                <!-- Video Player -->
-                <div class="relative" style="aspect-ratio: 16/9;">
-                    <video id="video-{{ video.pk }}"
-                           class="w-full h-full object-cover"
-                           controls
+                <div class="tcd-video-player tcd-video-aspect"
+                     x-data="videoPlayer({{ video.pk }}, '{{ video.title|escapejs }}', {% if video.thumbnail %}'{{ video.thumbnail.url }}'{% else %}null{% endif %})"
+                     @mousemove="onMouseMove()"
+                     @mouseleave="onMouseLeave()"
+                     tabindex="0">
+
+                    <video x-ref="video"
+                           class="tcd-video-element"
                            preload="metadata"
                            {% if video.thumbnail %}poster="{{ video.thumbnail.url }}"{% endif %}
-                           onplay="videoPlay({{ video.pk }}); registerPageMedia(this, '{{ video.title|escapejs }}', {% if video.thumbnail %}'{{ video.thumbnail.url }}'{% else %}null{% endif %}, 'video');">
+                           @click="togglePlay()">
                         <source src="{{ video.video_file.url }}" type="video/mp4">
-                        Your browser does not support the video element.
                     </video>
+
+                    <div class="tcd-big-play"
+                         x-show="!isPlaying"
+                         @click="togglePlay()">
+                        <span class="tcd-corner-bl"></span>
+                        <span class="tcd-corner-br"></span>
+                        <svg viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                    </div>
+
+                    <div class="tcd-video-overlay"
+                         :class="{ 'tcd-visible': controlsVisible || !isPlaying }">
+                        <div class="tcd-progress-bar mb-3"
+                             x-ref="progressBar"
+                             @mousedown="startScrub($event)"
+                             @touchstart.prevent="startScrub($event.touches[0])">
+                            <div class="tcd-progress-fill" :style="'width: ' + displayPercent + '%'"></div>
+                        </div>
+
+                        <div class="tcd-video-controls">
+                            <button class="tcd-btn tcd-btn-sm" @click.stop="togglePlay()">
+                                <svg x-show="!isPlaying" viewBox="0 0 24 24">
+                                    <path d="M8 5v14l11-7z"/>
+                                </svg>
+                                <svg x-show="isPlaying" viewBox="0 0 24 24">
+                                    <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                                </svg>
+                            </button>
+
+                            <div class="tcd-time-display">
+                                <span x-text="currentTimeDisplay"></span>
+                                <span class="mx-1">/</span>
+                                <span x-text="durationDisplay"></span>
+                            </div>
+
+                            <div class="flex-1"></div>
+
+                            <div class="tcd-volume-wrapper" :class="{ 'muted': isMuted }">
+                                <div class="tcd-volume-top">
+                                    <div class="tcd-volume-bars">
+                                        <div class="tcd-volume-bar" :class="{ 'active': volume >= 0.01 }" @click.stop="setVolume(0.14)"></div>
+                                        <div class="tcd-volume-bar" :class="{ 'active': volume >= 0.15 }" @click.stop="setVolume(0.28)"></div>
+                                        <div class="tcd-volume-bar" :class="{ 'active': volume >= 0.29 }" @click.stop="setVolume(0.42)"></div>
+                                        <div class="tcd-volume-bar" :class="{ 'active': volume >= 0.43 }" @click.stop="setVolume(0.57)"></div>
+                                        <div class="tcd-volume-bar" :class="{ 'active': volume >= 0.58 }" @click.stop="setVolume(0.71)"></div>
+                                        <div class="tcd-volume-bar" :class="{ 'active': volume >= 0.72 }" @click.stop="setVolume(0.85)"></div>
+                                        <div class="tcd-volume-bar" :class="{ 'active': volume >= 0.86 }" @click.stop="setVolume(1)"></div>
+                                    </div>
+                                    <span class="tcd-volume-percent" x-text="volumePercent + '%'"></span>
+                                </div>
+                                <div class="tcd-volume-slider-row">
+                                    <div class="tcd-volume-track"
+                                         @mousedown.stop="startVolumeDrag($event)"
+                                         @touchstart.stop.prevent="startVolumeDrag($event.touches[0])">
+                                        <div class="tcd-volume-fill" :style="'width: ' + volumePercent + '%'"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="tcd-quality-dropdown" @click.outside="qualityMenuOpen = false">
+                                <button class="tcd-quality-btn" @click.stop="toggleQualityMenu()">
+                                    <span x-text="currentQuality"></span>
+                                    <svg viewBox="0 0 24 24">
+                                        <path d="M7 10l5 5 5-5z"/>
+                                    </svg>
+                                </button>
+                                <div class="tcd-quality-menu" x-show="qualityMenuOpen" x-cloak>
+                                    <template x-for="q in qualities" :key="q">
+                                        <button class="tcd-quality-option"
+                                                :class="{ 'active': currentQuality === q }"
+                                                @click.stop="setQuality(q)"
+                                                x-text="q"></button>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <button class="tcd-btn-fullscreen" @click.stop="toggleFullscreen()">
+                                <svg x-show="!isFullscreen" viewBox="0 0 24 24">
+                                    <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+                                </svg>
+                                <svg x-show="isFullscreen" viewBox="0 0 24 24">
+                                    <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Video Info -->
-                <div class="p-4">
-                    <h2 class="font-monocraft text-lg text-white mb-2 truncate">{{ video.title }}</h2>
-                    <div class="flex items-center gap-3 font-monocraft text-sm text-gray-400">
-                        <span style="color: oklch(88.716% 0.09711 208.766);">thecafedisco</span>
+                <div class="p-5">
+                    <h2 class="font-monocraft-semibold text-xl text-white mb-2">{{ video.title }}</h2>
+                    <div class="flex items-center gap-3 font-monocraft-semibold text-sm text-gray-400">
+                        <span style="color: oklch(88.716% 0.09711 208.766);">{{ video.created_at|date:"m-d-Y" }}</span>
                         {% if video.category %}
-                        <span>{{ video.category }}</span>
+                        <span class="font-monocraft-semibold" style="color: white;">&#xEB49;</span>
+                        <span class="uppercase">{{ video.category }}</span>
                         {% endif %}
                         {% if video.resolution %}
                         <span class="px-2 py-0.5" style="background-color: #0d0d0d; border-radius: 0.25rem;">{{ video.resolution }}</span>
                         {% endif %}
                     </div>
 
-                    <!-- Tags -->
                     {% if video.tags %}
                     <div class="mt-3 flex flex-wrap gap-1">
                         {% for tag in video.tags.split %}
-                        <span class="px-2 py-0.5 font-monocraft text-xs" style="background-color: oklch(88.716% 0.09711 208.766 / 0.1); color: oklch(88.716% 0.09711 208.766 / 0.7); border-radius: 0.25rem;">{{ tag }}</span>
+                        <span class="px-2 py-0.5 font-monocraft-semibold text-xs" style="background-color: oklch(88.716% 0.09711 208.766 / 0.1); color: oklch(88.716% 0.09711 208.766 / 0.7); border-radius: 0.25rem;">{{ tag }}</span>
                         {% endfor %}
                     </div>
                     {% endif %}
 
-                    <!-- View Count -->
-                    <div class="mt-3 font-monocraft text-xs text-gray-500">
+                    <div class="mt-3 font-monocraft-semibold text-xs text-gray-500">
                         <span>{{ video.view_count }} view{% if video.view_count != 1 %}s{% endif %}</span>
                     </div>
 
-                    <!-- Comments Section -->
                     <div class="mt-4 pt-4" style="border-top: 1px solid oklch(88.716% 0.09711 208.766 / 0.2);">
-                        <!-- Approved Comments -->
                         {% if video.approved_comments %}
                         <div class="mb-4">
-                            <h4 class="font-monocraft text-xs text-gray-400 mb-2">Comments ({{ video.approved_comments|length }})</h4>
+                            <h4 class="font-monocraft-semibold text-xs text-gray-400 mb-2">Comments ({{ video.approved_comments|length }})</h4>
                             <div class="space-y-2 max-h-40 overflow-y-auto">
                                 {% for comment in video.approved_comments %}
                                 <div class="p-2" style="background-color: #0d0d0d; border-radius: 0.375rem;">
                                     <div class="flex items-center gap-2 mb-1">
-                                        <span class="font-monocraft text-xs text-white">{{ comment.username }}</span>
-                                        <span class="font-monocraft text-xs text-gray-500">{{ comment.created_at|timesince }} ago</span>
+                                        <span class="font-monocraft-semibold text-xs text-white">{{ comment.username }}</span>
+                                        <span class="font-monocraft-semibold text-xs text-gray-500">{{ comment.created_at|timesince }} ago</span>
                                     </div>
-                                    <p class="font-monocraft text-xs text-gray-300" style="white-space: pre-wrap;">{{ comment.comment_text|truncatewords:30 }}</p>
+                                    <p class="font-monocraft-semibold text-xs text-gray-300" style="white-space: pre-wrap;">{{ comment.comment_text|truncatewords:30 }}</p>
                                 </div>
                                 {% endfor %}
                             </div>
                         </div>
                         {% endif %}
 
-                        <!-- Comment Form -->
                         <div class="comment-form-container">
-                            <h4 class="font-monocraft text-xs text-gray-400 mb-2">Leave a comment</h4>
+                            <h4 class="font-monocraft-semibold text-xs text-gray-400 mb-2">Leave a comment</h4>
                             <form class="comment-form" data-url="{% url 'portfolio:submit_video_comment' video.pk %}">
                                 {% csrf_token %}
                                 <!-- Honeypot field (hidden) -->
                                 <input type="text" name="website" style="display: none;" tabindex="-1" autocomplete="off">
                                 <div class="mb-2">
                                     <input type="text" name="username" placeholder="Your name" required maxlength="50"
-                                           class="w-full p-2 font-monocraft text-xs"
-                                           style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.375rem; color: white; outline: none;"
-                                           onfocus="this.style.borderColor='oklch(88.716% 0.09711 208.766)'"
-                                           onblur="this.style.borderColor='oklch(88.716% 0.09711 208.766 / 0.3)'">
+                                           class="w-full p-2 font-miracode text-xs tcd-input-focus"
+                                           style="background-color: #0d0d0d; border-radius: 0.375rem; color: white; outline: none;">
                                 </div>
                                 <div class="mb-2">
                                     <textarea name="comment_text" placeholder="Your comment..." required maxlength="1000" rows="2"
-                                              class="w-full p-2 font-monocraft text-xs resize-none"
-                                              style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.375rem; color: white; outline: none;"
-                                              onfocus="this.style.borderColor='oklch(88.716% 0.09711 208.766)'"
-                                              onblur="this.style.borderColor='oklch(88.716% 0.09711 208.766 / 0.3)'"></textarea>
+                                              class="w-full p-2 font-miracode text-xs resize-none tcd-input-focus"
+                                              style="background-color: #0d0d0d; border-radius: 0.375rem; color: white; outline: none;"></textarea>
                                 </div>
                                 <div class="flex items-center gap-2">
-                                    <button type="submit" class="px-3 py-1 font-monocraft text-xs cursor-pointer"
-                                            style="background-color: oklch(88.716% 0.09711 208.766); color: #000; border: none; border-radius: 0.375rem; transition: opacity 0.2s;"
-                                            onmouseover="this.style.opacity='0.8'"
-                                            onmouseout="this.style.opacity='1'">
+                                    <button type="submit" class="px-3 py-1 font-monocraft-semibold text-xs cursor-pointer tcd-hover-opacity"
+                                            style="background-color: oklch(88.716% 0.09711 208.766); color: #000; border: none; border-radius: 0.375rem; transition: opacity 0.2s;">
                                         Submit
                                     </button>
-                                    <span class="comment-status font-monocraft text-xs" style="display: none;"></span>
+                                    <span class="comment-status font-monocraft-semibold text-xs" style="display: none;"></span>
                                 </div>
                             </form>
                         </div>
@@ -120,102 +196,68 @@
         </div>
         {% else %}
         <div class="p-8 text-center" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
-            <p class="font-monocraft text-gray-400">No videos available yet.</p>
-            <p class="font-monocraft text-sm text-gray-500 mt-2">Check back soon for new content.</p>
+            <p class="font-monocraft-semibold text-gray-400">No videos available yet.</p>
+            <p class="font-monocraft-semibold text-sm text-gray-500 mt-2">Check back soon for new content.</p>
         </div>
         {% endif %}
         </div>
     </div>
 </div>
 
-<!-- Custom Video Styling -->
-<style>
-    video {
-        background-color: #0d0d0d;
-    }
-    video::-webkit-media-controls-panel {
-        background-color: rgba(0, 0, 0, 0.7);
-    }
-</style>
-
-<!-- View Count Tracking -->
 <script>
-    const viewedVideos = new Set();
+    function initVideoCommentForms() {
+        document.querySelectorAll('.comment-form').forEach(form => {
+            if (form.dataset.initialized) return;
+            form.dataset.initialized = 'true';
 
-    function videoPlay(videoId) {
-        if (!viewedVideos.has(videoId)) {
-            viewedVideos.add(videoId);
-            fetch(`/videos/${videoId}/view/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken'),
-                    'Content-Type': 'application/json'
-                }
-            });
-        }
-    }
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const url = this.dataset.url;
+                const formData = new FormData(this);
+                const statusEl = this.querySelector('.comment-status');
+                const submitBtn = this.querySelector('button[type="submit"]');
 
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
+                submitBtn.disabled = true;
+                submitBtn.textContent = '...';
 
-    // Comment form handling
-    document.querySelectorAll('.comment-form').forEach(form => {
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const url = this.dataset.url;
-            const formData = new FormData(this);
-            const statusEl = this.querySelector('.comment-status');
-            const submitBtn = this.querySelector('button[type="submit"]');
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRFToken': MediaPlayerUtils.getCsrfToken()
+                        }
+                    });
 
-            submitBtn.disabled = true;
-            submitBtn.textContent = '...';
+                    const data = await response.json();
 
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-CSRFToken': getCookie('csrftoken')
+                    if (response.ok) {
+                        statusEl.style.display = 'inline';
+                        statusEl.style.color = 'oklch(88.716% 0.09711 208.766)';
+                        statusEl.textContent = 'Submitted!';
+                        this.reset();
+                    } else {
+                        statusEl.style.display = 'inline';
+                        statusEl.style.color = '#ef4444';
+                        statusEl.textContent = data.message || 'Error';
                     }
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    statusEl.style.display = 'inline';
-                    statusEl.style.color = 'oklch(88.716% 0.09711 208.766)';
-                    statusEl.textContent = 'Submitted!';
-                    this.reset();
-                } else {
+                } catch (err) {
                     statusEl.style.display = 'inline';
                     statusEl.style.color = '#ef4444';
-                    statusEl.textContent = data.message || 'Error';
+                    statusEl.textContent = 'Error';
                 }
-            } catch (err) {
-                statusEl.style.display = 'inline';
-                statusEl.style.color = '#ef4444';
-                statusEl.textContent = 'Error';
-            }
 
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Submit';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit';
 
-            setTimeout(() => {
-                statusEl.style.display = 'none';
-            }, 5000);
+                setTimeout(() => {
+                    statusEl.style.display = 'none';
+                }, 5000);
+            });
         });
-    });
+    }
+
+    document.addEventListener('DOMContentLoaded', initVideoCommentForms);
+    document.addEventListener('up:fragment:inserted', initVideoCommentForms);
 </script>
 {% endblock content %}

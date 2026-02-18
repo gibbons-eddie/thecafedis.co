@@ -5,22 +5,20 @@
 {% block content %}
 <div class="flex justify-center px-4 py-8">
     <div style="width: 100%; max-width: 600px;">
-        <!-- Header -->
         <div class="mb-6 pb-4" style="border-bottom: 1px solid oklch(88.716% 0.09711 208.766 / 0.3);">
             <div class="flex items-center gap-2 mb-2">
                 <span style="color: oklch(88.716% 0.09711 208.766); font-family: 'Monocraft-SemiBold', monospace;">%</span>
-                <span class="font-monocraft text-white text-xl">{% if action == 'add' %}career --add{% else %}career --edit "{{ entry.title }}"{% endif %}</span>
+                <span class="font-monocraft-semibold text-white text-xl">{% if action == 'add' %}career --add{% else %}career --edit "{{ entry.title }}"{% endif %}</span>
             </div>
-            <p class="font-monocraft text-sm text-gray-400">
+            <p class="font-monocraft-semibold text-sm text-gray-400">
                 {% if action == 'add' %}Add a new career entry{% else %}Update career entry details{% endif %}
             </p>
         </div>
 
-        <!-- Messages -->
         {% if messages %}
         <div class="mb-4">
             {% for message in messages %}
-            <div class="p-3 font-monocraft text-sm mb-2"
+            <div class="p-3 font-monocraft-semibold text-sm mb-2"
                  style="background-color: #1a1a1a; border: 1px solid {% if message.tags == 'success' %}oklch(88.716% 0.09711 208.766){% else %}oklch(74.443% 0.17237 51.252){% endif %}; border-radius: 0.5rem; color: {% if message.tags == 'success' %}oklch(88.716% 0.09711 208.766){% else %}oklch(74.443% 0.17237 51.252){% endif %};">
                 > {{ message }}
             </div>
@@ -28,134 +26,125 @@
         </div>
         {% endif %}
 
-        <!-- Form -->
         <form method="POST" class="space-y-4">
             {% csrf_token %}
 
             <div class="p-6" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
-                <!-- Title -->
                 <div class="mb-4">
-                    <label class="block font-monocraft text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
+                    <label class="block font-monocraft-semibold text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
                         title <span style="color: oklch(74.443% 0.17237 51.252);">*</span>
                     </label>
                     <input type="text" name="title" required
                            value="{% if entry %}{{ entry.title }}{% endif %}"
-                           class="w-full px-3 py-2 font-monocraft text-white"
+                           class="w-full px-3 py-2 font-monocraft-semibold text-white"
                            style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.5rem; outline: none;"
                            placeholder="Job title">
                 </div>
 
-                <!-- Company -->
                 <div class="mb-4">
-                    <label class="block font-monocraft text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
+                    <label class="block font-monocraft-semibold text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
                         company <span style="color: oklch(74.443% 0.17237 51.252);">*</span>
                     </label>
                     <input type="text" name="company" required
                            value="{% if entry %}{{ entry.company }}{% endif %}"
-                           class="w-full px-3 py-2 font-monocraft text-white"
+                           class="w-full px-3 py-2 font-monocraft-semibold text-white"
                            style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.5rem; outline: none;"
                            placeholder="Company name">
                 </div>
 
-                <!-- Location -->
                 <div class="mb-4">
-                    <label class="block font-monocraft text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
+                    <label class="block font-monocraft-semibold text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
                         location
                     </label>
                     <input type="text" name="location"
                            value="{% if entry %}{{ entry.location }}{% endif %}"
-                           class="w-full px-3 py-2 font-monocraft text-white"
+                           class="w-full px-3 py-2 font-monocraft-semibold text-white"
                            style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.5rem; outline: none;"
                            placeholder="City, State">
                 </div>
 
-                <!-- Dates -->
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
-                        <label class="block font-monocraft text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
+                        <label class="block font-monocraft-semibold text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
                             start_date <span style="color: oklch(74.443% 0.17237 51.252);">*</span>
                         </label>
                         <input type="date" name="start_date" required
                                value="{% if entry.start_date %}{{ entry.start_date|date:'Y-m-d' }}{% endif %}"
-                               class="w-full px-3 py-2 font-monocraft text-white"
+                               class="w-full px-3 py-2 font-monocraft-semibold text-white"
                                style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.5rem; outline: none; color-scheme: dark;">
                     </div>
                     <div>
-                        <label class="block font-monocraft text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
+                        <label class="block font-monocraft-semibold text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
                             end_date
                         </label>
                         <input type="date" name="end_date"
                                value="{% if entry.end_date %}{{ entry.end_date|date:'Y-m-d' }}{% endif %}"
-                               class="w-full px-3 py-2 font-monocraft text-white"
+                               class="w-full px-3 py-2 font-monocraft-semibold text-white"
                                style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.5rem; outline: none; color-scheme: dark;">
-                        <p class="mt-1 font-monocraft text-xs text-gray-500">Leave blank for current position</p>
+                        <p class="mt-1 font-monocraft-semibold text-xs text-gray-500">Leave blank for current position</p>
                     </div>
                 </div>
 
-                <!-- Bullet Points -->
                 <div class="mb-4">
-                    <label class="block font-monocraft text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
+                    <label class="block font-monocraft-semibold text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
                         bullet_1 <span style="color: oklch(74.443% 0.17237 51.252);">*</span>
                     </label>
                     <textarea name="bullet_1" required rows="2"
-                              class="w-full px-3 py-2 font-monocraft text-white resize-none"
+                              class="w-full px-3 py-2 font-monocraft-semibold text-white resize-none"
                               style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.5rem; outline: none;"
                               placeholder="First responsibility or achievement">{% if entry %}{{ entry.bullet_1 }}{% endif %}</textarea>
                 </div>
 
                 <div class="mb-4">
-                    <label class="block font-monocraft text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
+                    <label class="block font-monocraft-semibold text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
                         bullet_2 <span style="color: oklch(74.443% 0.17237 51.252);">*</span>
                     </label>
                     <textarea name="bullet_2" required rows="2"
-                              class="w-full px-3 py-2 font-monocraft text-white resize-none"
+                              class="w-full px-3 py-2 font-monocraft-semibold text-white resize-none"
                               style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.5rem; outline: none;"
                               placeholder="Second responsibility or achievement">{% if entry %}{{ entry.bullet_2 }}{% endif %}</textarea>
                 </div>
 
                 <div class="mb-4">
-                    <label class="block font-monocraft text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
+                    <label class="block font-monocraft-semibold text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
                         bullet_3 <span style="color: oklch(74.443% 0.17237 51.252);">*</span>
                     </label>
                     <textarea name="bullet_3" required rows="2"
-                              class="w-full px-3 py-2 font-monocraft text-white resize-none"
+                              class="w-full px-3 py-2 font-monocraft-semibold text-white resize-none"
                               style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.5rem; outline: none;"
                               placeholder="Third responsibility or achievement">{% if entry %}{{ entry.bullet_3 }}{% endif %}</textarea>
                 </div>
 
-                <!-- Order -->
                 <div class="mb-4">
-                    <label class="block font-monocraft text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
+                    <label class="block font-monocraft-semibold text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
                         order
                     </label>
                     <input type="number" name="order"
                            value="{% if entry %}{{ entry.order }}{% else %}0{% endif %}"
-                           class="w-full px-3 py-2 font-monocraft text-white"
+                           class="w-full px-3 py-2 font-monocraft-semibold text-white"
                            style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.5rem; outline: none;">
-                    <p class="mt-1 font-monocraft text-xs text-gray-500">Lower numbers appear first</p>
+                    <p class="mt-1 font-monocraft-semibold text-xs text-gray-500">Lower numbers appear first</p>
                 </div>
 
-                <!-- Publish Toggle -->
                 <div class="flex items-center gap-3">
                     <input type="checkbox" name="is_published" id="is_published"
                            {% if action == 'add' or entry.is_published %}checked{% endif %}
                            class="w-4 h-4 cursor-pointer"
                            style="accent-color: oklch(88.716% 0.09711 208.766);">
-                    <label for="is_published" class="font-monocraft text-sm text-white cursor-pointer">
+                    <label for="is_published" class="font-monocraft-semibold text-sm text-white cursor-pointer">
                         Publish immediately
                     </label>
                 </div>
             </div>
 
-            <!-- Actions -->
             <div class="flex justify-between items-center">
                 <a href="{% url 'portfolio:career_list' %}"
-                   class="px-4 py-2 font-monocraft text-sm"
+                   class="px-4 py-2 font-monocraft-semibold text-sm"
                    style="color: oklch(88.716% 0.09711 208.766); border: 1px solid oklch(88.716% 0.09711 208.766 / 0.5); border-radius: 0.5rem;">
                     cancel
                 </a>
                 <button type="submit"
-                        class="px-6 py-2 font-monocraft text-sm cursor-pointer"
+                        class="px-6 py-2 font-monocraft-semibold text-sm cursor-pointer"
                         style="background-color: oklch(88.716% 0.09711 208.766); color: #000; border: none; border-radius: 0.5rem;">
                     {% if action == 'add' %}$ create{% else %}$ save{% endif %}
                 </button>

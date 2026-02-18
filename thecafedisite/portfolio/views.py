@@ -1,3 +1,4 @@
+from urllib.parse import urlparse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -8,7 +9,6 @@ from .models import CareerEntry, Skill, ProfileImage, MusicTrack, Video, Comment
 
 
 def homepage(request):
-    """Home page with career entries, skills, and profile images"""
     context = {
         'career_entries': CareerEntry.objects.filter(is_published=True),
         'skills': Skill.objects.filter(is_published=True),
@@ -18,9 +18,7 @@ def homepage(request):
 
 
 def music(request):
-    """Music page with all published tracks"""
     tracks = MusicTrack.objects.filter(is_published=True).prefetch_related('comments')
-    # Add approved comments to each track
     for track in tracks:
         track.approved_comments = track.comments.filter(is_approved=True)
     context = {
@@ -30,9 +28,7 @@ def music(request):
 
 
 def videos(request):
-    """Videos page with all published videos"""
     videos_list = Video.objects.filter(is_published=True).prefetch_related('comments')
-    # Add approved comments to each video
     for video in videos_list:
         video.approved_comments = video.comments.filter(is_approved=True)
     context = {
@@ -43,7 +39,6 @@ def videos(request):
 
 @require_POST
 def track_play(request, pk):
-    """Increment play count for a track"""
     track = get_object_or_404(MusicTrack, pk=pk, is_published=True)
     track.increment_play_count()
     return JsonResponse({'status': 'ok', 'play_count': track.play_count})
@@ -51,19 +46,16 @@ def track_play(request, pk):
 
 @require_POST
 def video_view(request, pk):
-    """Increment view count for a video"""
     video = get_object_or_404(Video, pk=pk, is_published=True)
     video.increment_view_count()
     return JsonResponse({'status': 'ok', 'view_count': video.view_count})
 
 
 def stream(request):
-    """Stream page"""
     return render(request, "stream.html")
 
 
 def login_view(request):
-    """Custom login view with terminal styling"""
     if request.user.is_authenticated:
         return redirect('portfolio:dashboard')
 
@@ -74,8 +66,12 @@ def login_view(request):
 
         if user is not None:
             login(request, user)
-            next_url = request.GET.get('next', 'portfolio:dashboard')
-            return redirect(next_url)
+            next_url = request.GET.get('next')
+            if next_url:
+                parsed = urlparse(next_url)
+                if not parsed.netloc and not parsed.scheme:
+                    return redirect(next_url)
+            return redirect('portfolio:dashboard')
         else:
             messages.error(request, 'Invalid username or password.')
 
@@ -84,7 +80,6 @@ def login_view(request):
 
 @login_required
 def dashboard(request):
-    """Admin dashboard for content management"""
     context = {
         'career_count': CareerEntry.objects.count(),
         'skill_count': Skill.objects.count(),
@@ -96,20 +91,15 @@ def dashboard(request):
     return render(request, "dashboard.html", context)
 
 
-# =============================================================================
-# MUSIC TRACK MANAGEMENT
-# =============================================================================
 
 @login_required
 def music_list(request):
-    """List all music tracks for management"""
     tracks = MusicTrack.objects.all().order_by('-created_at')
     return render(request, "dashboard/music_list.html", {'tracks': tracks})
 
 
 @login_required
 def music_add(request):
-    """Add a new music track"""
     if request.method == 'POST':
         title = request.POST.get('title')
         genre = request.POST.get('genre', '')
@@ -138,7 +128,6 @@ def music_add(request):
 
 @login_required
 def music_edit(request, pk):
-    """Edit an existing music track"""
     track = get_object_or_404(MusicTrack, pk=pk)
 
     if request.method == 'POST':
@@ -163,7 +152,6 @@ def music_edit(request, pk):
 @login_required
 @require_POST
 def music_delete(request, pk):
-    """Delete a music track"""
     track = get_object_or_404(MusicTrack, pk=pk)
     title = track.title
     track.delete()
@@ -174,7 +162,6 @@ def music_delete(request, pk):
 @login_required
 @require_POST
 def music_toggle(request, pk):
-    """Toggle publish status of a music track"""
     track = get_object_or_404(MusicTrack, pk=pk)
     track.is_published = not track.is_published
     track.save(update_fields=['is_published'])
@@ -183,20 +170,15 @@ def music_toggle(request, pk):
     return redirect('portfolio:music_list')
 
 
-# =============================================================================
-# VIDEO MANAGEMENT
-# =============================================================================
 
 @login_required
 def video_list(request):
-    """List all videos for management"""
     videos = Video.objects.all().order_by('-created_at')
     return render(request, "dashboard/video_list.html", {'videos': videos})
 
 
 @login_required
 def video_add(request):
-    """Add a new video"""
     if request.method == 'POST':
         title = request.POST.get('title')
         category = request.POST.get('category', '')
@@ -227,7 +209,6 @@ def video_add(request):
 
 @login_required
 def video_edit(request, pk):
-    """Edit an existing video"""
     video = get_object_or_404(Video, pk=pk)
 
     if request.method == 'POST':
@@ -252,7 +233,6 @@ def video_edit(request, pk):
 @login_required
 @require_POST
 def video_delete(request, pk):
-    """Delete a video"""
     video = get_object_or_404(Video, pk=pk)
     title = video.title
     video.delete()
@@ -263,7 +243,6 @@ def video_delete(request, pk):
 @login_required
 @require_POST
 def video_toggle(request, pk):
-    """Toggle publish status of a video"""
     video = get_object_or_404(Video, pk=pk)
     video.is_published = not video.is_published
     video.save(update_fields=['is_published'])
@@ -272,20 +251,15 @@ def video_toggle(request, pk):
     return redirect('portfolio:video_list')
 
 
-# =============================================================================
-# CAREER ENTRY MANAGEMENT
-# =============================================================================
 
 @login_required
 def career_list(request):
-    """List all career entries for management"""
     entries = CareerEntry.objects.all().order_by('-start_date')
     return render(request, "dashboard/career_list.html", {'entries': entries})
 
 
 @login_required
 def career_add(request):
-    """Add a new career entry"""
     if request.method == 'POST':
         title = request.POST.get('title')
         company = request.POST.get('company')
@@ -322,7 +296,6 @@ def career_add(request):
 
 @login_required
 def career_edit(request, pk):
-    """Edit an existing career entry"""
     entry = get_object_or_404(CareerEntry, pk=pk)
 
     if request.method == 'POST':
@@ -348,7 +321,6 @@ def career_edit(request, pk):
 @login_required
 @require_POST
 def career_delete(request, pk):
-    """Delete a career entry"""
     entry = get_object_or_404(CareerEntry, pk=pk)
     title = entry.title
     entry.delete()
@@ -359,7 +331,6 @@ def career_delete(request, pk):
 @login_required
 @require_POST
 def career_toggle(request, pk):
-    """Toggle publish status of a career entry"""
     entry = get_object_or_404(CareerEntry, pk=pk)
     entry.is_published = not entry.is_published
     entry.save(update_fields=['is_published'])
@@ -368,20 +339,15 @@ def career_toggle(request, pk):
     return redirect('portfolio:career_list')
 
 
-# =============================================================================
-# SKILL MANAGEMENT
-# =============================================================================
 
 @login_required
 def skill_list(request):
-    """List all skills for management"""
     skills = Skill.objects.all().order_by('category', 'name')
     return render(request, "dashboard/skill_list.html", {'skills': skills})
 
 
 @login_required
 def skill_add(request):
-    """Add a new skill"""
     if request.method == 'POST':
         name = request.POST.get('name')
         category = request.POST.get('category')
@@ -416,7 +382,6 @@ def skill_add(request):
 
 @login_required
 def skill_edit(request, pk):
-    """Edit an existing skill"""
     skill = get_object_or_404(Skill, pk=pk)
 
     if request.method == 'POST':
@@ -441,7 +406,6 @@ def skill_edit(request, pk):
 @login_required
 @require_POST
 def skill_delete(request, pk):
-    """Delete a skill"""
     skill = get_object_or_404(Skill, pk=pk)
     name = skill.name
     skill.delete()
@@ -452,7 +416,6 @@ def skill_delete(request, pk):
 @login_required
 @require_POST
 def skill_toggle(request, pk):
-    """Toggle publish status of a skill"""
     skill = get_object_or_404(Skill, pk=pk)
     skill.is_published = not skill.is_published
     skill.save(update_fields=['is_published'])
@@ -461,20 +424,15 @@ def skill_toggle(request, pk):
     return redirect('portfolio:skill_list')
 
 
-# =============================================================================
-# PROFILE IMAGE MANAGEMENT
-# =============================================================================
 
 @login_required
 def profile_list(request):
-    """List all profile images for management"""
     images = ProfileImage.objects.all().order_by('order')
     return render(request, "dashboard/profile_list.html", {'images': images})
 
 
 @login_required
 def profile_add(request):
-    """Add a new profile image"""
     if request.method == 'POST':
         image = request.FILES.get('image')
         alt_text = request.POST.get('alt_text', '')
@@ -499,7 +457,6 @@ def profile_add(request):
 
 @login_required
 def profile_edit(request, pk):
-    """Edit an existing profile image"""
     profile = get_object_or_404(ProfileImage, pk=pk)
 
     if request.method == 'POST':
@@ -520,7 +477,6 @@ def profile_edit(request, pk):
 @login_required
 @require_POST
 def profile_delete(request, pk):
-    """Delete a profile image"""
     profile = get_object_or_404(ProfileImage, pk=pk)
     profile.delete()
     messages.success(request, 'Profile image deleted.')
@@ -530,7 +486,6 @@ def profile_delete(request, pk):
 @login_required
 @require_POST
 def profile_toggle(request, pk):
-    """Toggle active status of a profile image"""
     profile = get_object_or_404(ProfileImage, pk=pk)
     profile.is_active = not profile.is_active
     profile.save(update_fields=['is_active'])
@@ -539,20 +494,15 @@ def profile_toggle(request, pk):
     return redirect('portfolio:profile_list')
 
 
-# =============================================================================
-# COMMENT SUBMISSION (Public)
-# =============================================================================
 
 @require_POST
 def submit_track_comment(request, pk):
-    """Submit a comment on a music track"""
     track = get_object_or_404(MusicTrack, pk=pk, is_published=True)
 
     username = request.POST.get('username', '').strip()
     comment_text = request.POST.get('comment_text', '').strip()
     honeypot = request.POST.get('website', '')  # Honeypot field for spam
 
-    # Spam check - honeypot should be empty
     if honeypot:
         return JsonResponse({'status': 'ok'})  # Silently ignore spam
 
@@ -577,14 +527,12 @@ def submit_track_comment(request, pk):
 
 @require_POST
 def submit_video_comment(request, pk):
-    """Submit a comment on a video"""
     video = get_object_or_404(Video, pk=pk, is_published=True)
 
     username = request.POST.get('username', '').strip()
     comment_text = request.POST.get('comment_text', '').strip()
     honeypot = request.POST.get('website', '')  # Honeypot field for spam
 
-    # Spam check - honeypot should be empty
     if honeypot:
         return JsonResponse({'status': 'ok'})  # Silently ignore spam
 
@@ -607,13 +555,9 @@ def submit_video_comment(request, pk):
     return JsonResponse({'status': 'ok', 'message': 'Comment submitted for review.'})
 
 
-# =============================================================================
-# COMMENT MODERATION (Admin)
-# =============================================================================
 
 @login_required
 def comment_list(request):
-    """List all pending comments for moderation"""
     pending_comments = Comment.objects.filter(is_approved=False).order_by('-created_at')
     approved_comments = Comment.objects.filter(is_approved=True).order_by('-created_at')[:20]
     return render(request, "dashboard/comment_list.html", {
@@ -625,7 +569,6 @@ def comment_list(request):
 @login_required
 @require_POST
 def comment_approve(request, pk):
-    """Approve a comment"""
     comment = get_object_or_404(Comment, pk=pk)
     comment.is_approved = True
     comment.save(update_fields=['is_approved'])
@@ -636,7 +579,6 @@ def comment_approve(request, pk):
 @login_required
 @require_POST
 def comment_reject(request, pk):
-    """Reject (delete) a comment"""
     comment = get_object_or_404(Comment, pk=pk)
     username = comment.username
     comment.delete()

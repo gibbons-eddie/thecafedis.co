@@ -5,7 +5,6 @@
 {% block content %}
 <div class="flex justify-center px-4 py-8">
     <div style="width: 100%; max-width: 800px;">
-        <!-- Dashboard Header -->
         <div class="mb-8 pb-4" style="border-bottom: 1px solid oklch(88.716% 0.09711 208.766 / 0.3);">
             <div class="flex items-center justify-between">
                 <div>
@@ -18,10 +17,8 @@
                 <form method="POST" action="{% url 'portfolio:logout' %}" style="display: inline;">
                     {% csrf_token %}
                     <button type="submit"
-                       class="px-4 py-2 font-monocraft text-sm cursor-pointer"
-                       style="color: oklch(88.716% 0.09711 208.766); border: 1px solid oklch(88.716% 0.09711 208.766); border-radius: 0.5rem; background: transparent; transition: all 0.2s;"
-                       onmouseover="this.style.backgroundColor='oklch(88.716% 0.09711 208.766)'; this.style.color='#000'"
-                       onmouseout="this.style.backgroundColor='transparent'; this.style.color='oklch(88.716% 0.09711 208.766)'"
+                       class="px-4 py-2 font-monocraft-semibold text-sm cursor-pointer tcd-hover-fill"
+                       style="border: 1px solid oklch(88.716% 0.09711 208.766); border-radius: 0.5rem; transition: all 0.2s;"
                     >
                         $ logout
                     </button>
@@ -30,135 +27,114 @@
         </div>
 
         <div class="typewriter-body">
-        <!-- Content Stats Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <!-- Career Entries -->
             <div class="p-5" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
                 <div class="flex items-center gap-3 mb-3">
                     <span class="text-xl" style="color: oklch(88.716% 0.09711 208.766);">></span>
-                    <h3 class="font-monocraft text-base" style="color: oklch(88.716% 0.09711 208.766);">Career Entries</h3>
+                    <h3 class="font-monocraft-semibold text-base" style="color: oklch(88.716% 0.09711 208.766);">Career Entries</h3>
                 </div>
-                <p class="font-monocraft text-3xl text-white mb-3">{{ career_count }}</p>
-                <a href="{% url 'portfolio:career_list' %}" class="font-monocraft text-sm text-gray-400 hover:text-white transition-colors">
+                <p class="font-monocraft-semibold text-3xl text-white mb-3">{{ career_count }}</p>
+                <a href="{% url 'portfolio:career_list' %}" class="font-monocraft-semibold text-sm text-gray-400 hover:text-white transition-colors">
                     Manage entries >
                 </a>
             </div>
 
-            <!-- Skills -->
             <div class="p-5" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
                 <div class="flex items-center gap-3 mb-3">
                     <span class="text-xl" style="color: oklch(88.716% 0.09711 208.766);">></span>
-                    <h3 class="font-monocraft text-base" style="color: oklch(88.716% 0.09711 208.766);">Skills</h3>
+                    <h3 class="font-monocraft-semibold text-base" style="color: oklch(88.716% 0.09711 208.766);">Skills</h3>
                 </div>
-                <p class="font-monocraft text-3xl text-white mb-3">{{ skill_count }}</p>
-                <a href="{% url 'portfolio:skill_list' %}" class="font-monocraft text-sm text-gray-400 hover:text-white transition-colors">
+                <p class="font-monocraft-semibold text-3xl text-white mb-3">{{ skill_count }}</p>
+                <a href="{% url 'portfolio:skill_list' %}" class="font-monocraft-semibold text-sm text-gray-400 hover:text-white transition-colors">
                     Manage skills >
                 </a>
             </div>
 
-            <!-- Profile Images -->
             <div class="p-5" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
                 <div class="flex items-center gap-3 mb-3">
                     <span class="text-xl" style="color: oklch(88.716% 0.09711 208.766);">></span>
-                    <h3 class="font-monocraft text-base" style="color: oklch(88.716% 0.09711 208.766);">Profile Images</h3>
+                    <h3 class="font-monocraft-semibold text-base" style="color: oklch(88.716% 0.09711 208.766);">Profile Images</h3>
                 </div>
-                <p class="font-monocraft text-3xl text-white mb-3">{{ profile_image_count }}</p>
-                <a href="{% url 'portfolio:profile_list' %}" class="font-monocraft text-sm text-gray-400 hover:text-white transition-colors">
+                <p class="font-monocraft-semibold text-3xl text-white mb-3">{{ profile_image_count }}</p>
+                <a href="{% url 'portfolio:profile_list' %}" class="font-monocraft-semibold text-sm text-gray-400 hover:text-white transition-colors">
                     Manage images >
                 </a>
             </div>
 
-            <!-- Music Tracks -->
             <div class="p-5" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
                 <div class="flex items-center gap-3 mb-3">
                     <span class="text-xl" style="color: oklch(88.716% 0.09711 208.766);">></span>
-                    <h3 class="font-monocraft text-base" style="color: oklch(88.716% 0.09711 208.766);">Music Tracks</h3>
+                    <h3 class="font-monocraft-semibold text-base" style="color: oklch(88.716% 0.09711 208.766);">Music Tracks</h3>
                 </div>
-                <p class="font-monocraft text-3xl text-white mb-3">{{ track_count }}</p>
-                <a href="{% url 'portfolio:music_list' %}" class="font-monocraft text-sm text-gray-400 hover:text-white transition-colors">
+                <p class="font-monocraft-semibold text-3xl text-white mb-3">{{ track_count }}</p>
+                <a href="{% url 'portfolio:music_list' %}" class="font-monocraft-semibold text-sm text-gray-400 hover:text-white transition-colors">
                     Manage tracks >
                 </a>
             </div>
 
-            <!-- Videos -->
             <div class="p-5" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
                 <div class="flex items-center gap-3 mb-3">
                     <span class="text-xl" style="color: oklch(88.716% 0.09711 208.766);">></span>
-                    <h3 class="font-monocraft text-base" style="color: oklch(88.716% 0.09711 208.766);">Videos</h3>
+                    <h3 class="font-monocraft-semibold text-base" style="color: oklch(88.716% 0.09711 208.766);">Videos</h3>
                 </div>
-                <p class="font-monocraft text-3xl text-white mb-3">{{ video_count }}</p>
-                <a href="{% url 'portfolio:video_list' %}" class="font-monocraft text-sm text-gray-400 hover:text-white transition-colors">
+                <p class="font-monocraft-semibold text-3xl text-white mb-3">{{ video_count }}</p>
+                <a href="{% url 'portfolio:video_list' %}" class="font-monocraft-semibold text-sm text-gray-400 hover:text-white transition-colors">
                     Manage videos >
                 </a>
             </div>
 
-            <!-- Comments Moderation -->
             <div class="p-5" style="background-color: #1a1a1a; border: 1px solid {% if pending_comment_count > 0 %}oklch(74.443% 0.17237 51.252){% else %}oklch(88.716% 0.09711 208.766 / 0.3){% endif %}; border-radius: 0.75rem;">
                 <div class="flex items-center gap-3 mb-3">
                     <span class="text-xl" style="color: {% if pending_comment_count > 0 %}oklch(74.443% 0.17237 51.252){% else %}oklch(88.716% 0.09711 208.766){% endif %};">></span>
-                    <h3 class="font-monocraft text-base" style="color: {% if pending_comment_count > 0 %}oklch(74.443% 0.17237 51.252){% else %}oklch(88.716% 0.09711 208.766){% endif %};">Pending Comments</h3>
+                    <h3 class="font-monocraft-semibold text-base" style="color: {% if pending_comment_count > 0 %}oklch(74.443% 0.17237 51.252){% else %}oklch(88.716% 0.09711 208.766){% endif %};">Pending Comments</h3>
                 </div>
-                <p class="font-monocraft text-3xl text-white mb-3">{{ pending_comment_count }}</p>
-                <a href="{% url 'portfolio:comment_list' %}" class="font-monocraft text-sm text-gray-400 hover:text-white transition-colors">
+                <p class="font-monocraft-semibold text-3xl text-white mb-3">{{ pending_comment_count }}</p>
+                <a href="{% url 'portfolio:comment_list' %}" class="font-monocraft-semibold text-sm text-gray-400 hover:text-white transition-colors">
                     Moderate comments >
                 </a>
             </div>
 
-            <!-- Django Admin -->
             <div class="p-5" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
                 <div class="flex items-center gap-3 mb-3">
                     <span class="text-xl" style="color: oklch(88.716% 0.09711 208.766);">></span>
-                    <h3 class="font-monocraft text-base" style="color: oklch(88.716% 0.09711 208.766);">Admin Panel</h3>
+                    <h3 class="font-monocraft-semibold text-base" style="color: oklch(88.716% 0.09711 208.766);">Admin Panel</h3>
                 </div>
-                <p class="font-monocraft text-sm text-gray-400 mb-3">Full access to all models</p>
-                <a href="/admin/" class="inline-block px-4 py-2 font-monocraft text-sm"
-                   style="background-color: oklch(88.716% 0.09711 208.766); color: #000; border-radius: 0.5rem; transition: background-color 0.2s;"
-                   onmouseover="this.style.backgroundColor='oklch(78.716% 0.09711 208.766)'"
-                   onmouseout="this.style.backgroundColor='oklch(88.716% 0.09711 208.766)'"
+                <p class="font-monocraft-semibold text-sm text-gray-400 mb-3">Full access to all models</p>
+                <a href="/admin/" class="inline-block px-4 py-2 font-monocraft-semibold text-sm tcd-hover-bright"
+                   style="color: #000; border-radius: 0.5rem; transition: background-color 0.2s;"
                 >
                     $ open admin
                 </a>
             </div>
         </div>
 
-        <!-- Quick Actions -->
         <div class="p-5" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
-            <h3 class="font-monocraft text-base mb-4" style="color: oklch(88.716% 0.09711 208.766);">
+            <h3 class="font-monocraft-semibold text-base mb-4" style="color: oklch(88.716% 0.09711 208.766);">
                 <span class="text-gray-400">></span> Quick Actions
             </h3>
             <div class="flex flex-wrap gap-3">
-                <a href="{% url 'portfolio:career_add' %}" class="px-3 py-2 font-monocraft text-sm text-white"
+                <a href="{% url 'portfolio:career_add' %}" class="px-3 py-2 font-monocraft-semibold text-sm text-white tcd-hover-border"
                    style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.5); border-radius: 0.5rem; transition: border-color 0.2s;"
-                   onmouseover="this.style.borderColor='oklch(88.716% 0.09711 208.766)'"
-                   onmouseout="this.style.borderColor='oklch(88.716% 0.09711 208.766 / 0.5)'"
                 >
                     + Career Entry
                 </a>
-                <a href="{% url 'portfolio:skill_add' %}" class="px-3 py-2 font-monocraft text-sm text-white"
+                <a href="{% url 'portfolio:skill_add' %}" class="px-3 py-2 font-monocraft-semibold text-sm text-white tcd-hover-border"
                    style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.5); border-radius: 0.5rem; transition: border-color 0.2s;"
-                   onmouseover="this.style.borderColor='oklch(88.716% 0.09711 208.766)'"
-                   onmouseout="this.style.borderColor='oklch(88.716% 0.09711 208.766 / 0.5)'"
                 >
                     + Skill
                 </a>
-                <a href="{% url 'portfolio:profile_add' %}" class="px-3 py-2 font-monocraft text-sm text-white"
+                <a href="{% url 'portfolio:profile_add' %}" class="px-3 py-2 font-monocraft-semibold text-sm text-white tcd-hover-border"
                    style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.5); border-radius: 0.5rem; transition: border-color 0.2s;"
-                   onmouseover="this.style.borderColor='oklch(88.716% 0.09711 208.766)'"
-                   onmouseout="this.style.borderColor='oklch(88.716% 0.09711 208.766 / 0.5)'"
                 >
                     + Profile Image
                 </a>
-                <a href="{% url 'portfolio:music_add' %}" class="px-3 py-2 font-monocraft text-sm text-white"
+                <a href="{% url 'portfolio:music_add' %}" class="px-3 py-2 font-monocraft-semibold text-sm text-white tcd-hover-border"
                    style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.5); border-radius: 0.5rem; transition: border-color 0.2s;"
-                   onmouseover="this.style.borderColor='oklch(88.716% 0.09711 208.766)'"
-                   onmouseout="this.style.borderColor='oklch(88.716% 0.09711 208.766 / 0.5)'"
                 >
                     + Music Track
                 </a>
-                <a href="{% url 'portfolio:video_add' %}" class="px-3 py-2 font-monocraft text-sm text-white"
+                <a href="{% url 'portfolio:video_add' %}" class="px-3 py-2 font-monocraft-semibold text-sm text-white tcd-hover-border"
                    style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.5); border-radius: 0.5rem; transition: border-color 0.2s;"
-                   onmouseover="this.style.borderColor='oklch(88.716% 0.09711 208.766)'"
-                   onmouseout="this.style.borderColor='oklch(88.716% 0.09711 208.766 / 0.5)'"
                 >
                     + Video
                 </a>

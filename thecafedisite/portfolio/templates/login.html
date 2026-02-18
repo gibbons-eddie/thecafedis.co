@@ -5,29 +5,26 @@
 {% block content %}
 <div class="flex justify-center items-center min-h-[70vh] px-4">
     <div class="p-8" style="width: 360px; background-color: #1a1a1a; border: 2px solid oklch(88.716% 0.09711 208.766); border-radius: 1rem;">
-        <!-- Terminal Header -->
         <div class="mb-5 pb-3" style="border-bottom: 1px solid oklch(88.716% 0.09711 208.766 / 0.3);">
             <div class="flex items-center gap-2 mb-1">
                 <span style="color: oklch(88.716% 0.09711 208.766); font-family: 'Monocraft-SemiBold', monospace;">%</span>
-                <span class="font-monocraft" style="color: #ffffff;">thecafedisco --login</span>
+                <span class="font-monocraft-semibold" style="color: #ffffff;">thecafedisco --login</span>
             </div>
         </div>
 
-        <!-- Error Messages -->
         {% if messages %}
-        <div class="mb-4 p-3 font-monocraft text-sm" style="background-color: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 0.5rem;">
+        <div class="mb-4 p-3 font-monocraft-semibold text-sm" style="background-color: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 0.5rem;">
             {% for message in messages %}
             <p style="color: #ef4444;">ERROR: {{ message }}</p>
             {% endfor %}
         </div>
         {% endif %}
 
-        <!-- Login Form -->
         <form method="POST">
             {% csrf_token %}
 
             <div class="mb-4">
-                <label for="username" class="block font-monocraft text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
+                <label for="username" class="block font-monocraft-semibold text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
                     <span class="text-gray-400"></span> username
                 </label>
                 <input
@@ -36,16 +33,14 @@
                     id="username"
                     required
                     autocomplete="username"
-                    class="w-full p-3 font-monocraft text-white"
-                    style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.5); border-radius: 0.5rem; outline: none;"
-                    onfocus="this.style.borderColor='oklch(88.716% 0.09711 208.766)'"
-                    onblur="this.style.borderColor='oklch(88.716% 0.09711 208.766 / 0.5)'"
+                    class="w-full p-3 font-monocraft-semibold text-white tcd-input-focus"
+                    style="background-color: #0d0d0d; border-radius: 0.5rem; outline: none;"
                     placeholder="Enter username..."
                 >
             </div>
 
             <div class="mb-5">
-                <label for="password" class="block font-monocraft text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
+                <label for="password" class="block font-monocraft-semibold text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
                     <span class="text-gray-400"></span> password
                 </label>
                 <input
@@ -54,28 +49,23 @@
                     id="password"
                     required
                     autocomplete="current-password"
-                    class="w-full p-3 font-monocraft text-white"
-                    style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.5); border-radius: 0.5rem; outline: none;"
-                    onfocus="this.style.borderColor='oklch(88.716% 0.09711 208.766)'"
-                    onblur="this.style.borderColor='oklch(88.716% 0.09711 208.766 / 0.5)'"
+                    class="w-full p-3 font-monocraft-semibold text-white tcd-input-focus"
+                    style="background-color: #0d0d0d; border-radius: 0.5rem; outline: none;"
                     placeholder="Enter password..."
                 >
             </div>
 
             <button
                 type="submit"
-                class="w-full p-3 font-monocraft font-semibold cursor-pointer"
-                style="color: #000000; background-color: oklch(88.716% 0.09711 208.766); border: none; border-radius: 0.5rem; transition: background-color 0.2s;"
-                onmouseover="this.style.backgroundColor='oklch(78.716% 0.09711 208.766)'"
-                onmouseout="this.style.backgroundColor='oklch(88.716% 0.09711 208.766)'"
+                class="w-full p-3 font-monocraft-semibold font-semibold cursor-pointer tcd-hover-bright"
+                style="color: #000000; border: none; border-radius: 0.5rem; transition: background-color 0.2s;"
             >
-                $ authenticate
+                $ login
             </button>
         </form>
 
-        <!-- Footer -->
         <div class="mt-5 pt-3 text-center" style="border-top: 1px solid oklch(88.716% 0.09711 208.766 / 0.3);">
-            <p class="font-monocraft text-xs text-gray-500">Authorized personnel only</p>
+            <p class="font-monocraft-semibold text-xs text-gray-500">Authorized personnel only</p>
         </div>
     </div>
 </div>

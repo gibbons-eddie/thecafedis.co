@@ -6,7 +6,6 @@
 {% block content %}
 <div class="flex justify-center px-4 py-8">
     <div style="width: 100%; max-width: 900px;">
-        <!-- Page Header -->
         <div class="mb-8 pb-4" style="border-bottom: 1px solid oklch(88.716% 0.09711 208.766 / 0.3);">
             <div class="flex items-center gap-2 mb-2">
                 <span style="color: oklch(88.716% 0.09711 208.766); font-family: 'Monocraft-SemiBold', monospace;">%</span>
@@ -16,13 +15,11 @@
         </div>
 
         <div class="typewriter-body">
-        <!-- Tracks List -->
         {% if tracks %}
         <div class="space-y-6">
             {% for track in tracks %}
             <div class="p-5" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
                 <div class="flex gap-5">
-                    <!-- Cover Art -->
                     <div class="flex-shrink-0">
                         {% if track.cover_art %}
                         <img src="{{ track.cover_art.url }}" alt="{{ track.title }}"
@@ -31,92 +28,131 @@
                         {% else %}
                         <div class="flex items-center justify-center rounded-lg"
                              style="width: 120px; height: 120px; background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3);">
-                            <span class="font-monocraft text-4xl" style="color: oklch(88.716% 0.09711 208.766 / 0.5);">~</span>
+                            <span class="font-monocraft-semibold text-4xl" style="color: oklch(88.716% 0.09711 208.766 / 0.5);">~</span>
                         </div>
                         {% endif %}
                     </div>
 
-                    <!-- Track Info & Player -->
                     <div class="flex-1 min-w-0">
-                        <!-- Title & Metadata -->
                         <div class="mb-3">
-                            <h2 class="font-monocraft text-xl text-white mb-1 truncate">{{ track.title }}</h2>
-                            <div class="flex items-center gap-3 font-monocraft text-sm text-gray-400">
-                                <span style="color: oklch(88.716% 0.09711 208.766);">thecafedisco</span>
-                                {% if track.genre %}
-                                <span>{{ track.genre }}</span>
-                                {% endif %}
+                            <h2 class="font-monocraft-semibold text-xl text-white mb-1 truncate uppercase">{{ track.title }}</h2>
+                            <div class="flex items-center gap-3 font-monocraft-semibold text-sm text-gray-400">
                                 {% if track.release_date %}
-                                <span>{{ track.release_date|date:"Y" }}</span>
+                                <span style="color: oklch(88.716% 0.09711 208.766);">{{ track.release_date|date:"m-d-Y" }}</span>
+                                {% endif %}
+                                {% if track.genre %}
+                                <span class="font-monocraft-semibold" style="color: white;">&#xEB49;</span>
+                                <span class="uppercase">{{ track.genre }}</span>
                                 {% endif %}
                             </div>
                         </div>
 
-                        <!-- Audio Player -->
-                        <div class="mt-4">
-                            <audio id="audio-{{ track.pk }}" controls preload="metadata" class="w-full"
-                                   style="height: 40px;"
-                                   onplay="trackPlay({{ track.pk }}); registerPageMedia(this, '{{ track.title|escapejs }}', {% if track.cover_art %}'{{ track.cover_art.url }}'{% else %}null{% endif %}, 'audio');">
+                        <div class="tcd-audio-player mt-4"
+                             x-data="audioPlayer({{ track.pk }}, '{{ track.title|escapejs }}', {% if track.cover_art %}'{{ track.cover_art.url }}'{% else %}null{% endif %})"
+                             tabindex="0">
+                            <audio x-ref="audio" preload="metadata" crossorigin="anonymous">
                                 <source src="{{ track.audio_file.url }}" type="audio/mpeg">
-                                Your browser does not support the audio element.
                             </audio>
+
+                            <div class="tcd-waveform-container"
+                                 x-ref="waveformContainer"
+                                 @mousedown="startScrub($event)"
+                                 @touchstart.prevent="startScrub($event.touches[0])">
+                                <canvas x-ref="waveform" class="tcd-waveform-canvas"></canvas>
+                            </div>
+                            <div class="tcd-spectrum-progress-track mb-3"
+                                 @mousedown="startScrub($event)"
+                                 @touchstart.prevent="startScrub($event.touches[0])">
+                                <div class="tcd-spectrum-progress-fill" :class="{ 'scrubbing': isScrubbing }" :style="'width: ' + displayPercent + '%'"></div>
+                            </div>
+
+                            <div class="flex items-center gap-4">
+                                <button class="tcd-btn tcd-btn-play" @click="togglePlay()" :aria-label="isPlaying ? 'Pause' : 'Play'">
+                                    <svg x-show="!isPlaying" viewBox="0 0 24 24">
+                                        <path d="M8 5v14l11-7z"/>
+                                    </svg>
+                                    <svg x-show="isPlaying" viewBox="0 0 24 24">
+                                        <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                                    </svg>
+                                </button>
+
+                                <div class="tcd-time-display">
+                                    <span x-text="currentTimeDisplay"></span>
+                                    <span class="mx-1">/</span>
+                                    <span x-text="durationDisplay"></span>
+                                </div>
+
+                                <div class="flex-1"></div>
+
+                                <div class="tcd-volume-wrapper" :class="{ 'muted': isMuted }">
+                                    <div class="tcd-volume-top">
+                                        <div class="tcd-volume-bars">
+                                            <div class="tcd-volume-bar" :class="{ 'active': volume >= 0.01 }" @click="setVolume(0.14)"></div>
+                                            <div class="tcd-volume-bar" :class="{ 'active': volume >= 0.15 }" @click="setVolume(0.28)"></div>
+                                            <div class="tcd-volume-bar" :class="{ 'active': volume >= 0.29 }" @click="setVolume(0.42)"></div>
+                                            <div class="tcd-volume-bar" :class="{ 'active': volume >= 0.43 }" @click="setVolume(0.57)"></div>
+                                            <div class="tcd-volume-bar" :class="{ 'active': volume >= 0.58 }" @click="setVolume(0.71)"></div>
+                                            <div class="tcd-volume-bar" :class="{ 'active': volume >= 0.72 }" @click="setVolume(0.85)"></div>
+                                            <div class="tcd-volume-bar" :class="{ 'active': volume >= 0.86 }" @click="setVolume(1)"></div>
+                                        </div>
+                                        <span class="tcd-volume-percent" x-text="volumePercent + '%'"></span>
+                                    </div>
+                                    <div class="tcd-volume-slider-row">
+                                        <div class="tcd-volume-track"
+                                             @mousedown="startVolumeDrag($event)"
+                                             @touchstart.prevent="startVolumeDrag($event.touches[0])">
+                                            <div class="tcd-volume-fill" :style="'width: ' + volumePercent + '%'"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <!-- Play Count -->
-                        <div class="mt-2 font-monocraft text-xs text-gray-500">
+                        <div class="mt-2 font-monocraft-semibold text-xs text-gray-500">
                             <span>{{ track.play_count }} play{% if track.play_count != 1 %}s{% endif %}</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Comments Section -->
                 <div class="mt-5 pt-5" style="border-top: 1px solid oklch(88.716% 0.09711 208.766 / 0.2);">
-                    <!-- Approved Comments -->
                     {% if track.approved_comments %}
                     <div class="mb-4">
-                        <h4 class="font-monocraft text-sm text-gray-400 mb-3">Comments ({{ track.approved_comments|length }})</h4>
+                        <h4 class="font-monocraft-semibold text-sm text-gray-400 mb-3">Comments ({{ track.approved_comments|length }})</h4>
                         <div class="space-y-3">
                             {% for comment in track.approved_comments %}
                             <div class="p-3" style="background-color: #0d0d0d; border-radius: 0.5rem;">
                                 <div class="flex items-center gap-2 mb-1">
-                                    <span class="font-monocraft text-sm text-white">{{ comment.username }}</span>
-                                    <span class="font-monocraft text-xs text-gray-500">{{ comment.created_at|timesince }} ago</span>
+                                    <span class="font-monocraft-semibold text-sm text-white">{{ comment.username }}</span>
+                                    <span class="font-monocraft-semibold text-xs text-gray-500">{{ comment.created_at|timesince }} ago</span>
                                 </div>
-                                <p class="font-monocraft text-sm text-gray-300" style="white-space: pre-wrap;">{{ comment.comment_text }}</p>
+                                <p class="font-monocraft-semibold text-sm text-gray-300" style="white-space: pre-wrap;">{{ comment.comment_text }}</p>
                             </div>
                             {% endfor %}
                         </div>
                     </div>
                     {% endif %}
 
-                    <!-- Comment Form -->
                     <div class="comment-form-container" id="comment-form-track-{{ track.pk }}">
-                        <h4 class="font-monocraft text-sm text-gray-400 mb-3">Leave a comment</h4>
+                        <h4 class="font-monocraft-semibold text-sm text-gray-400 mb-3">Leave a comment</h4>
                         <form class="comment-form" data-url="{% url 'portfolio:submit_track_comment' track.pk %}">
                             {% csrf_token %}
                             <!-- Honeypot field (hidden) -->
                             <input type="text" name="website" style="display: none;" tabindex="-1" autocomplete="off">
                             <div class="mb-3">
                                 <input type="text" name="username" placeholder="Your name" required maxlength="50"
-                                       class="w-full p-2 font-monocraft text-sm"
-                                       style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.375rem; color: white; outline: none;"
-                                       onfocus="this.style.borderColor='oklch(88.716% 0.09711 208.766)'"
-                                       onblur="this.style.borderColor='oklch(88.716% 0.09711 208.766 / 0.3)'">
+                                       class="w-full p-2 font-miracode text-sm tcd-input-focus"
+                                       style="background-color: #0d0d0d; border-radius: 0.375rem; color: white; outline: none;">
                             </div>
                             <div class="mb-3">
                                 <textarea name="comment_text" placeholder="Your comment..." required maxlength="1000" rows="3"
-                                          class="w-full p-2 font-monocraft text-sm resize-none"
-                                          style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.375rem; color: white; outline: none;"
-                                          onfocus="this.style.borderColor='oklch(88.716% 0.09711 208.766)'"
-                                          onblur="this.style.borderColor='oklch(88.716% 0.09711 208.766 / 0.3)'"></textarea>
+                                          class="w-full p-2 font-miracode text-sm resize-none tcd-input-focus"
+                                          style="background-color: #0d0d0d; border-radius: 0.375rem; color: white; outline: none;"></textarea>
                             </div>
-                            <button type="submit" class="px-4 py-2 font-monocraft text-sm cursor-pointer"
-                                    style="background-color: oklch(88.716% 0.09711 208.766); color: #000; border: none; border-radius: 0.375rem; transition: opacity 0.2s;"
-                                    onmouseover="this.style.opacity='0.8'"
-                                    onmouseout="this.style.opacity='1'">
+                            <button type="submit" class="px-4 py-2 font-monocraft-semibold text-sm cursor-pointer tcd-hover-opacity"
+                                    style="background-color: oklch(88.716% 0.09711 208.766); color: #000; border: none; border-radius: 0.375rem; transition: opacity 0.2s;">
                                 Submit Comment
                             </button>
-                            <span class="comment-status font-monocraft text-sm ml-3" style="display: none;"></span>
+                            <span class="comment-status font-monocraft-semibold text-sm ml-3" style="display: none;"></span>
                         </form>
                     </div>
                 </div>
@@ -125,104 +161,68 @@
         </div>
         {% else %}
         <div class="p-8 text-center" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
-            <p class="font-monocraft text-gray-400">No tracks available yet.</p>
-            <p class="font-monocraft text-sm text-gray-500 mt-2">Check back soon for new music.</p>
+            <p class="font-monocraft-semibold text-gray-400">No tracks available yet.</p>
+            <p class="font-monocraft-semibold text-sm text-gray-500 mt-2">Check back soon for new music.</p>
         </div>
         {% endif %}
         </div>
     </div>
 </div>
 
-<!-- Custom Audio Styling -->
-<style>
-    audio {
-        filter: sepia(20%) saturate(70%) grayscale(1) contrast(99%) invert(12%);
-        width: 100%;
-        border-radius: 0.5rem;
-    }
-    audio::-webkit-media-controls-panel {
-        background-color: #0d0d0d;
-    }
-</style>
-
-<!-- Play Count Tracking -->
 <script>
-    const playedTracks = new Set();
+    function initCommentForms() {
+        document.querySelectorAll('.comment-form').forEach(form => {
+            if (form.dataset.initialized) return;
+            form.dataset.initialized = 'true';
 
-    function trackPlay(trackId) {
-        if (!playedTracks.has(trackId)) {
-            playedTracks.add(trackId);
-            fetch(`/music/track/${trackId}/play/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken'),
-                    'Content-Type': 'application/json'
-                }
-            });
-        }
-    }
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const url = this.dataset.url;
+                const formData = new FormData(this);
+                const statusEl = this.querySelector('.comment-status');
+                const submitBtn = this.querySelector('button[type="submit"]');
 
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Submitting...';
 
-    // Comment form handling
-    document.querySelectorAll('.comment-form').forEach(form => {
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const url = this.dataset.url;
-            const formData = new FormData(this);
-            const statusEl = this.querySelector('.comment-status');
-            const submitBtn = this.querySelector('button[type="submit"]');
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRFToken': MediaPlayerUtils.getCsrfToken()
+                        }
+                    });
 
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Submitting...';
+                    const data = await response.json();
 
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-CSRFToken': getCookie('csrftoken')
+                    if (response.ok) {
+                        statusEl.style.display = 'inline';
+                        statusEl.style.color = 'oklch(88.716% 0.09711 208.766)';
+                        statusEl.textContent = 'Comment submitted for review!';
+                        this.reset();
+                    } else {
+                        statusEl.style.display = 'inline';
+                        statusEl.style.color = '#ef4444';
+                        statusEl.textContent = data.message || 'Error submitting comment.';
                     }
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    statusEl.style.display = 'inline';
-                    statusEl.style.color = 'oklch(88.716% 0.09711 208.766)';
-                    statusEl.textContent = 'Comment submitted for review!';
-                    this.reset();
-                } else {
+                } catch (err) {
                     statusEl.style.display = 'inline';
                     statusEl.style.color = '#ef4444';
-                    statusEl.textContent = data.message || 'Error submitting comment.';
+                    statusEl.textContent = 'Network error. Please try again.';
                 }
-            } catch (err) {
-                statusEl.style.display = 'inline';
-                statusEl.style.color = '#ef4444';
-                statusEl.textContent = 'Network error. Please try again.';
-            }
 
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Submit Comment';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Comment';
 
-            setTimeout(() => {
-                statusEl.style.display = 'none';
-            }, 5000);
+                setTimeout(() => {
+                    statusEl.style.display = 'none';
+                }, 5000);
+            });
         });
-    });
+    }
+
+    document.addEventListener('DOMContentLoaded', initCommentForms);
+    document.addEventListener('up:fragment:inserted', initCommentForms);
 </script>
 {% endblock content %}

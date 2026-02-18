@@ -1,17 +1,14 @@
 from django.db import models
+from django.db.models import F
 from django.core.validators import FileExtensionValidator
 
-# ============ HOME PAGE CONTENT ============
-
 class CareerEntry(models.Model):
-    """Career history timeline entries with 3 bullet points"""
     title = models.CharField(max_length=200, help_text="Job title")
     company = models.CharField(max_length=200)
     location = models.CharField(max_length=200, blank=True)
     start_date = models.DateField()
     end_date = models.DateField(null=True, blank=True, help_text="Leave blank if current")
 
-    # 3 bullet point descriptions (not a paragraph)
     bullet_1 = models.CharField(max_length=500, help_text="First responsibility/achievement")
     bullet_2 = models.CharField(max_length=500, help_text="Second responsibility/achievement")
     bullet_3 = models.CharField(max_length=500, help_text="Third responsibility/achievement")
@@ -35,7 +32,6 @@ class CareerEntry(models.Model):
 
 
 class Skill(models.Model):
-    """Skills with categories and proficiency levels"""
     CATEGORY_CHOICES = [
         ('tech_frameworks', 'Technologies and Frameworks'),
         ('programming_languages', 'Programming Languages'),
@@ -69,7 +65,6 @@ class Skill(models.Model):
 
 
 class ProfileImage(models.Model):
-    """Rotating profile images for home page"""
     image = models.ImageField(
         upload_to='profile/',
         help_text="Profile image (recommended: square, min 400x400px)"
@@ -93,16 +88,12 @@ class ProfileImage(models.Model):
         return f"Profile Image {self.order + 1}"
 
 
-# ============ MUSIC PAGE ============
-
 class MusicTrack(models.Model):
-    """Music tracks with audio files and metadata (artist: thecafedisco)"""
     title = models.CharField(max_length=200)
     genre = models.CharField(max_length=100, blank=True)
     release_date = models.DateField(null=True, blank=True)
     duration = models.DurationField(null=True, blank=True, help_text="Auto-calculated from file")
 
-    # File uploads
     audio_file = models.FileField(
         upload_to='music/',
         validators=[FileExtensionValidator(allowed_extensions=['wav', 'mp3'])],
@@ -115,7 +106,6 @@ class MusicTrack(models.Model):
         help_text="Album artwork (optional)"
     )
 
-    # Metadata
     is_published = models.BooleanField(default=True)
     play_count = models.IntegerField(default=0, editable=False)
 
@@ -130,19 +120,16 @@ class MusicTrack(models.Model):
         return self.title
 
     def increment_play_count(self):
-        self.play_count += 1
-        self.save(update_fields=['play_count'])
+        """Atomically increment play count to prevent race conditions"""
+        MusicTrack.objects.filter(pk=self.pk).update(play_count=F('play_count') + 1)
+        self.refresh_from_db(fields=['play_count'])
 
-
-# ============ VIDEO PAGE ============
 
 class Video(models.Model):
-    """Video files with metadata"""
     title = models.CharField(max_length=200)
     category = models.CharField(max_length=100, blank=True, help_text="e.g., 'Tutorial', 'Demo', 'Showcase'")
     tags = models.CharField(max_length=500, blank=True, help_text="Comma-separated tags")
 
-    # File uploads
     video_file = models.FileField(
         upload_to='videos/',
         validators=[FileExtensionValidator(allowed_extensions=['mp4', 'webm'])],
@@ -155,7 +142,6 @@ class Video(models.Model):
         help_text="Video thumbnail (auto-generated if not provided)"
     )
 
-    # Metadata
     duration = models.DurationField(null=True, blank=True, help_text="Video length")
     resolution = models.CharField(max_length=20, blank=True, help_text="e.g., '1920x1080', '2560x1440'")
     order = models.IntegerField(default=0)
@@ -173,15 +159,12 @@ class Video(models.Model):
         return self.title
 
     def increment_view_count(self):
-        self.view_count += 1
-        self.save(update_fields=['view_count'])
+        """Atomically increment view count to prevent race conditions"""
+        Video.objects.filter(pk=self.pk).update(view_count=F('view_count') + 1)
+        self.refresh_from_db(fields=['view_count'])
 
-
-# ============ COMMENTS ============
 
 class Comment(models.Model):
-    """User comments on music tracks or videos"""
-    # Can be associated with either a track or video (one must be set)
     track = models.ForeignKey(
         MusicTrack,
         on_delete=models.CASCADE,
@@ -197,14 +180,11 @@ class Comment(models.Model):
         related_name='comments'
     )
 
-    # Comment content
     username = models.CharField(max_length=50, help_text="Display name")
     comment_text = models.TextField(max_length=1000)
 
-    # Moderation
     is_approved = models.BooleanField(default=False)
 
-    # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -216,7 +196,6 @@ class Comment(models.Model):
 
     @property
     def content_type(self):
-        """Returns 'track' or 'video' based on which FK is set"""
         if self.track:
             return 'track'
         elif self.video:

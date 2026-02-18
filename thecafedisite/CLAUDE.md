@@ -14,6 +14,10 @@
 - Always compile Tailwind: npx tailwindcss -i static/src/styles.css -o static/dist/styles.css
 - Background text color: oklch(22% 0.04 208.734) with 0.3 opacity
 - Do not use emojis in responses or planning documents or anything else ever.
+- Do not use `!important` in CSS code, it's bad coding practice.
+- Always store planning documents in `thecafedis.co planning` directory on the Desktop
+- When I say to start or stop the dev server, always use the start and stop scripts inside the `thecafedisite` directory
+- Try to minimize comments. If the method is relatively straightforward and easy to understand without comments, remove the comments and/or JAVADOCs
 
 ## Planning File Convention
 - All Claude planning files stored in: /Users/eddiegibbons/.claude/plans/
@@ -22,3 +26,25 @@
 - Header template: # [Plan Title] | **Model:** Claude Sonnet 4.5 (`claude-sonnet-4-5-20250929`) | **Date:** [Month DD, YYYY] | **Status:** [Planning/Implementation/Complete]
 - Keep old plan files as backup when creating consolidated versions
 - Reference examples: 2025-11-27-menu-btn-hover-impl.md (implementation), 2025-11-28-unpoly-persistent-bg-features.md (planning)
+
+## Site Testing Agent
+
+A comprehensive browser-based testing agent is available for validating the dev server.
+
+### To Run Tests
+Say: "Test the dev server at localhost:8000 and save results to the planning folder"
+
+### Test Documentation
+- Test specification: `/Users/eddiegibbons/Desktop/thecafedis.co planning/site-testing-agent.md`
+- Results template: `/Users/eddiegibbons/Desktop/thecafedis.co planning/test-results-template.md`
+
+### Test Categories
+1. Public Pages (Homepage, Music, Videos, Stream)
+2. Authentication (Login, Protected Routes)
+3. Dashboard Admin (Music, Videos, Career, Skills, Profiles, Comments)
+4. API Endpoints (Play counts, View counts, Comment submission)
+5. Edge Cases (Empty states, 404s, Form validation, Navigation)
+6. Visual/UI (Styling, Animations, Responsive design)
+
+### Output
+Test results saved to: `/Users/eddiegibbons/Desktop/thecafedis.co planning/test-results-YYYY-MM-DD.md`

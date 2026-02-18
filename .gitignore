@@ -52,6 +52,9 @@ media/
 htmlcov/
 .pytest_cache/
 
+# Playwright MCP
+.playwright-mcp/
+
 # Claude
 thecafedisite/CLAUDE.md
-thecafedisite/.claude/
+.claude/

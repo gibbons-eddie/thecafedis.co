@@ -1,5 +1,5 @@
 # Number of names to display in background scroller
-SCROLLER_DISPLAY_COUNT = 15
+SCROLLER_DISPLAY_COUNT = 60
 
 # Pool of names for background scroller (randomly selected on each visit)
 SCROLLER_NAME_POOL = [
