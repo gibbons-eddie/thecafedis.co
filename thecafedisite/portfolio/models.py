@@ -128,25 +128,16 @@ class MusicTrack(models.Model):
 class Video(models.Model):
     title = models.CharField(max_length=200)
     category = models.CharField(max_length=100, blank=True, help_text="e.g., 'Tutorial', 'Demo', 'Showcase'")
-    tags = models.CharField(max_length=500, blank=True, help_text="Comma-separated tags")
-
-    video_file = models.FileField(
-        upload_to='videos/',
-        validators=[FileExtensionValidator(allowed_extensions=['mp4', 'webm'])],
-        help_text="Upload .mp4 file (1440p recommended, max 10GB)"
-    )
+    youtube_video_id = models.CharField(max_length=20, blank=True)
     thumbnail = models.ImageField(
         upload_to='videos/thumbnails/',
         null=True,
         blank=True,
-        help_text="Video thumbnail (auto-generated if not provided)"
+        help_text="Optional thumbnail override (YouTube provides one automatically)"
     )
-
     duration = models.DurationField(null=True, blank=True, help_text="Video length")
-    resolution = models.CharField(max_length=20, blank=True, help_text="e.g., '1920x1080', '2560x1440'")
     order = models.IntegerField(default=0)
     is_published = models.BooleanField(default=True)
-    view_count = models.IntegerField(default=0, editable=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -158,11 +149,6 @@ class Video(models.Model):
     def __str__(self):
         return self.title
 
-    def increment_view_count(self):
-        """Atomically increment view count to prevent race conditions"""
-        Video.objects.filter(pk=self.pk).update(view_count=F('view_count') + 1)
-        self.refresh_from_db(fields=['view_count'])
-
 
 class Comment(models.Model):
     track = models.ForeignKey(
@@ -172,14 +158,6 @@ class Comment(models.Model):
         blank=True,
         related_name='comments'
     )
-    video = models.ForeignKey(
-        Video,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name='comments'
-    )
-
     username = models.CharField(max_length=50, help_text="Display name")
     comment_text = models.TextField(max_length=1000)
 
@@ -191,13 +169,62 @@ class Comment(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        target = self.track.title if self.track else self.video.title if self.video else "Unknown"
+        target = self.track.title if self.track else "Unknown"
         return f"{self.username} on {target}"
 
-    @property
-    def content_type(self):
-        if self.track:
-            return 'track'
-        elif self.video:
-            return 'video'
-        return None
+
+class StreamConfig(models.Model):
+    placeholder_video_url = models.URLField(
+        blank=True,
+        help_text="URL to a looping video shown when not live"
+    )
+    next_stream_date = models.DateTimeField(
+        null=True, blank=True,
+        help_text="When the next stream is scheduled"
+    )
+    next_stream_title = models.CharField(
+        max_length=200, blank=True,
+        help_text="Title/topic for the next stream"
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Stream Configuration"
+        verbose_name_plural = "Stream Configuration"
+
+    def __str__(self):
+        return "Stream Configuration"
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+
+class StreamSession(models.Model):
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    streamed_at = models.DateTimeField()
+    ended_at = models.DateTimeField(null=True, blank=True)
+    duration = models.DurationField(null=True, blank=True)
+    s3_recording_prefix = models.CharField(max_length=500, blank=True)
+    vod_playlist_url = models.URLField(blank=True)
+    thumbnail_url = models.URLField(blank=True)
+    is_published = models.BooleanField(default=False)
+    view_count = models.IntegerField(default=0, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-streamed_at']
+
+    def __str__(self):
+        return self.title
+
+    def increment_view_count(self):
+        StreamSession.objects.filter(pk=self.pk).update(view_count=F('view_count') + 1)
+        self.refresh_from_db(fields=['view_count'])

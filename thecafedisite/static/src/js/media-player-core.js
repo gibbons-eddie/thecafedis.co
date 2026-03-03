@@ -568,6 +568,9 @@ const GlobalMediaState = {
   register(mediaEl, title, coverUrl, type) {
     this.activePageMedia = mediaEl;
     this.activeMediaInfo = { title, coverUrl, type, src: mediaEl.currentSrc || mediaEl.src };
+    document.dispatchEvent(new CustomEvent('tcd:media-registered', {
+      detail: this.activeMediaInfo
+    }));
   },
 
   unregister() {

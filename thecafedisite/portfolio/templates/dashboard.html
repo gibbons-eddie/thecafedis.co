@@ -27,6 +27,44 @@
         </div>
 
         <div class="typewriter-body">
+        <div class="p-5 mb-6" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
+            <h3 class="font-monocraft-semibold text-base mb-4" style="color: oklch(88.716% 0.09711 208.766);">
+                <span class="text-gray-400">></span> Quick Actions
+            </h3>
+            <div class="flex flex-wrap gap-3">
+                <a href="{% url 'portfolio:career_add' %}" class="px-3 py-2 font-monocraft-semibold text-sm text-white tcd-hover-border"
+                   style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.5); border-radius: 0.5rem; transition: border-color 0.2s;"
+                >
+                    + Career Entry
+                </a>
+                <a href="{% url 'portfolio:skill_add' %}" class="px-3 py-2 font-monocraft-semibold text-sm text-white tcd-hover-border"
+                   style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.5); border-radius: 0.5rem; transition: border-color 0.2s;"
+                >
+                    + Skill
+                </a>
+                <a href="{% url 'portfolio:profile_add' %}" class="px-3 py-2 font-monocraft-semibold text-sm text-white tcd-hover-border"
+                   style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.5); border-radius: 0.5rem; transition: border-color 0.2s;"
+                >
+                    + Profile Image
+                </a>
+                <a href="{% url 'portfolio:music_add' %}" class="px-3 py-2 font-monocraft-semibold text-sm text-white tcd-hover-border"
+                   style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.5); border-radius: 0.5rem; transition: border-color 0.2s;"
+                >
+                    + Music Track
+                </a>
+                <a href="{% url 'portfolio:video_add' %}" class="px-3 py-2 font-monocraft-semibold text-sm text-white tcd-hover-border"
+                   style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.5); border-radius: 0.5rem; transition: border-color 0.2s;"
+                >
+                    + Video
+                </a>
+                <a href="{% url 'portfolio:stream_add' %}" class="px-3 py-2 font-monocraft-semibold text-sm text-white tcd-hover-border"
+                   style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.5); border-radius: 0.5rem; transition: border-color 0.2s;"
+                >
+                    + Stream Session
+                </a>
+            </div>
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div class="p-5" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
                 <div class="flex items-center gap-3 mb-3">
@@ -83,6 +121,17 @@
                 </a>
             </div>
 
+            <div class="p-5" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
+                <div class="flex items-center gap-3 mb-3">
+                    <span class="text-xl" style="color: oklch(88.716% 0.09711 208.766);">></span>
+                    <h3 class="font-monocraft-semibold text-base" style="color: oklch(88.716% 0.09711 208.766);">Streams</h3>
+                </div>
+                <p class="font-monocraft-semibold text-3xl text-white mb-3">{{ stream_count }}</p>
+                <a href="{% url 'portfolio:stream_list' %}" class="font-monocraft-semibold text-sm text-gray-400 hover:text-white transition-colors">
+                    Manage streams >
+                </a>
+            </div>
+
             <div class="p-5" style="background-color: #1a1a1a; border: 1px solid {% if pending_comment_count > 0 %}oklch(74.443% 0.17237 51.252){% else %}oklch(88.716% 0.09711 208.766 / 0.3){% endif %}; border-radius: 0.75rem;">
                 <div class="flex items-center gap-3 mb-3">
                     <span class="text-xl" style="color: {% if pending_comment_count > 0 %}oklch(74.443% 0.17237 51.252){% else %}oklch(88.716% 0.09711 208.766){% endif %};">></span>
@@ -108,38 +157,6 @@
             </div>
         </div>
 
-        <div class="p-5" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
-            <h3 class="font-monocraft-semibold text-base mb-4" style="color: oklch(88.716% 0.09711 208.766);">
-                <span class="text-gray-400">></span> Quick Actions
-            </h3>
-            <div class="flex flex-wrap gap-3">
-                <a href="{% url 'portfolio:career_add' %}" class="px-3 py-2 font-monocraft-semibold text-sm text-white tcd-hover-border"
-                   style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.5); border-radius: 0.5rem; transition: border-color 0.2s;"
-                >
-                    + Career Entry
-                </a>
-                <a href="{% url 'portfolio:skill_add' %}" class="px-3 py-2 font-monocraft-semibold text-sm text-white tcd-hover-border"
-                   style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.5); border-radius: 0.5rem; transition: border-color 0.2s;"
-                >
-                    + Skill
-                </a>
-                <a href="{% url 'portfolio:profile_add' %}" class="px-3 py-2 font-monocraft-semibold text-sm text-white tcd-hover-border"
-                   style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.5); border-radius: 0.5rem; transition: border-color 0.2s;"
-                >
-                    + Profile Image
-                </a>
-                <a href="{% url 'portfolio:music_add' %}" class="px-3 py-2 font-monocraft-semibold text-sm text-white tcd-hover-border"
-                   style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.5); border-radius: 0.5rem; transition: border-color 0.2s;"
-                >
-                    + Music Track
-                </a>
-                <a href="{% url 'portfolio:video_add' %}" class="px-3 py-2 font-monocraft-semibold text-sm text-white tcd-hover-border"
-                   style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.5); border-radius: 0.5rem; transition: border-color 0.2s;"
-                >
-                    + Video
-                </a>
-            </div>
-        </div>
         </div>
     </div>
 </div>

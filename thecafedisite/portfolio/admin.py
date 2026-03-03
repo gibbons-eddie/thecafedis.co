@@ -53,9 +53,9 @@ class MusicTrackAdmin(admin.ModelAdmin):
 
 @admin.register(Video)
 class VideoAdmin(admin.ModelAdmin):
-    list_display = ['title', 'category', 'duration', 'resolution', 'view_count', 'order', 'is_published']
+    list_display = ['title', 'category', 'youtube_video_id', 'duration', 'order', 'is_published']
     list_filter = ['is_published', 'category']
     list_editable = ['order', 'is_published']
     search_fields = ['title', 'category', 'tags']
-    readonly_fields = ['view_count', 'created_at', 'updated_at']
+    readonly_fields = ['created_at', 'updated_at']
     ordering = ['order', '-created_at']

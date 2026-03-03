@@ -10,8 +10,14 @@ urlpatterns = [
     path('music/', views.music, name='music'),
     path('music/track/<int:pk>/play/', views.track_play, name='track_play'),
     path('videos/', views.videos, name='videos'),
-    path('videos/<int:pk>/view/', views.video_view, name='video_view'),
     path('stream/', views.stream, name='stream'),
+    path('stream/past/', views.stream_past, name='stream_past'),
+    path('stream/past/<int:pk>/', views.stream_replay, name='stream_replay'),
+
+    # Stream API
+    path('api/stream/status/', views.stream_status, name='stream_status'),
+    path('api/stream/chat-token/', views.stream_chat_token, name='stream_chat_token'),
+    path('api/stream/vod/<int:pk>/view/', views.stream_vod_view, name='stream_vod_view'),
 
     # Authentication
     path('login/', views.login_view, name='login'),
@@ -57,7 +63,14 @@ urlpatterns = [
 
     # Public comment submission
     path('music/track/<int:pk>/comment/', views.submit_track_comment, name='submit_track_comment'),
-    path('videos/<int:pk>/comment/', views.submit_video_comment, name='submit_video_comment'),
+
+    # Custom admin - Stream Sessions
+    path('dashboard/streams/', views.stream_list, name='stream_list'),
+    path('dashboard/streams/add/', views.stream_add, name='stream_add'),
+    path('dashboard/streams/<int:pk>/edit/', views.stream_edit, name='stream_edit'),
+    path('dashboard/streams/<int:pk>/delete/', views.stream_delete, name='stream_delete'),
+    path('dashboard/streams/<int:pk>/toggle/', views.stream_toggle, name='stream_toggle'),
+    path('dashboard/streams/config/', views.stream_config_view, name='stream_config'),
 
     # Custom admin - Comment Moderation
     path('dashboard/comments/', views.comment_list, name='comment_list'),

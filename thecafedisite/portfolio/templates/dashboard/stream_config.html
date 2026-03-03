@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Stream Settings - Dashboard{% endblock %}
+
+{% block content %}
+<div class="flex justify-center px-4 py-8">
+    <div style="width: 100%; max-width: 600px;">
+        <div class="mb-6 pb-4" style="border-bottom: 1px solid oklch(88.716% 0.09711 208.766 / 0.3);">
+            <div class="flex items-center gap-2 mb-2">
+                <span style="color: oklch(88.716% 0.09711 208.766); font-family: 'Monocraft-SemiBold', monospace;">%</span>
+                <span class="font-monocraft-semibold text-white text-xl">config --stream</span>
+            </div>
+            <p class="font-monocraft-semibold text-sm text-gray-400">
+                Offline placeholder video and next stream announcement
+            </p>
+        </div>
+
+        {% if messages %}
+        <div class="mb-4">
+            {% for message in messages %}
+            <div class="p-3 font-monocraft-semibold text-sm mb-2"
+                 style="background-color: #1a1a1a; border: 1px solid {% if message.tags == 'success' %}oklch(88.716% 0.09711 208.766){% else %}oklch(74.443% 0.17237 51.252){% endif %}; border-radius: 0.5rem; color: {% if message.tags == 'success' %}oklch(88.716% 0.09711 208.766){% else %}oklch(74.443% 0.17237 51.252){% endif %};">
+                > {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="POST" class="space-y-4">
+            {% csrf_token %}
+
+            <div class="p-6" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
+                <div class="mb-4">
+                    <label class="block font-monocraft-semibold text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
+                        placeholder_video_url
+                    </label>
+                    <input type="url" name="placeholder_video_url"
+                           value="{{ config.placeholder_video_url }}"
+                           class="w-full px-3 py-2 font-monocraft-semibold text-white tcd-input-focus"
+                           style="background-color: #0d0d0d; border-radius: 0.5rem; outline: none;"
+                           placeholder="https://s3.amazonaws.com/.../offline-loop.mp4">
+                    <p class="mt-1 font-monocraft-semibold text-xs text-gray-500">Looping video shown when stream is offline</p>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block font-monocraft-semibold text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
+                        next_stream_date
+                    </label>
+                    <input type="datetime-local" name="next_stream_date"
+                           value="{% if config.next_stream_date %}{{ config.next_stream_date|date:'Y-m-d\TH:i' }}{% endif %}"
+                           class="w-full px-3 py-2 font-monocraft-semibold text-white tcd-input-focus"
+                           style="background-color: #0d0d0d; border-radius: 0.5rem; outline: none; color-scheme: dark;">
+                    <p class="mt-1 font-monocraft-semibold text-xs text-gray-500">Leave empty to hide the announcement</p>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block font-monocraft-semibold text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
+                        next_stream_title
+                    </label>
+                    <input type="text" name="next_stream_title"
+                           value="{{ config.next_stream_title }}"
+                           class="w-full px-3 py-2 font-monocraft-semibold text-white tcd-input-focus"
+                           style="background-color: #0d0d0d; border-radius: 0.5rem; outline: none;"
+                           placeholder="Building something cool">
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center">
+                <a href="{% url 'portfolio:stream_list' %}"
+                   class="px-4 py-2 font-monocraft-semibold text-sm"
+                   style="color: oklch(88.716% 0.09711 208.766); border: 1px solid oklch(88.716% 0.09711 208.766 / 0.5); border-radius: 0.5rem;">
+                    &lt; back to streams
+                </a>
+                <button type="submit"
+                        class="px-6 py-2 font-monocraft-semibold text-sm cursor-pointer tcd-hover-bright"
+                        style="color: #000; border: none; border-radius: 0.5rem; transition: background-color 0.2s;">
+                    $ save
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock content %}

@@ -1,11 +1,17 @@
-from urllib.parse import urlparse
+import re
+import logging
+from urllib.parse import urlparse, parse_qs
+from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
-from django.views.decorators.http import require_POST
-from .models import CareerEntry, Skill, ProfileImage, MusicTrack, Video, Comment
+from django.utils import timezone
+from django.views.decorators.http import require_POST, require_GET
+from .models import CareerEntry, Skill, ProfileImage, MusicTrack, Video, Comment, StreamConfig, StreamSession
+
+logger = logging.getLogger(__name__)
 
 
 def homepage(request):
@@ -28,9 +34,7 @@ def music(request):
 
 
 def videos(request):
-    videos_list = Video.objects.filter(is_published=True).prefetch_related('comments')
-    for video in videos_list:
-        video.approved_comments = video.comments.filter(is_approved=True)
+    videos_list = Video.objects.filter(is_published=True)
     context = {
         'videos': videos_list,
     }
@@ -44,15 +48,119 @@ def track_play(request, pk):
     return JsonResponse({'status': 'ok', 'play_count': track.play_count})
 
 
-@require_POST
-def video_view(request, pk):
-    video = get_object_or_404(Video, pk=pk, is_published=True)
-    video.increment_view_count()
-    return JsonResponse({'status': 'ok', 'view_count': video.view_count})
+def _extract_youtube_id(url_or_id):
+    url_or_id = url_or_id.strip()
+    if re.match(r'^[a-zA-Z0-9_-]{11}$', url_or_id):
+        return url_or_id
+    parsed = urlparse(url_or_id)
+    if parsed.hostname in ('www.youtube.com', 'youtube.com'):
+        if parsed.path == '/watch':
+            return parse_qs(parsed.query).get('v', [''])[0]
+        if parsed.path.startswith('/embed/'):
+            return parsed.path.split('/embed/')[1].split('/')[0]
+    if parsed.hostname == 'youtu.be':
+        return parsed.path.lstrip('/')
+    return url_or_id
+
+
+def _check_ivs_live():
+    channel_arn = settings.AWS_IVS_CHANNEL_ARN
+    if not channel_arn:
+        return False, None
+
+    try:
+        import boto3
+        client = boto3.client(
+            'ivs',
+            region_name=settings.AWS_S3_REGION_NAME,
+            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+        )
+        response = client.get_stream(channelArn=channel_arn)
+        stream_data = response.get('stream', {})
+        is_live = stream_data.get('state') == 'LIVE'
+        recording_url = stream_data.get('health', {}).get('recordingUrl', None)
+        return is_live, recording_url
+    except Exception:
+        return False, None
 
 
 def stream(request):
-    return render(request, "stream.html")
+    is_live, recording_url = _check_ivs_live()
+    stream_config = StreamConfig.load()
+    context = {
+        'is_live': is_live,
+        'playback_url': settings.AWS_IVS_PLAYBACK_URL,
+        'recording_url': recording_url or '',
+        'chat_room_id': settings.AWS_IVS_CHAT_ROOM_ARN.split('/')[-1] if settings.AWS_IVS_CHAT_ROOM_ARN else '',
+        'stream_config': stream_config,
+        'past_streams': StreamSession.objects.filter(is_published=True)[:3],
+    }
+    return render(request, "stream.html", context)
+
+
+def stream_past(request):
+    sessions = StreamSession.objects.filter(is_published=True)
+    return render(request, "stream_past.html", {'sessions': sessions})
+
+
+def stream_replay(request, pk):
+    session = get_object_or_404(StreamSession, pk=pk, is_published=True)
+    session.increment_view_count()
+    return render(request, "stream_replay.html", {'session': session})
+
+
+@require_GET
+def stream_status(request):
+    is_live, recording_url = _check_ivs_live()
+    return JsonResponse({
+        'is_live': is_live,
+        'recording_url': recording_url or '',
+        'playback_url': settings.AWS_IVS_PLAYBACK_URL if is_live else '',
+    })
+
+
+@require_GET
+def stream_chat_token(request):
+    username = request.GET.get('username', '').strip()
+    if not username:
+        return JsonResponse({'error': 'Username required'}, status=400)
+    if len(username) > 50:
+        return JsonResponse({'error': 'Username too long'}, status=400)
+
+    chat_room_arn = settings.AWS_IVS_CHAT_ROOM_ARN
+    if not chat_room_arn:
+        return JsonResponse({'error': 'Chat not configured'}, status=503)
+
+    try:
+        import boto3
+        client = boto3.client(
+            'ivschat',
+            region_name=settings.AWS_S3_REGION_NAME,
+            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+        )
+        response = client.create_chat_token(
+            roomIdentifier=chat_room_arn,
+            userId=username,
+            attributes={'displayName': username},
+            capabilities=['SEND_MESSAGE'],
+        )
+        return JsonResponse({
+            'token': response['token'],
+            'sessionExpirationTime': response['sessionExpirationTime'].isoformat(),
+            'tokenExpirationTime': response['tokenExpirationTime'].isoformat(),
+        })
+    except Exception as e:
+        logger.exception("Failed to create chat token")
+        return JsonResponse({'error': 'Failed to generate chat token'}, status=500)
+
+
+@require_POST
+def stream_vod_view(request, pk):
+    session = get_object_or_404(StreamSession, pk=pk, is_published=True)
+    session.increment_view_count()
+    return JsonResponse({'status': 'ok', 'view_count': session.view_count})
 
 
 def login_view(request):
@@ -87,6 +195,7 @@ def dashboard(request):
         'track_count': MusicTrack.objects.count(),
         'video_count': Video.objects.count(),
         'pending_comment_count': Comment.objects.filter(is_approved=False).count(),
+        'stream_count': StreamSession.objects.count(),
     }
     return render(request, "dashboard.html", context)
 
@@ -182,26 +291,24 @@ def video_add(request):
     if request.method == 'POST':
         title = request.POST.get('title')
         category = request.POST.get('category', '')
-        tags = request.POST.get('tags', '')
-        video_file = request.FILES.get('video_file')
+        youtube_url = request.POST.get('youtube_video_id', '')
         thumbnail = request.FILES.get('thumbnail')
-        resolution = request.POST.get('resolution', '')
         is_published = request.POST.get('is_published') == 'on'
 
-        if not title or not video_file:
-            messages.error(request, 'Title and video file are required.')
+        youtube_video_id = _extract_youtube_id(youtube_url) if youtube_url else ''
+
+        if not title or not youtube_video_id:
+            messages.error(request, 'Title and YouTube video ID are required.')
             return render(request, "dashboard/video_form.html", {'action': 'add'})
 
-        video = Video.objects.create(
+        Video.objects.create(
             title=title,
             category=category,
-            tags=tags,
-            video_file=video_file,
+            youtube_video_id=youtube_video_id,
             thumbnail=thumbnail,
-            resolution=resolution,
             is_published=is_published,
         )
-        messages.success(request, f'Video "{title}" uploaded successfully.')
+        messages.success(request, f'Video "{title}" added successfully.')
         return redirect('portfolio:video_list')
 
     return render(request, "dashboard/video_form.html", {'action': 'add'})
@@ -214,12 +321,12 @@ def video_edit(request, pk):
     if request.method == 'POST':
         video.title = request.POST.get('title', video.title)
         video.category = request.POST.get('category', '')
-        video.tags = request.POST.get('tags', '')
-        video.resolution = request.POST.get('resolution', '')
         video.is_published = request.POST.get('is_published') == 'on'
 
-        if request.FILES.get('video_file'):
-            video.video_file = request.FILES['video_file']
+        youtube_url = request.POST.get('youtube_video_id', '')
+        if youtube_url:
+            video.youtube_video_id = _extract_youtube_id(youtube_url)
+
         if request.FILES.get('thumbnail'):
             video.thumbnail = request.FILES['thumbnail']
 
@@ -525,41 +632,13 @@ def submit_track_comment(request, pk):
     return JsonResponse({'status': 'ok', 'message': 'Comment submitted for review.'})
 
 
-@require_POST
-def submit_video_comment(request, pk):
-    video = get_object_or_404(Video, pk=pk, is_published=True)
-
-    username = request.POST.get('username', '').strip()
-    comment_text = request.POST.get('comment_text', '').strip()
-    honeypot = request.POST.get('website', '')  # Honeypot field for spam
-
-    if honeypot:
-        return JsonResponse({'status': 'ok'})  # Silently ignore spam
-
-    if not username or not comment_text:
-        return JsonResponse({'status': 'error', 'message': 'Name and comment are required.'}, status=400)
-
-    if len(username) > 50:
-        return JsonResponse({'status': 'error', 'message': 'Name too long.'}, status=400)
-
-    if len(comment_text) > 1000:
-        return JsonResponse({'status': 'error', 'message': 'Comment too long (max 1000 characters).'}, status=400)
-
-    Comment.objects.create(
-        video=video,
-        username=username,
-        comment_text=comment_text,
-        is_approved=False,
-    )
-
-    return JsonResponse({'status': 'ok', 'message': 'Comment submitted for review.'})
 
 
 
 @login_required
 def comment_list(request):
-    pending_comments = Comment.objects.filter(is_approved=False).order_by('-created_at')
-    approved_comments = Comment.objects.filter(is_approved=True).order_by('-created_at')[:20]
+    pending_comments = Comment.objects.filter(is_approved=False, track__isnull=False).order_by('-created_at')
+    approved_comments = Comment.objects.filter(is_approved=True, track__isnull=False).order_by('-created_at')[:20]
     return render(request, "dashboard/comment_list.html", {
         'pending_comments': pending_comments,
         'approved_comments': approved_comments,
@@ -584,3 +663,106 @@ def comment_reject(request, pk):
     comment.delete()
     messages.success(request, f'Comment by "{username}" rejected and deleted.')
     return redirect('portfolio:comment_list')
+
+
+# =============================================================================
+# Dashboard - Stream Sessions
+# =============================================================================
+
+@login_required
+def stream_list(request):
+    sessions = StreamSession.objects.all().order_by('-streamed_at')
+    return render(request, "dashboard/stream_list.html", {'sessions': sessions})
+
+
+@login_required
+def stream_add(request):
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        description = request.POST.get('description', '')
+        streamed_at = request.POST.get('streamed_at')
+        ended_at = request.POST.get('ended_at') or None
+        s3_recording_prefix = request.POST.get('s3_recording_prefix', '')
+        vod_playlist_url = request.POST.get('vod_playlist_url', '')
+        thumbnail_url = request.POST.get('thumbnail_url', '')
+        is_published = request.POST.get('is_published') == 'on'
+
+        if not title or not streamed_at:
+            messages.error(request, 'Title and stream date are required.')
+            return render(request, "dashboard/stream_form.html", {'action': 'add'})
+
+        StreamSession.objects.create(
+            title=title,
+            description=description,
+            streamed_at=streamed_at,
+            ended_at=ended_at,
+            s3_recording_prefix=s3_recording_prefix,
+            vod_playlist_url=vod_playlist_url,
+            thumbnail_url=thumbnail_url,
+            is_published=is_published,
+        )
+        messages.success(request, f'Stream session "{title}" created.')
+        return redirect('portfolio:stream_list')
+
+    return render(request, "dashboard/stream_form.html", {'action': 'add'})
+
+
+@login_required
+def stream_edit(request, pk):
+    session = get_object_or_404(StreamSession, pk=pk)
+
+    if request.method == 'POST':
+        session.title = request.POST.get('title', session.title)
+        session.description = request.POST.get('description', '')
+        streamed_at = request.POST.get('streamed_at')
+        if streamed_at:
+            session.streamed_at = streamed_at
+        ended_at = request.POST.get('ended_at')
+        session.ended_at = ended_at if ended_at else None
+        session.s3_recording_prefix = request.POST.get('s3_recording_prefix', '')
+        session.vod_playlist_url = request.POST.get('vod_playlist_url', '')
+        session.thumbnail_url = request.POST.get('thumbnail_url', '')
+        session.is_published = request.POST.get('is_published') == 'on'
+
+        session.save()
+        messages.success(request, f'Stream session "{session.title}" updated.')
+        return redirect('portfolio:stream_list')
+
+    return render(request, "dashboard/stream_form.html", {'action': 'edit', 'session': session})
+
+
+@login_required
+@require_POST
+def stream_delete(request, pk):
+    session = get_object_or_404(StreamSession, pk=pk)
+    title = session.title
+    session.delete()
+    messages.success(request, f'Stream session "{title}" deleted.')
+    return redirect('portfolio:stream_list')
+
+
+@login_required
+@require_POST
+def stream_toggle(request, pk):
+    session = get_object_or_404(StreamSession, pk=pk)
+    session.is_published = not session.is_published
+    session.save(update_fields=['is_published'])
+    status = 'published' if session.is_published else 'unpublished'
+    messages.success(request, f'Stream session "{session.title}" {status}.')
+    return redirect('portfolio:stream_list')
+
+
+@login_required
+def stream_config_view(request):
+    config = StreamConfig.load()
+
+    if request.method == 'POST':
+        config.placeholder_video_url = request.POST.get('placeholder_video_url', '')
+        next_stream_date = request.POST.get('next_stream_date')
+        config.next_stream_date = next_stream_date if next_stream_date else None
+        config.next_stream_title = request.POST.get('next_stream_title', '')
+        config.save()
+        messages.success(request, 'Stream configuration updated.')
+        return redirect('portfolio:stream_config')
+
+    return render(request, "dashboard/stream_config.html", {'config': config})

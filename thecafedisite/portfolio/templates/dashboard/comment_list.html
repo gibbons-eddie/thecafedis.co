@@ -45,7 +45,7 @@
                             <span class="font-monocraft-semibold text-xs text-gray-500 ml-2">{{ comment.created_at|timesince }} ago</span>
                         </div>
                         <span class="font-monocraft-semibold text-xs px-2 py-1" style="background-color: #0d0d0d; color: oklch(88.716% 0.09711 208.766); border-radius: 0.25rem;">
-                            {% if comment.track %}Track: {{ comment.track.title }}{% else %}Video: {{ comment.video.title }}{% endif %}
+                            Track: {{ comment.track.title|default:"Unknown" }}
                         </span>
                     </div>
                     <p class="font-monocraft-semibold text-sm text-gray-300 mb-4" style="white-space: pre-wrap;">{{ comment.comment_text }}</p>
@@ -90,7 +90,7 @@
                             <span class="font-monocraft-semibold text-xs text-gray-500 ml-2">{{ comment.created_at|timesince }} ago</span>
                         </div>
                         <span class="font-monocraft-semibold text-xs text-gray-500">
-                            {% if comment.track %}{{ comment.track.title }}{% else %}{{ comment.video.title }}{% endif %}
+                            {{ comment.track.title|default:"Unknown" }}
                         </span>
                     </div>
                     <p class="font-monocraft-semibold text-xs text-gray-400 truncate">{{ comment.comment_text|truncatewords:20 }}</p>
