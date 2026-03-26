@@ -218,7 +218,8 @@
 </div>
 
 <script>
-document.addEventListener('alpine:init', () => {
+(function() {
+    function register() {
     Alpine.data('streamPage', () => ({
         isLive: {{ is_live|yesno:"true,false" }},
         playbackUrl: '{{ playback_url }}',
@@ -466,6 +467,13 @@ document.addEventListener('alpine:init', () => {
             }
         },
     }));
-});
+    }
+    if (window.Alpine) {
+        register();
+        Alpine.initTree(document.querySelector('[x-data="streamPage()"]'));
+    } else {
+        document.addEventListener('alpine:init', register);
+    }
+})();
 </script>
 {% endblock content %}

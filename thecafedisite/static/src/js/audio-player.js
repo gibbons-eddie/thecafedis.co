@@ -13,6 +13,8 @@ document.addEventListener('alpine:init', () => {
     analyserConnected: false,
     previousVolume: 1,
     isScrubbing: false,
+    volumeDragging: false,
+    volumeSignalsVisible: false,
     scrubPercent: 0,
     scrubTime: 0,
 
@@ -186,6 +188,8 @@ document.addEventListener('alpine:init', () => {
       const clientX = event.clientX;
       const vol = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
       this.setVolume(vol);
+      this.volumeDragging = true;
+      this.volumeSignalsVisible = true;
 
       const onMove = (e) => {
         const cx = e.clientX || (e.touches && e.touches[0].clientX);
@@ -193,6 +197,8 @@ document.addEventListener('alpine:init', () => {
         this.setVolume(v);
       };
       const onUp = () => {
+        this.volumeDragging = false;
+        setTimeout(() => { this.volumeSignalsVisible = false; }, 200);
         document.removeEventListener('mousemove', onMove);
         document.removeEventListener('mouseup', onUp);
         document.removeEventListener('touchmove', onMove);

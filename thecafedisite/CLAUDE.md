@@ -19,6 +19,7 @@
 - When I say to start or stop the dev server, always use the start and stop scripts inside the `thecafedisite` directory
 - Try to minimize comments. If the method is relatively straightforward and easy to understand without comments, remove the comments and/or JAVADOCs
 - Use Chrome MCP instead of the playwright plugin as much as possible
+- Any PLaywright screengrabs must be saved to `.playwright-mcp` folder
 
 ## Planning File Convention
 - All Claude planning files stored in: /Users/eddiegibbons/.claude/plans/

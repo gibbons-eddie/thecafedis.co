@@ -13,8 +13,17 @@ TAILWIND_PID=$!
 trap "kill $TAILWIND_PID 2>/dev/null" EXIT
 
 echo "Tailwind watch started (PID: $TAILWIND_PID)"
-echo "Starting Django dev server..."
-echo ""
 
-# Start Django dev server (foreground)
-python3 manage.py runserver
+if [ "$1" = "--mobile" ]; then
+  export DEBUG=true
+  LAN_IP=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null)
+  echo "Starting Django dev server (mobile mode)..."
+  echo "Local:  http://localhost:8000"
+  echo "Phone:  http://${LAN_IP}:8000"
+  echo ""
+  python3 manage.py runserver 0.0.0.0:8000
+else
+  echo "Starting Django dev server..."
+  echo ""
+  python3 manage.py runserver
+fi

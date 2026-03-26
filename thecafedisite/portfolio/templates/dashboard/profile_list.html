@@ -14,7 +14,7 @@
                     </div>
                     <p class="font-monocraft-semibold text-sm text-gray-400">{{ images|length }} image{% if images|length != 1 %}s{% endif %} total</p>
                 </div>
-                <div class="flex gap-3">
+                <div class="flex gap-3 tcd-dash-header-actions">
                     <a href="{% url 'portfolio:dashboard' %}"
                        class="px-4 py-2 font-monocraft-semibold text-sm"
                        style="color: oklch(88.716% 0.09711 208.766); border: 1px solid oklch(88.716% 0.09711 208.766 / 0.5); border-radius: 0.5rem;">
@@ -63,7 +63,7 @@
                         <p class="font-monocraft-semibold text-sm text-gray-400 truncate mb-3">
                             {% if image.alt_text %}{{ image.alt_text }}{% else %}<span class="text-gray-600">No alt text</span>{% endif %}
                         </p>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 tcd-dash-actions">
                             <form method="POST" action="{% url 'portfolio:profile_toggle' image.pk %}" style="display: inline;">
                                 {% csrf_token %}
                                 <button type="submit" class="px-3 py-1.5 font-monocraft-semibold text-xs cursor-pointer"

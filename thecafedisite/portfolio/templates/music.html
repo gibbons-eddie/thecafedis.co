@@ -16,7 +16,8 @@
 
         <div class="typewriter-body">
         {% if tracks %}
-        <div class="space-y-6">
+
+        <div class="tcd-desktop-tracks space-y-6">
             {% for track in tracks %}
             <div class="p-5" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
                 <div class="flex gap-5">
@@ -84,24 +85,21 @@
 
                                 <div class="flex-1"></div>
 
-                                <div class="tcd-volume-wrapper" :class="{ 'muted': isMuted }">
-                                    <div class="tcd-volume-top">
-                                        <div class="tcd-volume-bars">
-                                            <div class="tcd-volume-bar" :class="{ 'active': volume >= 0.01 }" @click="setVolume(0.14)"></div>
-                                            <div class="tcd-volume-bar" :class="{ 'active': volume >= 0.15 }" @click="setVolume(0.28)"></div>
-                                            <div class="tcd-volume-bar" :class="{ 'active': volume >= 0.29 }" @click="setVolume(0.42)"></div>
-                                            <div class="tcd-volume-bar" :class="{ 'active': volume >= 0.43 }" @click="setVolume(0.57)"></div>
-                                            <div class="tcd-volume-bar" :class="{ 'active': volume >= 0.58 }" @click="setVolume(0.71)"></div>
-                                            <div class="tcd-volume-bar" :class="{ 'active': volume >= 0.72 }" @click="setVolume(0.85)"></div>
-                                            <div class="tcd-volume-bar" :class="{ 'active': volume >= 0.86 }" @click="setVolume(1)"></div>
-                                        </div>
-                                        <span class="tcd-volume-percent" x-text="volumePercent + '%'"></span>
-                                    </div>
-                                    <div class="tcd-volume-slider-row">
-                                        <div class="tcd-volume-track"
-                                             @mousedown="startVolumeDrag($event)"
-                                             @touchstart.prevent="startVolumeDrag($event.touches[0])">
+                                <div class="tcd-volume-wrapper">
+                                    <span class="tcd-volume-percent" :class="volumeSignalsVisible && 'tcd-volume-percent--active'" x-text="volumePercent + '%'"></span>
+                                    <div class="tcd-volume-track" :class="volumeSignalsVisible && 'tcd-volume-track--active'"
+                                         @mousedown="startVolumeDrag($event)"
+                                         @touchstart.prevent="startVolumeDrag($event.touches[0])">
+                                        <div class="tcd-volume-bar-inner">
                                             <div class="tcd-volume-fill" :style="'width: ' + volumePercent + '%'"></div>
+                                            <div class="tcd-volume-head" :style="'left: ' + volumePercent + '%'"></div>
+                                        </div>
+                                        <div class="tcd-volume-signals">
+                                            <template x-for="i in 25" :key="i">
+                                                <div class="tcd-volume-signal" :class="(i / 25 * 100) <= volumePercent && 'active'">
+                                                    <div class="tcd-volume-signal-bar" :style="volumeDragging && (i / 25 * 100) <= volumePercent ? 'height: ' + (3 + (i * 0.76)) + 'px' : 'height: 0px'"></div>
+                                                </div>
+                                            </template>
                                         </div>
                                     </div>
                                 </div>
@@ -136,7 +134,6 @@
                         <h4 class="font-monocraft-semibold text-sm text-gray-400 mb-3">Leave a comment</h4>
                         <form class="comment-form" data-url="{% url 'portfolio:submit_track_comment' track.pk %}">
                             {% csrf_token %}
-                            <!-- Honeypot field (hidden) -->
                             <input type="text" name="website" style="display: none;" tabindex="-1" autocomplete="off">
                             <div class="mb-3 tcd-float-group">
                                 <input type="text" name="username" placeholder=" " required maxlength="50"
@@ -161,6 +158,109 @@
             </div>
             {% endfor %}
         </div>
+
+        <div class="tcd-mobile-tracks" x-data="vinylPlayer()">
+            <div class="tcd-mobile-track-grid" :class="phase !== 'closed' && 'tcd-mobile-track-grid--faded'">
+                {% for track in tracks %}
+                <div class="tcd-mobile-track-item" @click="openTrack({{ forloop.counter0 }}, $event)">
+                    {% if track.cover_art %}
+                    <img src="{{ track.cover_art.url }}" alt="{{ track.title }}">
+                    {% else %}
+                    <div class="tcd-mobile-track-item-placeholder">
+                        <span>~</span>
+                    </div>
+                    {% endif %}
+                    <div class="tcd-mobile-track-info">
+                        <h3>{{ track.title }}</h3>
+                        <span>{{ track.genre|default:"" }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="tcd-vinyl-player" :class="phase !== 'closed' && phase !== 'closing-fade' && 'tcd-vinyl-player--visible'">
+                <div class="tcd-vinyl-content">
+                    <button class="tcd-vinyl-close"
+                            :class="headerVisible && 'tcd-vinyl-close--visible'"
+                            @click="closePlayer()">X</button>
+
+                    <h2 class="tcd-vinyl-track-title"
+                        :class="headerVisible && 'tcd-vinyl-track-title--visible'"
+                        x-text="currentTrack ? currentTrack.title : ''"></h2>
+
+                    <div class="tcd-vinyl-stage">
+                        <div class="tcd-vinyl-disc"
+                             :class="{
+                               'tcd-vinyl-disc--emerging': phase === 'emerging',
+                               'tcd-vinyl-disc--returning': phase === 'returning' || phase === 'expanding',
+                               'tcd-vinyl-disc--settled': phase === 'settled' || phase === 'closing-controls' || phase === 'closing-shrink',
+                               'tcd-vinyl-disc--closing-out': phase === 'closing-disc-out',
+                               'tcd-vinyl-disc--closing-behind': phase === 'closing-disc-behind',
+                               'tcd-vinyl-disc--scrubbing': isScrubbing
+                             }"
+                             :style="(phase === 'settled' || phase === 'closing-controls' || phase === 'closing-shrink') ? (isScrubbing ? 'transform: rotate(' + scrubAngle + 'deg)' : (flickAngle !== 0 ? 'transform: rotate(' + (restAngle + flickAngle) + 'deg); transition: transform 0.3s ease-out' : (isPlaying ? 'transform: rotate(' + spinAngle + 'deg)' : 'transform: rotate(' + restAngle + 'deg)'))) : ''"
+                             @touchstart.prevent="vinylTouchStart($event)"
+                             @touchmove.prevent="vinylTouchMove($event)"
+                             @touchend="vinylTouchEnd()">
+                            <img src="{% static 'images/dark-cd-vinyl.PNG' %}" alt="vinyl">
+                        </div>
+                        <div class="tcd-vinyl-sleeve"
+                             :class="sleeveOpen && 'tcd-vinyl-sleeve--opened'">
+                            <img :src="currentTrack ? currentTrack.coverUrl : ''" alt="cover art">
+                            <div class="tcd-vinyl-sleeve-tint"></div>
+                        </div>
+                    </div>
+
+                    <div class="tcd-vinyl-controls-area" :class="phase === 'settled' && 'tcd-vinyl-controls-area--visible'">
+                        <div class="tcd-vinyl-timeline"
+                             :class="timelineDragging && 'tcd-vinyl-timeline--dragging'">
+                            <div class="tcd-vinyl-timeline-track">
+                                <div class="tcd-vinyl-timeline-fill" :style="'width: ' + progressPercent + '%'"></div>
+                                <div class="tcd-vinyl-timeline-head" :style="'left: ' + progressPercent + '%'"></div>
+                            </div>
+                        </div>
+
+                        <div class="tcd-vinyl-time">
+                            <span x-text="formatTime(currentTime)"></span>
+                            <span x-text="formatTime(duration)"></span>
+                        </div>
+
+                        <div class="tcd-vinyl-transport">
+                            <button @click="seekRelative(-10)" aria-label="Rewind 10 seconds">
+                                <span class="font-monocraft-semibold text-white text-lg">&lt;&lt;</span>
+                            </button>
+                            <button class="tcd-vinyl-transport-play" @click="togglePlay()" :aria-label="isPlaying ? 'Pause' : 'Play'">
+                                <svg x-show="!isPlaying" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                <svg x-show="isPlaying" viewBox="0 0 24 24"><path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/></svg>
+                            </button>
+                            <button @click="seekRelative(10)" aria-label="Forward 10 seconds">
+                                <span class="font-monocraft-semibold text-white text-lg">&gt;&gt;</span>
+                            </button>
+                        </div>
+
+                        <div class="tcd-vinyl-volume-row">
+                            <div class="tcd-vinyl-volume-track" :class="volumeSignalsVisible && 'tcd-vinyl-volume-track--active'">
+                                <div class="tcd-vinyl-volume-bar">
+                                    <div class="tcd-vinyl-volume-fill" :style="'width: ' + volumePercent + '%'"></div>
+                                    <div class="tcd-vinyl-volume-head" :style="'left: ' + volumePercent + '%'"></div>
+                                </div>
+                                <div class="tcd-vinyl-volume-signals">
+                                    <template x-for="i in 25" :key="i">
+                                        <div class="tcd-vinyl-volume-signal" :class="(i / 25 * 100) <= volumePercent && 'active'">
+                                            <div class="tcd-vinyl-volume-signal-top" :style="volumeDragging && (i / 25 * 100) <= volumePercent ? 'height: ' + (3 + (i * 0.76)) + 'px' : 'height: 0px'"></div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                            <div class="tcd-vinyl-volume-percent" :class="volumeSignalsVisible && 'tcd-vinyl-volume-percent--visible'" x-text="volumePercent + '%'"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <audio x-ref="mobileAudio" preload="metadata"></audio>
+            </div>
+        </div>
+
         {% else %}
         <div class="p-8 text-center" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
             <p class="font-monocraft-semibold text-gray-400">No tracks available yet.</p>
@@ -226,5 +326,20 @@
 
     document.addEventListener('DOMContentLoaded', initCommentForms);
     document.addEventListener('up:fragment:inserted', initCommentForms);
+</script>
+
+<script>
+    const TRACK_DATA = [
+        {% for track in tracks %}
+        {
+            id: {{ track.pk }},
+            title: '{{ track.title|escapejs }}',
+            genre: '{{ track.genre|default:""|escapejs }}',
+            coverUrl: {% if track.cover_art %}'{{ track.cover_art.url }}'{% else %}null{% endif %},
+            audioUrl: '{{ track.audio_file.url }}',
+            releaseDate: '{{ track.release_date|date:"m-d-Y"|default:"" }}'
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
 </script>
 {% endblock content %}
