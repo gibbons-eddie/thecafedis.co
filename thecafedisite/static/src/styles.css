@@ -331,6 +331,42 @@ h1 {
   color: oklch(88.716% 0.09711 208.766 / 0.55);
 }
 
+.tcd-pixel-window {
+  --pixel-corners: polygon(
+    0 18px, 6px 18px, 6px 12px, 12px 12px, 12px 6px, 18px 6px, 18px 0,
+    calc(100% - 6px) 0, calc(100% - 6px) 6px, 100% 6px,
+    100% calc(100% - 18px), calc(100% - 6px) calc(100% - 18px), calc(100% - 6px) calc(100% - 12px),
+    calc(100% - 12px) calc(100% - 12px), calc(100% - 12px) calc(100% - 6px),
+    calc(100% - 18px) calc(100% - 6px), calc(100% - 18px) 100%,
+    6px 100%, 6px calc(100% - 6px), 0 calc(100% - 6px)
+  );
+  position: relative;
+  isolation: isolate;
+  filter: drop-shadow(4px 4px 0 oklch(8% 0.02 208.766 / 0.8));
+}
+
+.tcd-pixel-window::before {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  background: oklch(50% 0.07 208.766);
+  clip-path: var(--pixel-corners);
+  z-index: -2;
+  box-shadow:
+    inset 3px 3px 0 0 oklch(68% 0.09 208.766),
+    inset -3px -3px 0 0 oklch(32% 0.04 208.766);
+}
+
+.tcd-pixel-window::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #1a1a1a;
+  clip-path: var(--pixel-corners);
+  z-index: -1;
+  box-shadow: inset 0 0 0 3px oklch(25% 0.015 208.766);
+}
+
 .tcd-hover-bright {
   background-color: var(--color-blue-tron);
 }

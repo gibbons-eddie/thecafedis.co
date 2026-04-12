@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Verify - thecafedisco{% endblock %}
+
+{% block content %}
+<div class="flex flex-col items-center min-h-[70vh] px-4 pt-8">
+    <div class="mb-5" style="max-width: 360px; width: 100%;">
+        <div class="flex items-center gap-2 mb-1">
+            <span style="color: oklch(88.716% 0.09711 208.766); font-family: 'Monocraft-SemiBold', monospace;">%</span>
+            <span class="typewriter-header font-monocraft-semibold" style="color: #ffffff;">thecafedisco --verify</span>
+        </div>
+    </div>
+
+    <div class="typewriter-body">
+    <div class="p-8" style="max-width: 360px; width: 100%; background-color: #1a1a1a; border: 2px solid oklch(88.716% 0.09711 208.766); border-radius: 1rem;">
+        {% if messages %}
+        <div class="mb-4 p-3 font-monocraft-semibold text-sm" style="background-color: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 0.5rem;">
+            {% for message in messages %}
+            <p style="color: #ef4444;">ERROR: {{ message }}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <p class="font-monocraft-semibold text-sm text-gray-400 mb-4">Enter the 6-digit code from your authenticator app, or a backup code.</p>
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="mb-5">
+                <label for="otp_code" class="block font-monocraft-semibold text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
+                    verification code
+                </label>
+                <input
+                    type="text"
+                    name="otp_code"
+                    id="otp_code"
+                    required
+                    autocomplete="one-time-code"
+                    inputmode="numeric"
+                    maxlength="8"
+                    class="w-full p-3 font-monocraft-semibold text-white text-center text-xl tracking-widest tcd-input-focus"
+                    style="background-color: #0d0d0d; border-radius: 0.5rem; outline: none; letter-spacing: 0.5em;"
+                    placeholder="------"
+                    autofocus
+                >
+            </div>
+
+            <button
+                type="submit"
+                class="w-full p-3 font-monocraft-semibold font-semibold cursor-pointer tcd-hover-bright"
+                style="color: #000000; border: none; border-radius: 0.5rem; transition: background-color 0.2s;"
+            >
+                $ verify
+            </button>
+        </form>
+
+        <div class="mt-5 pt-3 text-center" style="border-top: 1px solid oklch(88.716% 0.09711 208.766 / 0.3);">
+            <a href="{% url 'portfolio:login' %}" class="font-monocraft-semibold text-xs text-gray-500 hover:text-gray-400" style="transition: color 0.2s;">Back to login</a>
+        </div>
+    </div>
+    </div>
+</div>
+
+<style>
+    input::placeholder {
+        color: #6b7280;
+        opacity: 1;
+    }
+</style>
+{% endblock content %}

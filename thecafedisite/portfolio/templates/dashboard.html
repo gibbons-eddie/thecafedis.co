@@ -27,6 +27,35 @@
         </div>
 
         <div class="typewriter-body">
+        <div class="p-5 mb-6" style="background-color: #1a1a1a; border: 1px solid {% if has_2fa %}#22c55e{% else %}#ef4444{% endif %}; border-radius: 0.75rem;">
+            <div class="flex items-center gap-3 mb-3">
+                <span class="text-xl" style="color: {% if has_2fa %}#22c55e{% else %}#ef4444{% endif %};">></span>
+                <h3 class="font-monocraft-semibold text-base" style="color: {% if has_2fa %}#22c55e{% else %}#ef4444{% endif %};">Security: Two-Factor Auth</h3>
+            </div>
+            {% if has_2fa %}
+            <p class="font-monocraft-semibold text-sm text-gray-400 mb-3">2FA is enabled. Your account requires a TOTP code on login.</p>
+            <form method="POST" action="{% url 'portfolio:disable_2fa' %}">
+                {% csrf_token %}
+                <button type="submit"
+                    class="px-4 py-2 font-monocraft-semibold text-sm cursor-pointer"
+                    style="color: #ef4444; border: 1px solid #ef4444; border-radius: 0.5rem; background: transparent; transition: all 0.2s;"
+                    onmouseover="this.style.backgroundColor='#ef4444'; this.style.color='#000';"
+                    onmouseout="this.style.backgroundColor='transparent'; this.style.color='#ef4444';"
+                >
+                    $ disable --2fa
+                </button>
+            </form>
+            {% else %}
+            <p class="font-monocraft-semibold text-sm text-gray-400 mb-3">2FA is not enabled. Set it up to secure your dashboard login.</p>
+            <a href="{% url 'portfolio:setup_2fa' %}"
+               class="inline-block px-4 py-2 font-monocraft-semibold text-sm tcd-hover-bright"
+               style="color: #000; border-radius: 0.5rem; transition: background-color 0.2s;"
+            >
+                $ setup --2fa
+            </a>
+            {% endif %}
+        </div>
+
         <div class="p-5 mb-6 tcd-dash-quick" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
             <h3 class="font-monocraft-semibold text-base mb-4" style="color: oklch(88.716% 0.09711 208.766);">
                 <span class="text-gray-400">></span> Quick Actions

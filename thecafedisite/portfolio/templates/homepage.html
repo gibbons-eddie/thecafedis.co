@@ -85,10 +85,10 @@
             </div>
 
             <div class="typewriter-body">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {% regroup skills by get_category_display as skill_groups %}
                 {% for group in skill_groups %}
-                <div class="p-4" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
+                <div class="p-6 tcd-pixel-window">
                     <h3 class="font-monocraft-semibold text-sm mb-4" style="color: oklch(88.716% 0.09711 208.766);">
                          {{ group.grouper }}
                     </h3>
@@ -117,7 +117,7 @@
             <div class="typewriter-body">
             <div class="space-y-6">
                 {% for entry in career_entries %}
-                <div class="p-5" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
+                <div class="p-7 tcd-pixel-window">
                     <div class="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-2 mb-4">
                         <div>
                             <h3 class="font-monocraft-semibold text-lg text-white mb-1">{{ entry.title }}</h3>

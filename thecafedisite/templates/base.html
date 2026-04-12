@@ -906,8 +906,9 @@
 
                 document.addEventListener('up:link:follow', () => {
                     const state = GlobalMediaState.getActive();
-                    if (state.media && !state.media.paused && state.info) {
-                        this._transferToOwn(state.media, state.info);
+                    if (state.media && !state.media.paused) {
+                        state.media.pause();
+                        state.media.currentTime = 0;
                     }
                 });
 

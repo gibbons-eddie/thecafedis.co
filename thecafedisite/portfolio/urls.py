@@ -21,6 +21,7 @@ urlpatterns = [
 
     # Authentication
     path('login/', views.login_view, name='login'),
+    path('login/verify/', views.verify_2fa, name='verify_2fa'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
 
     # Admin dashboard
@@ -72,6 +73,10 @@ urlpatterns = [
     path('dashboard/streams/<int:pk>/delete/', views.stream_delete, name='stream_delete'),
     path('dashboard/streams/<int:pk>/toggle/', views.stream_toggle, name='stream_toggle'),
     path('dashboard/streams/config/', views.stream_config_view, name='stream_config'),
+
+    # Two-Factor Authentication
+    path('dashboard/2fa/setup/', views.setup_2fa, name='setup_2fa'),
+    path('dashboard/2fa/disable/', views.disable_2fa, name='disable_2fa'),
 
     # Custom admin - Comment Moderation
     path('dashboard/comments/', views.comment_list, name='comment_list'),

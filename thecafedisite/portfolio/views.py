@@ -1,5 +1,8 @@
 import re
+import io
+import base64
 import logging
+import secrets
 from urllib.parse import urlparse, parse_qs
 from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
@@ -9,6 +12,8 @@ from django.contrib import messages
 from django.http import JsonResponse, FileResponse
 from django.utils import timezone
 from django.views.decorators.http import require_POST, require_GET
+from django_otp.plugins.otp_totp.models import TOTPDevice
+from django_otp.plugins.otp_static.models import StaticDevice, StaticToken
 from .models import CareerEntry, Skill, ProfileImage, MusicTrack, Video, Comment, StreamConfig, StreamSession
 
 logger = logging.getLogger(__name__)
@@ -189,6 +194,11 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
+            has_totp = TOTPDevice.objects.filter(user=user, confirmed=True).exists()
+            if has_totp:
+                request.session['pre_2fa_user_id'] = user.pk
+                request.session['pre_2fa_next'] = request.GET.get('next', '')
+                return redirect('portfolio:verify_2fa')
             login(request, user)
             next_url = request.GET.get('next')
             if next_url:
@@ -202,6 +212,105 @@ def login_view(request):
     return render(request, "login.html")
 
 
+def verify_2fa(request):
+    user_id = request.session.get('pre_2fa_user_id')
+    if not user_id:
+        return redirect('portfolio:login')
+
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    try:
+        user = User.objects.get(pk=user_id)
+    except User.DoesNotExist:
+        return redirect('portfolio:login')
+
+    if request.method == 'POST':
+        code = request.POST.get('otp_code', '').strip()
+        device = TOTPDevice.objects.filter(user=user, confirmed=True).first()
+        static_device = StaticDevice.objects.filter(user=user, confirmed=True).first()
+
+        verified = False
+        if device and device.verify_token(code):
+            verified = True
+        elif static_device and static_device.verify_token(code):
+            verified = True
+
+        if verified:
+            login(request, user)
+            next_url = request.session.pop('pre_2fa_next', '')
+            request.session.pop('pre_2fa_user_id', None)
+            if next_url:
+                parsed = urlparse(next_url)
+                if not parsed.netloc and not parsed.scheme:
+                    return redirect(next_url)
+            return redirect('portfolio:dashboard')
+        else:
+            messages.error(request, 'Invalid verification code.')
+
+    return render(request, "verify_2fa.html")
+
+
+@login_required
+def setup_2fa(request):
+    device = TOTPDevice.objects.filter(user=request.user, confirmed=True).first()
+    if device:
+        return redirect('portfolio:dashboard')
+
+    pending_device = TOTPDevice.objects.filter(user=request.user, confirmed=False).first()
+    if not pending_device:
+        pending_device = TOTPDevice.objects.create(
+            user=request.user,
+            name='default',
+            confirmed=False,
+        )
+
+    if request.method == 'POST':
+        code = request.POST.get('otp_code', '').strip()
+        if pending_device.verify_token(code):
+            pending_device.confirmed = True
+            pending_device.save()
+
+            static_device, _ = StaticDevice.objects.get_or_create(
+                user=request.user,
+                name='backup',
+                defaults={'confirmed': True},
+            )
+            static_device.token_set.all().delete()
+            backup_codes = []
+            for _ in range(8):
+                token = secrets.token_hex(4)
+                StaticToken.objects.create(device=static_device, token=token)
+                backup_codes.append(token)
+
+            return render(request, "dashboard/setup_2fa_complete.html", {
+                'backup_codes': backup_codes,
+            })
+        else:
+            messages.error(request, 'Invalid code. Try again.')
+
+    import qrcode
+    uri = pending_device.config_url
+    uri = uri.replace('otpauth://totp/default', 'otpauth://totp/thecafedisco')
+    img = qrcode.make(uri, box_size=6, border=2)
+    buf = io.BytesIO()
+    img.save(buf, format='PNG')
+    qr_b64 = base64.b64encode(buf.getvalue()).decode()
+
+    return render(request, "dashboard/setup_2fa.html", {
+        'qr_data': qr_b64,
+        'secret_key': base64.b32encode(pending_device.bin_key).decode(),
+    })
+
+
+@login_required
+@require_POST
+def disable_2fa(request):
+    TOTPDevice.objects.filter(user=request.user).delete()
+    StaticDevice.objects.filter(user=request.user).delete()
+    messages.success(request, '2FA has been disabled.')
+    return redirect('portfolio:dashboard')
+
+
 @login_required
 def dashboard(request):
     context = {
@@ -212,6 +321,7 @@ def dashboard(request):
         'video_count': Video.objects.count(),
         'pending_comment_count': Comment.objects.filter(is_approved=False).count(),
         'stream_count': StreamSession.objects.count(),
+        'has_2fa': TOTPDevice.objects.filter(user=request.user, confirmed=True).exists(),
     }
     return render(request, "dashboard.html", context)
 
