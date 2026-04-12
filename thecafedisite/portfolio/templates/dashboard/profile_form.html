@@ -35,10 +35,13 @@
                     <label class="block font-monocraft-semibold text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
                         current_image
                     </label>
-                    <img src="{{ profile.image.url }}"
+                    <img id="existing-image" src="{{ profile.image.url }}"
                          alt="{{ profile.alt_text|default:'Current profile image' }}"
                          class="rounded-lg"
-                         style="width: 120px; height: 120px; object-fit: cover; border: 2px solid oklch(88.716% 0.09711 208.766);">
+                         style="width: 120px; height: 120px; object-fit: cover; border: 2px solid oklch(88.716% 0.09711 208.766); cursor: pointer;"
+                         title="Click to re-crop"
+                         data-proxy-url="{% url 'portfolio:profile_image_proxy' profile.pk %}">
+                    <p class="mt-1 font-monocraft-semibold text-xs text-gray-500">Click image to re-crop</p>
                 </div>
                 {% endif %}
 
@@ -46,11 +49,52 @@
                     <label class="block font-monocraft-semibold text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
                         image {% if action == 'add' %}<span style="color: oklch(74.443% 0.17237 51.252);">*</span>{% endif %}
                     </label>
-                    <input type="file" name="image" accept="image/*"
+                    <input type="file" name="image" accept="image/*" id="image-input"
                            {% if action == 'add' %}required{% endif %}
                            class="w-full px-3 py-2 font-monocraft-semibold text-gray-400"
                            style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.5rem;">
-                    <p class="mt-1 font-monocraft-semibold text-xs text-gray-500">Square image recommended (min 400x400px)</p>
+                    <p class="mt-1 font-monocraft-semibold text-xs text-gray-500">Image will be cropped to a square</p>
+
+                    <div id="crop-area" style="display: none; margin-top: 1rem;">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="font-monocraft-semibold text-xs" style="color: oklch(88.716% 0.09711 208.766);">drag to position crop</p>
+                            <button type="button" id="reset-crop" class="font-monocraft-semibold text-xs" style="color: oklch(74.443% 0.17237 51.252); background: none; border: none; cursor: pointer; min-height: auto;">reset</button>
+                        </div>
+                        <div id="crop-wrapper" style="position: relative; width: 280px; height: 280px;">
+                            <div id="crop-viewport" style="width: 280px; height: 280px; overflow: hidden; position: relative; border-radius: 0.75rem; cursor: grab; background-color: #0d0d0d;">
+                                <img id="crop-image" style="position: absolute; user-select: none; -webkit-user-drag: none; pointer-events: none; max-width: none;">
+                                <div id="crop-scanlines" style="position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(to bottom, transparent 0px, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px); z-index: 2;"></div>
+                                <div id="crop-grid" style="position: absolute; inset: 0; pointer-events: none; z-index: 3;">
+                                    <div style="position: absolute; left: 33.33%; top: 0; bottom: 0; width: 1px; background: oklch(88.716% 0.09711 208.766 / 0.2);"></div>
+                                    <div style="position: absolute; left: 66.66%; top: 0; bottom: 0; width: 1px; background: oklch(88.716% 0.09711 208.766 / 0.2);"></div>
+                                    <div style="position: absolute; top: 33.33%; left: 0; right: 0; height: 1px; background: oklch(88.716% 0.09711 208.766 / 0.2);"></div>
+                                    <div style="position: absolute; top: 66.66%; left: 0; right: 0; height: 1px; background: oklch(88.716% 0.09711 208.766 / 0.2);"></div>
+                                </div>
+                                <div id="crop-crosshair" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; z-index: 3;">
+                                    <div style="width: 12px; height: 2px; background: oklch(88.716% 0.09711 208.766 / 0.4); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
+                                    <div style="width: 2px; height: 12px; background: oklch(88.716% 0.09711 208.766 / 0.4); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
+                                </div>
+                            </div>
+                            <div style="position: absolute; inset: -3px; border-radius: 0.85rem; border: 3px solid oklch(88.716% 0.09711 208.766); pointer-events: none; z-index: 4;"></div>
+                            <div style="position: absolute; top: -3px; left: -3px; width: 14px; height: 14px; border-top: 3px solid oklch(88.716% 0.09711 208.766); border-left: 3px solid oklch(88.716% 0.09711 208.766); border-radius: 0.85rem 0 0 0; pointer-events: none; z-index: 5;"></div>
+                            <div style="position: absolute; top: -3px; right: -3px; width: 14px; height: 14px; border-top: 3px solid oklch(88.716% 0.09711 208.766); border-right: 3px solid oklch(88.716% 0.09711 208.766); border-radius: 0 0.85rem 0 0; pointer-events: none; z-index: 5;"></div>
+                            <div style="position: absolute; bottom: -3px; left: -3px; width: 14px; height: 14px; border-bottom: 3px solid oklch(88.716% 0.09711 208.766); border-left: 3px solid oklch(88.716% 0.09711 208.766); border-radius: 0 0 0 0.85rem; pointer-events: none; z-index: 5;"></div>
+                            <div style="position: absolute; bottom: -3px; right: -3px; width: 14px; height: 14px; border-bottom: 3px solid oklch(88.716% 0.09711 208.766); border-right: 3px solid oklch(88.716% 0.09711 208.766); border-radius: 0 0 0.85rem 0; pointer-events: none; z-index: 5;"></div>
+                        </div>
+                        <div class="flex items-center gap-3" style="width: 280px; margin-top: 1.25rem;">
+                            <button type="button" id="zoom-out"
+                                    style="width: 36px; height: 36px; background: none; border: none; cursor: pointer; min-height: auto; display: flex; align-items: center; justify-content: center;">
+                                <span class="font-monocraft-semibold text-white" style="font-size: 1.125rem;">&lt;</span>
+                            </button>
+                            <input type="range" id="zoom-slider" min="100" max="300" value="100" class="tcd-crop-zoom-slider">
+                            <button type="button" id="zoom-in"
+                                    style="width: 36px; height: 36px; background: none; border: none; cursor: pointer; min-height: auto; display: flex; align-items: center; justify-content: center;">
+                                <span class="font-monocraft-semibold text-white" style="font-size: 1.125rem;">&gt;</span>
+                            </button>
+                            <span id="zoom-label" class="font-monocraft-semibold" style="font-size: 0.625rem; color: oklch(88.716% 0.09711 208.766); min-width: 32px; text-align: right;">1x</span>
+                        </div>
+                        <p class="font-monocraft-semibold mt-2" style="font-size: 0.625rem; color: #555;">[ 800x800 output ]</p>
+                    </div>
                 </div>
 
                 <div class="mb-4">
@@ -69,10 +113,20 @@
                     <label class="block font-monocraft-semibold text-sm mb-2" style="color: oklch(88.716% 0.09711 208.766);">
                         order
                     </label>
-                    <input type="number" name="order"
-                           value="{% if profile %}{{ profile.order }}{% else %}0{% endif %}"
-                           class="w-full px-3 py-2 font-monocraft-semibold text-white"
-                           style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.5rem; outline: none;">
+                    <div class="flex items-center" style="gap: 10px;">
+                        <input type="number" name="order"
+                               value="{% if profile %}{{ profile.order }}{% else %}0{% endif %}"
+                               class="px-3 py-2 font-monocraft-semibold text-white text-center"
+                               style="background-color: #0d0d0d; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.5rem; outline: none; width: 70px; -moz-appearance: textfield; -webkit-appearance: none; appearance: textfield;">
+                        <button type="button" onclick="var i=this.parentElement.querySelector('input');i.value=Math.max(0,parseInt(i.value||0)-1);"
+                                style="width: 32px; height: 36px; background: none; border: none; cursor: pointer; min-height: auto; display: flex; align-items: center; justify-content: center;">
+                            <span class="font-monocraft-semibold text-white" style="font-size: 1.125rem;">&lt;</span>
+                        </button>
+                        <button type="button" onclick="var i=this.parentElement.querySelector('input');i.value=parseInt(i.value||0)+1;"
+                                style="width: 32px; height: 36px; background: none; border: none; cursor: pointer; min-height: auto; display: flex; align-items: center; justify-content: center;">
+                            <span class="font-monocraft-semibold text-white" style="font-size: 1.125rem;">&gt;</span>
+                        </button>
+                    </div>
                     <p class="mt-1 font-monocraft-semibold text-xs text-gray-500">Lower numbers appear first in rotation</p>
                 </div>
 
@@ -102,4 +156,221 @@
         </form>
     </div>
 </div>
+<style>
+.tcd-crop-zoom-slider {
+    flex: 1;
+    height: 2px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: oklch(88.716% 0.09711 208.766 / 0.3);
+    outline: none;
+    border-radius: 0;
+}
+.tcd-crop-zoom-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 15px;
+    height: 15px;
+    background: #fff;
+    border: none;
+    border-radius: 0;
+    cursor: pointer;
+}
+.tcd-crop-zoom-slider::-moz-range-thumb {
+    width: 15px;
+    height: 15px;
+    background: #fff;
+    border: none;
+    border-radius: 0;
+    cursor: pointer;
+}
+</style>
+<script>
+(function() {
+    var fileInput = document.getElementById('image-input');
+    var cropArea = document.getElementById('crop-area');
+    var cropViewport = document.getElementById('crop-viewport');
+    var cropImage = document.getElementById('crop-image');
+    var form = document.querySelector('form');
+    var zoomSlider = document.getElementById('zoom-slider');
+    var zoomLabel = document.getElementById('zoom-label');
+    var existingImg = document.getElementById('existing-image');
+
+    var VIEWPORT = 280;
+    var OUTPUT = 800;
+    var baseScale = 1, scale = 1;
+    var imgNatW = 0, imgNatH = 0;
+    var offsetX = 0, offsetY = 0, hasCrop = false;
+
+    function applyZoom() {
+        cropImage.style.width = (imgNatW * scale) + 'px';
+        cropImage.style.height = (imgNatH * scale) + 'px';
+        applyOffset();
+    }
+
+    function centerImage() {
+        offsetX = -(imgNatW * scale - VIEWPORT) / 2;
+        offsetY = -(imgNatH * scale - VIEWPORT) / 2;
+        applyOffset();
+    }
+
+    function applyOffset() {
+        var minX = VIEWPORT - imgNatW * scale;
+        var minY = VIEWPORT - imgNatH * scale;
+        offsetX = Math.max(minX, Math.min(0, offsetX));
+        offsetY = Math.max(minY, Math.min(0, offsetY));
+        cropImage.style.left = offsetX + 'px';
+        cropImage.style.top = offsetY + 'px';
+    }
+
+    function setZoom(pct) {
+        var oldW = imgNatW * scale;
+        var oldH = imgNatH * scale;
+        var centerPtX = (VIEWPORT / 2 - offsetX) / oldW;
+        var centerPtY = (VIEWPORT / 2 - offsetY) / oldH;
+
+        scale = baseScale * (pct / 100);
+        var newW = imgNatW * scale;
+        var newH = imgNatH * scale;
+
+        offsetX = VIEWPORT / 2 - centerPtX * newW;
+        offsetY = VIEWPORT / 2 - centerPtY * newH;
+
+        zoomSlider.value = pct;
+        zoomLabel.textContent = (pct / 100).toFixed(1) + 'x';
+        applyZoom();
+    }
+
+    function loadIntoCrop(src) {
+        var img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = function() {
+            imgNatW = img.naturalWidth;
+            imgNatH = img.naturalHeight;
+            baseScale = Math.max(VIEWPORT / imgNatW, VIEWPORT / imgNatH);
+            scale = baseScale;
+
+            cropImage.src = src;
+            applyZoom();
+            centerImage();
+
+            zoomSlider.value = 100;
+            zoomLabel.textContent = '1.0x';
+            cropArea.style.display = 'block';
+            hasCrop = true;
+        };
+        img.src = src;
+    }
+
+    fileInput.addEventListener('change', function() {
+        var file = this.files[0];
+        if (!file) { cropArea.style.display = 'none'; hasCrop = false; return; }
+        var reader = new FileReader();
+        reader.onload = function(ev) { loadIntoCrop(ev.target.result); };
+        reader.readAsDataURL(file);
+    });
+
+    zoomSlider.addEventListener('input', function() {
+        setZoom(parseInt(this.value));
+    });
+
+    document.getElementById('zoom-in').addEventListener('click', function() {
+        setZoom(Math.min(300, parseInt(zoomSlider.value) + 20));
+    });
+
+    document.getElementById('zoom-out').addEventListener('click', function() {
+        setZoom(Math.max(100, parseInt(zoomSlider.value) - 20));
+    });
+
+    document.getElementById('reset-crop').addEventListener('click', function() {
+        scale = baseScale;
+        zoomSlider.value = 100;
+        zoomLabel.textContent = '1.0x';
+        applyZoom();
+        centerImage();
+    });
+
+    if (existingImg) {
+        existingImg.addEventListener('click', function() {
+            var proxyUrl = this.dataset.proxyUrl;
+            if (proxyUrl) {
+                fetch(proxyUrl)
+                    .then(function(r) { return r.blob(); })
+                    .then(function(blob) {
+                        loadIntoCrop(URL.createObjectURL(blob));
+                        existingImg.parentElement.style.display = 'none';
+                    });
+            } else {
+                loadIntoCrop(this.src);
+                this.parentElement.style.display = 'none';
+            }
+        });
+    }
+
+    function startDrag(e) {
+        var pt = e.touches ? e.touches[0] : e;
+        var sx = pt.clientX, sy = pt.clientY;
+        var ox = offsetX, oy = offsetY;
+        cropViewport.style.cursor = 'grabbing';
+
+        function onMove(ev) {
+            var p = ev.touches ? ev.touches[0] : ev;
+            offsetX = ox + (p.clientX - sx);
+            offsetY = oy + (p.clientY - sy);
+            applyOffset();
+        }
+        function onEnd() {
+            cropViewport.style.cursor = 'grab';
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onEnd);
+            document.removeEventListener('touchmove', onMove);
+            document.removeEventListener('touchend', onEnd);
+        }
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onEnd);
+        document.addEventListener('touchmove', onMove, { passive: false });
+        document.addEventListener('touchend', onEnd);
+    }
+
+    cropViewport.addEventListener('mousedown', startDrag);
+    cropViewport.addEventListener('touchstart', function(e) { e.preventDefault(); startDrag(e); }, { passive: false });
+
+    form.addEventListener('submit', function(e) {
+        if (!hasCrop) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+
+        var canvas = document.createElement('canvas');
+        canvas.width = OUTPUT;
+        canvas.height = OUTPUT;
+        var ctx = canvas.getContext('2d');
+
+        var sx = -offsetX / scale;
+        var sy = -offsetY / scale;
+        var sSize = VIEWPORT / scale;
+        ctx.drawImage(cropImage, sx, sy, sSize, sSize, 0, 0, OUTPUT, OUTPUT);
+
+        canvas.toBlob(function(blob) {
+            var formData = new FormData(form);
+            formData.delete('image');
+            formData.append('image', blob, 'profile-cropped.jpg');
+
+            var originalFile = fileInput.files[0];
+            if (originalFile) {
+                formData.append('original_image', originalFile);
+            }
+
+            fetch(form.action || window.location.href, {
+                method: 'POST',
+                body: formData,
+            }).then(function(resp) {
+                if (resp.redirected) {
+                    window.location.href = resp.url;
+                } else {
+                    window.location.reload();
+                }
+            });
+        }, 'image/jpeg', 0.92);
+    });
+})();
+</script>
 {% endblock content %}

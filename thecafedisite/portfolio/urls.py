@@ -60,6 +60,7 @@ urlpatterns = [
     path('dashboard/profiles/<int:pk>/edit/', views.profile_edit, name='profile_edit'),
     path('dashboard/profiles/<int:pk>/delete/', views.profile_delete, name='profile_delete'),
     path('dashboard/profiles/<int:pk>/toggle/', views.profile_toggle, name='profile_toggle'),
+    path('dashboard/profiles/<int:pk>/image/', views.profile_image_proxy, name='profile_image_proxy'),
 
     # Public comment submission
     path('music/track/<int:pk>/comment/', views.submit_track_comment, name='submit_track_comment'),

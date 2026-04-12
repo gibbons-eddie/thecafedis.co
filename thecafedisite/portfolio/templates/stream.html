@@ -4,7 +4,9 @@
 {% block title %}Stream - thecafedisco{% endblock %}
 
 {% block extra_head %}
-<script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.15/dist/hls.min.js"></script>
+{% if is_live %}
+<script src="https://player.live-video.net/1.24.0/amazon-ivs-player.min.js"></script>
+{% endif %}
 {% endblock %}
 
 {% block content %}
@@ -25,70 +27,72 @@
         <!-- LIVE STATE -->
         <template x-if="isLive">
             <div>
-                <!-- Live indicator -->
-                <div class="flex items-center gap-3 mb-4">
-                    <span class="tcd-live-dot"></span>
-                    <span class="font-monocraft-semibold text-sm" style="color: oklch(88.716% 0.09711 208.766);">LIVE</span>
-                </div>
-
                 <!-- Video player -->
                 <div class="tcd-stream-player mb-4">
                     <div class="tcd-stream-video-wrapper">
                         <video x-ref="liveVideo"
                                class="tcd-stream-video"
                                playsinline
-                               autoplay
-                               @click="togglePlay()"></video>
+                               muted></video>
                     </div>
 
                     <!-- Controls -->
                     <div class="tcd-stream-controls">
-                        <div class="flex items-center gap-3 flex-1">
-                            <button class="tcd-btn tcd-btn-sm" @click="togglePlay()">
-                                <svg x-show="!playing" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-                                <svg x-show="playing" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/></svg>
-                            </button>
-
-                            <!-- Volume -->
-                            <div class="flex items-center gap-2">
-                                <button class="tcd-btn-fullscreen" @click="toggleMute()">
-                                    <svg x-show="!muted" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
-                                    <svg x-show="muted" viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>
-                                </button>
-                                <div class="tcd-volume-track" @click="setVolume($event)" style="width: 80px;">
-                                    <div class="tcd-volume-fill" :style="'width: ' + (muted ? 0 : volume * 100) + '%'"></div>
+                        <div class="flex items-center flex-1">
+                            <div class="tcd-stream-volume-track"
+                                 x-ref="volumeTrack"
+                                 :class="(volumeDragging || (isMobile && !muted)) && 'tcd-stream-volume-track--active'"
+                                 @mousedown.prevent="startVolumeDrag($event)"
+                                 @click="onVolumeClick()">
+                                <div class="tcd-stream-volume-bar">
+                                    <div class="tcd-stream-volume-fill" :style="'width: ' + (muted ? 0 : volume * 100) + '%'"></div>
+                                    <div class="tcd-stream-volume-head" :style="'left: ' + (muted ? 0 : volume * 100) + '%'"></div>
+                                    <div class="tcd-stream-volume-signals">
+                                        <template x-for="i in 20" :key="i">
+                                            <div class="tcd-stream-volume-signal" :class="(i / 20 * 100) <= (muted ? 0 : volume * 100) && 'active'">
+                                                <div class="tcd-stream-volume-signal-top" :style="((volumeDragging || isMobile) && (i / 20 * 100) <= (muted ? 0 : volume * 100)) ? 'height: ' + (2 + (i * 0.6)) + 'px' : 'height: 0px'"></div>
+                                            </div>
+                                        </template>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Quality selector -->
-                        <div class="tcd-quality-dropdown" x-data="{ open: false }">
-                            <button class="tcd-quality-btn" @click="open = !open">
-                                <span x-text="currentQuality">auto</span>
-                                <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                            <div class="tcd-stream-volume-percent" :class="(volumeDragging || isMobile) && 'tcd-stream-volume-percent--visible'" x-text="Math.round((muted ? 0 : volume) * 100) + '%'"></div>
+                            <button class="tcd-stream-mute-btn" @click="toggleMute()" :aria-label="muted ? 'Unmute' : 'Mute'">
+                                <svg viewBox="0 0 24 24" shape-rendering="crispEdges">
+                                    <rect x="3" y="15" width="4" height="6" class="tcd-mute-bar"/>
+                                    <rect x="10" y="10" width="4" height="11" class="tcd-mute-bar"/>
+                                    <rect x="17" y="5" width="4" height="16" class="tcd-mute-bar"/>
+                                    <rect x="1" y="1" width="22" height="22" fill="none" stroke="#ffffff" stroke-width="2" x-show="muted"/>
+                                    <line x1="1" y1="1" x2="23" y2="23" stroke="#ffffff" stroke-width="2" x-show="muted"/>
+                                </svg>
                             </button>
-                            <div class="tcd-quality-menu" x-show="open" @click.outside="open = false" x-cloak>
-                                <template x-for="level in qualityLevels" :key="level.index">
-                                    <button class="tcd-quality-option"
-                                            :class="{ 'active': currentQualityIndex === level.index }"
-                                            @click="setQuality(level.index); open = false"
-                                            x-text="level.label"></button>
-                                </template>
-                                <button class="tcd-quality-option"
-                                        :class="{ 'active': currentQualityIndex === -1 }"
-                                        @click="setQuality(-1); open = false">auto</button>
-                            </div>
                         </div>
 
-                        <!-- DVR rewind -->
-                        <button class="tcd-quality-btn" @click="toggleDVR()" x-show="recordingUrl">
-                            <span x-text="isDVR ? 'back to live' : 'rewind'"></span>
-                        </button>
+                        <div class="flex items-center gap-3">
+                            <!-- Quality selector -->
+                            <div class="tcd-quality-dropdown" x-data="{ open: false }">
+                                <button class="tcd-quality-btn" :class="isMobile && 'tcd-quality-btn--disabled'" :disabled="isMobile" @click="!isMobile && (open = !open)">
+                                    <span x-text="currentQuality">auto</span>
+                                    <svg x-show="!isMobile" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                                </button>
+                                <div class="tcd-quality-menu" x-show="open && !isMobile" @click.outside="open = false" x-cloak>
+                                    <template x-for="level in qualityLevels" :key="level.index">
+                                        <button class="tcd-quality-option"
+                                                :class="{ 'active': currentQualityIndex === level.index }"
+                                                @click="setQuality(level.index); open = false"
+                                                x-text="level.label"></button>
+                                    </template>
+                                    <button class="tcd-quality-option"
+                                            :class="{ 'active': currentQualityIndex === -1 }"
+                                            @click="setQuality(-1); open = false">auto</button>
+                                </div>
+                            </div>
 
-                        <!-- Fullscreen -->
-                        <button class="tcd-btn-fullscreen" @click="toggleFullscreen()">
-                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
-                        </button>
+                            <!-- Fullscreen -->
+                            <button class="tcd-btn-fullscreen" @click="toggleFullscreen()">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -96,7 +100,7 @@
                 <div class="tcd-stream-chat" x-data="streamChat()">
                     <div class="tcd-stream-chat-header">
                         <span class="font-monocraft-semibold text-sm" style="color: oklch(88.716% 0.09711 208.766);">live chat</span>
-                        <span class="font-monocraft-semibold text-xs text-gray-500" x-text="viewerCount + ' connected'"></span>
+                        <span class="font-monocraft-semibold text-xs text-gray-500" x-text="$store.stream.viewerCount + ' connected'"></span>
                     </div>
 
                     <div class="tcd-stream-chat-messages" x-ref="chatMessages">
@@ -148,9 +152,10 @@
                     {% if stream_config.placeholder_video_url %}
                     <div class="tcd-stream-player mb-6 mx-auto" style="max-width: 960px;">
                         <div class="tcd-stream-video-wrapper" style="aspect-ratio: 4/3;">
-                            <video class="tcd-stream-video"
+                            <video id="placeholder-video" class="tcd-stream-video"
                                    src="{{ stream_config.placeholder_video_url }}"
-                                   loop autoplay muted playsinline></video>
+                                   loop muted playsinline></video>
+                            <canvas id="pixelate-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; image-rendering: pixelated; image-rendering: crisp-edges; z-index: 1;"></canvas>
                         </div>
                     </div>
                     {% else %}
@@ -220,140 +225,268 @@
 <script>
 (function() {
     function register() {
+    if (!Alpine.store('stream')) {
+        Alpine.store('stream', {
+            viewerCount: {{ viewer_count|default:0 }},
+        });
+    }
+
     Alpine.data('streamPage', () => ({
         isLive: {{ is_live|yesno:"true,false" }},
         playbackUrl: '{{ playback_url }}',
-        recordingUrl: '{{ recording_url }}',
         playing: false,
-        muted: false,
+        muted: true,
         volume: 1,
-        hls: null,
-        isDVR: false,
+        volumeDragging: false,
+        isMobile: typeof window !== 'undefined' && window.innerWidth <= 767,
+        player: null,
         currentQuality: 'auto',
         currentQualityIndex: -1,
         qualityLevels: [],
         pollingDots: '',
         pollInterval: null,
         dotInterval: null,
+        viewerPollInterval: null,
 
         init() {
+            if (this._initialized) return;
+            this._initialized = true;
+            this.isMobile = window.innerWidth <= 767;
+            this._resizeHandler = () => {
+                this.isMobile = window.innerWidth <= 767;
+            };
+            window.addEventListener('resize', this._resizeHandler);
             if (this.isLive) {
                 this.$nextTick(() => this.initPlayer());
+                this.startViewerPolling();
             } else {
+                sessionStorage.removeItem('tcd-chat-username');
                 this.startPolling();
             }
         },
 
+        destroy() {
+            this._initialized = false;
+            if (this._resizeHandler) {
+                window.removeEventListener('resize', this._resizeHandler);
+            }
+            if (this._fullscreenHandler) {
+                document.removeEventListener('fullscreenchange', this._fullscreenHandler);
+                document.removeEventListener('webkitfullscreenchange', this._fullscreenHandler);
+            }
+            if (this.player) {
+                this.player.pause();
+                this.player.delete();
+                this.player = null;
+            }
+            if (this.pollInterval) clearInterval(this.pollInterval);
+            if (this.dotInterval) clearInterval(this.dotInterval);
+            if (this.viewerPollInterval) clearInterval(this.viewerPollInterval);
+        },
+
+        startViewerPolling() {
+            const update = () => {
+                fetch('{% url "portfolio:stream_status" %}')
+                    .then(r => r.json())
+                    .then(data => {
+                        Alpine.store('stream').viewerCount = data.viewer_count || 0;
+                    })
+                    .catch(() => {});
+            };
+            update();
+            this.viewerPollInterval = setInterval(update, 20000);
+        },
+
         initPlayer() {
+            if (this.player) return;
             const video = this.$refs.liveVideo;
             if (!video || !this.playbackUrl) return;
 
-            if (Hls.isSupported()) {
-                this.hls = new Hls({
-                    lowLatencyMode: true,
-                    liveSyncDurationCount: 3,
-                });
-                this.hls.loadSource(this.playbackUrl);
-                this.hls.attachMedia(video);
-                this.hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                    video.play().catch(() => {});
-                    this.updateQualityLevels();
-                });
-                this.hls.on(Hls.Events.LEVEL_SWITCHED, () => {
-                    this.updateCurrentQuality();
-                });
-            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                video.src = this.playbackUrl;
-                video.play().catch(() => {});
+            if (typeof IVSPlayer === 'undefined') {
+                const script = document.createElement('script');
+                script.src = 'https://player.live-video.net/1.24.0/amazon-ivs-player.min.js';
+                script.onload = () => this.initPlayer();
+                document.head.appendChild(script);
+                return;
             }
 
-            video.addEventListener('play', () => { this.playing = true; });
-            video.addEventListener('pause', () => { this.playing = false; });
+            if (!IVSPlayer.isPlayerSupported) {
+                video.src = this.playbackUrl;
+                video.muted = true;
+                video.play().catch(() => {});
+                return;
+            }
+
+            const player = IVSPlayer.create();
+            this.player = player;
+            player.attachHTMLVideoElement(video);
+            player.setMuted(true);
+
+            player.addEventListener(IVSPlayer.PlayerState.PLAYING, () => {
+                this.playing = true;
+                this.updateQualityLevels();
+            });
+
+            player.addEventListener(IVSPlayer.PlayerState.IDLE, () => {
+                this.playing = false;
+            });
+
+            player.addEventListener(IVSPlayer.PlayerEventType.QUALITY_CHANGED, () => {
+                if (!this.qualityLevels.length) this.updateQualityLevels();
+                this.updateCurrentQuality();
+            });
+
+            player.addEventListener(IVSPlayer.PlayerEventType.ERROR, (err) => {
+                console.warn('IVS player error:', err);
+            });
+
+            const resumePlayback = () => {
+                setTimeout(() => {
+                    try { this.player && this.player.play(); } catch (err) {}
+                    if (video.paused) video.play().catch(() => {});
+                }, 100);
+            };
+            this._fullscreenHandler = () => {
+                if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                    resumePlayback();
+                }
+            };
+            document.addEventListener('fullscreenchange', this._fullscreenHandler);
+            document.addEventListener('webkitfullscreenchange', this._fullscreenHandler);
+            video.addEventListener('webkitendfullscreen', resumePlayback);
+
+            player.load(this.playbackUrl);
+            player.play();
         },
 
         updateQualityLevels() {
-            if (!this.hls) return;
-            this.qualityLevels = this.hls.levels.map((level, index) => ({
+            if (!this.player) return;
+            const qualities = this.player.getQualities();
+            this.qualityLevels = qualities.map((q, index) => ({
                 index,
-                label: level.height + 'p',
-                height: level.height,
+                quality: q,
+                label: q.height + 'p',
+                height: q.height,
             }));
         },
 
         updateCurrentQuality() {
-            if (!this.hls) return;
-            if (this.hls.autoLevelEnabled) {
-                const current = this.hls.levels[this.hls.currentLevel];
+            if (!this.player) return;
+            const current = this.player.getQuality();
+            if (this.player.isAutoQualityMode()) {
                 this.currentQuality = current ? 'auto (' + current.height + 'p)' : 'auto';
                 this.currentQualityIndex = -1;
             } else {
-                const level = this.hls.levels[this.hls.currentLevel];
-                this.currentQuality = level ? level.height + 'p' : 'auto';
-                this.currentQualityIndex = this.hls.currentLevel;
+                this.currentQuality = current ? current.height + 'p' : 'auto';
+                const idx = this.qualityLevels.findIndex(l => l.height === current?.height);
+                this.currentQualityIndex = idx >= 0 ? idx : -1;
             }
         },
 
         setQuality(index) {
-            if (!this.hls) return;
+            if (!this.player) return;
             if (index === -1) {
-                this.hls.currentLevel = -1;
+                this.player.setAutoQualityMode(true);
                 this.currentQuality = 'auto';
                 this.currentQualityIndex = -1;
             } else {
-                this.hls.currentLevel = index;
-                this.currentQualityIndex = index;
-            }
-        },
-
-        togglePlay() {
-            const video = this.$refs.liveVideo;
-            if (!video) return;
-            if (video.paused) {
-                video.play().catch(() => {});
-            } else {
-                video.pause();
+                const level = this.qualityLevels[index];
+                if (level) {
+                    this.player.setAutoQualityMode(false);
+                    this.player.setQuality(Alpine.raw(level.quality));
+                    this.currentQualityIndex = index;
+                }
             }
         },
 
         toggleMute() {
-            const video = this.$refs.liveVideo;
-            if (!video) return;
             this.muted = !this.muted;
-            video.muted = this.muted;
-        },
-
-        setVolume(event) {
-            const rect = event.currentTarget.getBoundingClientRect();
-            this.volume = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
-            this.muted = false;
+            this.volume = 1;
+            if (this.player) {
+                try { this.player.setMuted(this.muted); } catch (err) {}
+                try { this.player.setVolume(1); } catch (err) {}
+            }
             const video = this.$refs.liveVideo;
             if (video) {
-                video.volume = this.volume;
-                video.muted = false;
+                video.muted = this.muted;
             }
         },
 
-        toggleDVR() {
-            if (!this.hls) return;
-            const video = this.$refs.liveVideo;
-            if (this.isDVR) {
-                this.hls.loadSource(this.playbackUrl);
-                this.hls.attachMedia(video);
-                this.isDVR = false;
-            } else if (this.recordingUrl) {
-                this.hls.loadSource(this.recordingUrl);
-                this.hls.attachMedia(video);
-                this.isDVR = true;
+        onVolumeClick() {
+            if (this.isMobile) {
+                this.toggleMute();
             }
+        },
+
+        startVolumeDrag(e) {
+            if (this.isMobile) return;
+            const track = this.$refs.volumeTrack;
+            if (!track) return;
+            this.volumeDragging = true;
+
+            const getX = (evt) => {
+                if (evt.touches && evt.touches.length) return evt.touches[0].clientX;
+                if (evt.changedTouches && evt.changedTouches.length) return evt.changedTouches[0].clientX;
+                return evt.clientX;
+            };
+
+            const setVol = (clientX) => {
+                const rect = track.getBoundingClientRect();
+                this.volume = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+                this.muted = false;
+                if (this.player) {
+                    try { this.player.setVolume(this.volume); } catch (err) {}
+                    try { this.player.setMuted(false); } catch (err) {}
+                }
+                const video = this.$refs.liveVideo;
+                if (video) {
+                    video.muted = false;
+                    video.volume = this.volume;
+                }
+            };
+
+            setVol(getX(e));
+
+            const onMove = (evt) => {
+                if (evt.cancelable) evt.preventDefault();
+                setVol(getX(evt));
+            };
+            const onUp = () => {
+                this.volumeDragging = false;
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', onUp);
+                document.removeEventListener('touchmove', onMove);
+                document.removeEventListener('touchend', onUp);
+                document.removeEventListener('touchcancel', onUp);
+            };
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
+            document.addEventListener('touchmove', onMove, { passive: false });
+            document.addEventListener('touchend', onUp);
+            document.addEventListener('touchcancel', onUp);
         },
 
         toggleFullscreen() {
-            const wrapper = this.$refs.liveVideo?.closest('.tcd-stream-player');
-            if (!wrapper) return;
-            if (document.fullscreenElement) {
-                document.exitFullscreen();
-            } else {
-                wrapper.requestFullscreen().catch(() => {});
+            const video = this.$refs.liveVideo;
+            if (!video) return;
+            const wrapper = video.closest('.tcd-stream-player');
+
+            if (document.fullscreenElement || document.webkitFullscreenElement) {
+                if (document.exitFullscreen) document.exitFullscreen();
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                return;
+            }
+
+            if (wrapper && wrapper.requestFullscreen) {
+                wrapper.requestFullscreen().catch(() => {
+                    if (typeof video.webkitEnterFullscreen === 'function') {
+                        video.webkitEnterFullscreen();
+                    }
+                });
+            } else if (wrapper && wrapper.webkitRequestFullscreen) {
+                wrapper.webkitRequestFullscreen();
+            } else if (typeof video.webkitEnterFullscreen === 'function') {
+                video.webkitEnterFullscreen();
             }
         },
 
@@ -368,13 +501,14 @@
                 fetch('{% url "portfolio:stream_status" %}')
                     .then(r => r.json())
                     .then(data => {
+                        Alpine.store('stream').viewerCount = data.viewer_count || 0;
                         if (data.is_live) {
                             this.isLive = true;
                             this.playbackUrl = data.playback_url;
-                            this.recordingUrl = data.recording_url || '';
                             clearInterval(this.pollInterval);
                             clearInterval(this.dotInterval);
                             this.$nextTick(() => this.initPlayer());
+                            this.startViewerPolling();
                         }
                     })
                     .catch(() => {});
@@ -389,7 +523,14 @@
         chatMessages: [],
         chatError: '',
         chatConnection: null,
-        viewerCount: 0,
+
+        init() {
+            const saved = sessionStorage.getItem('tcd-chat-username');
+            if (saved) {
+                this.chatUsername = saved;
+                this.joinChat();
+            }
+        },
 
         joinChat() {
             const username = this.chatUsername.trim();
@@ -404,6 +545,7 @@
                     }
                     this.chatError = '';
                     this.chatJoined = true;
+                    sessionStorage.setItem('tcd-chat-username', username);
                     this.connectChat(data.token);
                 })
                 .catch(() => {
@@ -419,7 +561,7 @@
             }
 
             try {
-                const wsUrl = 'wss://edge.ivschat.us-east-2.amazonaws.com';
+                const wsUrl = 'wss://edge.ivschat.us-east-1.amazonaws.com';
                 this.chatConnection = new WebSocket(wsUrl, [token]);
 
                 this.chatConnection.onmessage = (event) => {
@@ -427,7 +569,7 @@
                     if (data.Type === 'MESSAGE') {
                         this.chatMessages.push({
                             id: data.Id,
-                            username: data.Attributes?.displayName || 'anon',
+                            username: data.Sender?.Attributes?.displayName || data.Sender?.UserId || 'anon',
                             text: data.Content,
                         });
                         this.$nextTick(() => {
@@ -474,6 +616,109 @@
     } else {
         document.addEventListener('alpine:init', register);
     }
+})();
+</script>
+
+<script>
+(function() {
+    var attempts = 0;
+
+    function init() {
+        var video = document.getElementById('placeholder-video');
+        var overlay = document.getElementById('pixelate-overlay');
+        if (!video) {
+            if (++attempts < 40) setTimeout(init, 50);
+            return;
+        }
+        setup(video, overlay);
+    }
+
+    function setup(video, overlay) {
+
+    var isMobile = window.matchMedia('(max-width: 767px)').matches;
+
+    if (isMobile) {
+        if (overlay) overlay.remove();
+        video.style.opacity = '0';
+        video.style.transition = 'opacity 0.8s ease-in';
+        function mobilePlay() {
+            video.play().catch(function() {});
+            video.style.opacity = '1';
+        }
+        video.addEventListener('canplay', mobilePlay, { once: true });
+        if (video.readyState >= 3) mobilePlay();
+        return;
+    }
+
+    if (!overlay) return;
+    var ctx = overlay.getContext('2d');
+
+    var steps = [
+        { res: 4,   scale: 0.25 },
+        { res: 6,   scale: 0.3 },
+        { res: 8,   scale: 0.35 },
+        { res: 10,  scale: 0.4 },
+        { res: 13,  scale: 0.45 },
+        { res: 16,  scale: 0.5 },
+        { res: 20,  scale: 0.55 },
+        { res: 24,  scale: 0.6 },
+        { res: 30,  scale: 0.65 },
+        { res: 36,  scale: 0.7 },
+        { res: 44,  scale: 0.74 },
+        { res: 52,  scale: 0.78 },
+        { res: 64,  scale: 0.82 },
+        { res: 80,  scale: 0.85 },
+        { res: 96,  scale: 0.88 },
+        { res: 120, scale: 0.9 },
+        { res: 150, scale: 0.93 },
+        { res: 180, scale: 0.95 },
+        { res: 220, scale: 0.97 },
+        { res: 280, scale: 0.98 },
+        { res: 350, scale: 0.99 },
+        { res: 400, scale: 1.0 },
+    ];
+    var stepIndex = 0;
+    var interval = 80;
+    var aspect = 4 / 3;
+
+    function drawStep(step) {
+        var w = step.res;
+        var h = Math.round(w / aspect);
+        overlay.width = w;
+        overlay.height = h;
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(video, 0, 0, w, h);
+        overlay.style.transform = 'scale(' + step.scale + ')';
+    }
+
+    function runTransition() {
+        video.pause();
+        overlay.style.transition = 'transform ' + interval + 'ms ease-out';
+
+        function tick() {
+            if (stepIndex >= steps.length) {
+                overlay.style.transition = 'opacity 0.15s ease-out';
+                overlay.style.opacity = '0';
+                setTimeout(function() { overlay.remove(); }, 150);
+                video.play().catch(function() {});
+                return;
+            }
+            drawStep(steps[stepIndex]);
+            stepIndex++;
+            setTimeout(tick, interval);
+        }
+
+        overlay.style.transition = 'none';
+        drawStep(steps[0]);
+        stepIndex = 1;
+        setTimeout(tick, interval);
+    }
+
+    video.addEventListener('canplay', runTransition, { once: true });
+    if (video.readyState >= 3) runTransition();
+    }
+
+    init();
 })();
 </script>
 {% endblock content %}

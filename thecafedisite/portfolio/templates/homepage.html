@@ -31,7 +31,7 @@
                     <span style="color: oklch(88.716% 0.09711 208.766); font-family: 'Monocraft-SemiBold', monospace;">%</span>
                     <span class="typewriter-header text-white text-3xl">whoami</span>
                 </div>
-                <h1 class="typewriter-header text-6xl md:text-7xl mb-6 uppercase" style="color: var(--color-gold-clu); font-family: 'nb_architektbold', sans-serif;">Eddie Gibbons</h1>
+                <h1 class="typewriter-header tcd-name-heading text-6xl md:text-7xl mb-6 uppercase" style="color: var(--color-gold-clu); font-family: 'nb_architektbold', sans-serif;">Eddie Gibbons</h1>
 <div class="typewriter-body">
                 <div class="flex items-center gap-4">
                     <a href="https://www.linkedin.com/in/eddie-gibbons-703759172/" target="_blank" rel="noopener noreferrer"
@@ -90,7 +90,7 @@
                 {% for group in skill_groups %}
                 <div class="p-4" style="background-color: #1a1a1a; border: 1px solid oklch(88.716% 0.09711 208.766 / 0.3); border-radius: 0.75rem;">
                     <h3 class="font-monocraft-semibold text-sm mb-4" style="color: oklch(88.716% 0.09711 208.766);">
-                        > {{ group.grouper }}
+                         {{ group.grouper }}
                     </h3>
                     <div class="flex flex-wrap gap-2">
                         {% for skill in group.list %}
@@ -163,7 +163,7 @@
 
 {% if profile_images|length > 1 %}
 <!-- SVG Pixelation Filters -->
-<svg width="0" height="0" style="position: absolute;">
+<svg aria-hidden="true" style="position: absolute; width: 0; height: 0; overflow: hidden; pointer-events: none;">
     <defs>
         <filter id="pixelate-1"><feFlood x="2" y="2" width="1" height="1"/><feComposite width="4" height="4"/><feTile result="a"/><feComposite in="SourceGraphic" in2="a" operator="in"/><feMorphology operator="dilate" radius="2"/></filter>
         <filter id="pixelate-2"><feFlood x="3" y="3" width="1" height="1"/><feComposite width="6" height="6"/><feTile result="a"/><feComposite in="SourceGraphic" in2="a" operator="in"/><feMorphology operator="dilate" radius="3"/></filter>
@@ -179,44 +179,94 @@
         const images = document.querySelectorAll('.profile-image');
         if (images.length <= 1) return;
 
-        const pixelLevels = [null, 'url(#pixelate-1)', 'url(#pixelate-2)', 'url(#pixelate-3)', 'url(#pixelate-4)', 'url(#pixelate-5)', 'url(#pixelate-6)'];
-        const stepDuration = 80; // ms per pixelation step
+        const stepDuration = 80;
         let currentIndex = 0;
+        const isMobile = window.matchMedia('(max-width: 767px)').matches;
+
+        // --- Desktop: SVG filter approach ---
+        const pixelLevels = [null, 'url(#pixelate-1)', 'url(#pixelate-2)', 'url(#pixelate-3)', 'url(#pixelate-4)', 'url(#pixelate-5)', 'url(#pixelate-6)'];
 
         function applyPixelation(img, level) {
             img.style.filter = level || 'none';
         }
 
-        async function pixelateOut(img) {
+        async function svgPixelateOut(img) {
             for (let i = 1; i < pixelLevels.length; i++) {
                 applyPixelation(img, pixelLevels[i]);
                 await new Promise(r => setTimeout(r, stepDuration));
             }
         }
 
-        async function pixelateIn(img) {
+        async function svgPixelateIn(img) {
             for (let i = pixelLevels.length - 1; i >= 0; i--) {
                 applyPixelation(img, pixelLevels[i]);
                 await new Promise(r => setTimeout(r, stepDuration));
             }
         }
 
+        // --- Mobile: canvas approach ---
+        const container = document.getElementById('profile-container');
+        let canvas, ctx, tempCanvas, tempCtx;
+        const resolutions = [200, 100, 50, 25, 12, 6, 3];
+
+        if (isMobile && container) {
+            canvas = document.createElement('canvas');
+            canvas.width = 200;
+            canvas.height = 200;
+            canvas.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; display: none;';
+            container.appendChild(canvas);
+            ctx = canvas.getContext('2d');
+            tempCanvas = document.createElement('canvas');
+            tempCtx = tempCanvas.getContext('2d');
+        }
+
+        function drawPixelated(img, level) {
+            const size = resolutions[level];
+            tempCanvas.width = size;
+            tempCanvas.height = size;
+            tempCtx.drawImage(img, 0, 0, size, size);
+            ctx.imageSmoothingEnabled = false;
+            ctx.clearRect(0, 0, 200, 200);
+            ctx.drawImage(tempCanvas, 0, 0, 200, 200);
+        }
+
+        async function canvasPixelateOut(img) {
+            canvas.style.display = 'block';
+            for (let i = 0; i < resolutions.length; i++) {
+                drawPixelated(img, i);
+                await new Promise(r => setTimeout(r, stepDuration));
+            }
+        }
+
+        async function canvasPixelateIn(img) {
+            for (let i = resolutions.length - 1; i >= 0; i--) {
+                drawPixelated(img, i);
+                await new Promise(r => setTimeout(r, stepDuration));
+            }
+            canvas.style.display = 'none';
+        }
+
+        // --- Transition logic ---
         async function transitionImages() {
             const currentImg = images[currentIndex];
             const nextIndex = (currentIndex + 1) % images.length;
             const nextImg = images[nextIndex];
 
-            await pixelateOut(currentImg);
-
-            currentImg.style.opacity = '0';
-            applyPixelation(currentImg, null);
-
-            applyPixelation(nextImg, pixelLevels[pixelLevels.length - 1]);
-            nextImg.style.opacity = '1';
-
-            await new Promise(r => setTimeout(r, 100));
-
-            await pixelateIn(nextImg);
+            if (isMobile && canvas) {
+                await canvasPixelateOut(currentImg);
+                currentImg.style.opacity = '0';
+                nextImg.style.opacity = '1';
+                await new Promise(r => setTimeout(r, 100));
+                await canvasPixelateIn(nextImg);
+            } else {
+                await svgPixelateOut(currentImg);
+                currentImg.style.opacity = '0';
+                applyPixelation(currentImg, null);
+                applyPixelation(nextImg, pixelLevels[pixelLevels.length - 1]);
+                nextImg.style.opacity = '1';
+                await new Promise(r => setTimeout(r, 100));
+                await svgPixelateIn(nextImg);
+            }
 
             currentIndex = nextIndex;
         }

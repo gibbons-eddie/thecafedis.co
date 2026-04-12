@@ -198,6 +198,7 @@ AWS_IVS_CHANNEL_ARN = os.getenv('AWS_IVS_CHANNEL_ARN', '')
 AWS_IVS_PLAYBACK_URL = os.getenv('AWS_IVS_PLAYBACK_URL', '')
 AWS_IVS_CHAT_ROOM_ARN = os.getenv('AWS_IVS_CHAT_ROOM_ARN', '')
 AWS_CLOUDFRONT_VOD_DOMAIN = os.getenv('AWS_CLOUDFRONT_VOD_DOMAIN', '')
+AWS_IVS_REGION = os.getenv('AWS_IVS_REGION', 'us-east-1')
 
 # Keep local media root for fallback/development
 MEDIA_ROOT = BASE_DIR / 'media'

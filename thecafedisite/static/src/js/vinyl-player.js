@@ -17,6 +17,7 @@ document.addEventListener('alpine:init', () => {
     volumeSignalsVisible: false,
     flickAngle: 0,
     spinAngle: 0,
+    flipFrame: 0,
 
     _lastTouchAngle: 0,
     _vinylCenterX: 0,
@@ -26,6 +27,7 @@ document.addEventListener('alpine:init', () => {
     _wasPlayingBeforeScrub: false,
     _spinStartTime: 0,
     _spinRAF: null,
+    _flipInterval: null,
 
     get headerVisible() {
       const show = ['centering', 'emerging', 'returning', 'expanding', 'settled',
@@ -37,6 +39,36 @@ document.addEventListener('alpine:init', () => {
       const open = ['emerging', 'returning', 'expanding', 'settled',
                      'closing-controls', 'closing-shrink', 'closing-disc-out', 'closing-disc-behind'];
       return open.includes(this.phase);
+    },
+
+    get flipping() {
+      return this._isFlipping;
+    },
+
+    _isFlipping: false,
+
+    _startFlip() {
+      if (this._flipInterval) return;
+      this._isFlipping = true;
+      this.flipFrame = 0;
+      let count = 0;
+      this._flipInterval = setInterval(() => {
+        count++;
+        if (count > 2) {
+          this._stopFlip();
+          return;
+        }
+        this.flipFrame = count;
+      }, 80);
+    },
+
+    _stopFlip() {
+      if (this._flipInterval) {
+        clearInterval(this._flipInterval);
+        this._flipInterval = null;
+      }
+      this._isFlipping = false;
+      this.flipFrame = 0;
     },
 
     init() {
@@ -256,26 +288,32 @@ document.addEventListener('alpine:init', () => {
 
       setTimeout(() => {
         const d = rootEl._x_dataStack[0];
-        d.phase = 'returning';
+        d._startFlip();
 
         setTimeout(() => {
           const d2 = rootEl._x_dataStack[0];
-          d2.phase = 'expanding';
-
-          const stage = rootEl.querySelector('.tcd-vinyl-stage');
-          if (stage) {
-            stage.style.transition = 'transform 0.4s ease-out';
-            stage.style.transform = 'scale(1)';
-          }
+          d2._stopFlip();
+          d2.phase = 'returning';
 
           setTimeout(() => {
+            const d3 = rootEl._x_dataStack[0];
+            d3.phase = 'expanding';
+
+            const stage = rootEl.querySelector('.tcd-vinyl-stage');
             if (stage) {
-              stage.style.transition = '';
-              stage.style.transform = '';
+              stage.style.transition = 'transform 0.4s ease-out';
+              stage.style.transform = 'scale(1)';
             }
-            rootEl._x_dataStack[0].phase = 'settled';
-          }, 420);
-        }, 600);
+
+            setTimeout(() => {
+              if (stage) {
+                stage.style.transition = '';
+                stage.style.transform = '';
+              }
+              rootEl._x_dataStack[0].phase = 'settled';
+            }, 420);
+          }, 600);
+        }, 250);
       }, 600);
     },
 
@@ -304,22 +342,28 @@ document.addEventListener('alpine:init', () => {
 
           setTimeout(() => {
             const d3 = rootEl._x_dataStack[0];
-            d3.phase = 'closing-disc-behind';
+            d3._startFlip();
 
             setTimeout(() => {
               const d4 = rootEl._x_dataStack[0];
-              d4.phase = 'closing-fade';
+              d4._stopFlip();
+              d4.phase = 'closing-disc-behind';
 
               setTimeout(() => {
                 const d5 = rootEl._x_dataStack[0];
-                d5._setContentWrapperZ(1);
-                d5.phase = 'closed';
-                if (stage) {
-                  stage.style.transition = '';
-                  stage.style.transform = '';
-                }
-              }, 350);
-            }, 500);
+                d5.phase = 'closing-fade';
+
+                setTimeout(() => {
+                  const d6 = rootEl._x_dataStack[0];
+                  d6._setContentWrapperZ(1);
+                  d6.phase = 'closed';
+                  if (stage) {
+                    stage.style.transition = '';
+                    stage.style.transform = '';
+                  }
+                }, 350);
+              }, 500);
+            }, 250);
           }, 500);
         }, 320);
       }, 200);

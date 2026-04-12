@@ -6,7 +6,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, FileResponse
 from django.utils import timezone
 from django.views.decorators.http import require_POST, require_GET
 from .models import CareerEntry, Skill, ProfileImage, MusicTrack, Video, Comment, StreamConfig, StreamSession
@@ -63,35 +63,50 @@ def _extract_youtube_id(url_or_id):
     return url_or_id
 
 
+_ivs_cache = {'result': (False, None, 0), 'ts': 0}
+
 def _check_ivs_live():
+    import time
+    now = time.time()
+    if now - _ivs_cache['ts'] < 5:
+        return _ivs_cache['result']
+
     channel_arn = settings.AWS_IVS_CHANNEL_ARN
     if not channel_arn:
-        return False, None
+        return False, None, 0
 
     try:
         import boto3
+        from botocore.config import Config
         client = boto3.client(
             'ivs',
-            region_name=settings.AWS_S3_REGION_NAME,
+            region_name=settings.AWS_IVS_REGION,
             aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
             aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+            config=Config(connect_timeout=3, read_timeout=3),
         )
         response = client.get_stream(channelArn=channel_arn)
         stream_data = response.get('stream', {})
         is_live = stream_data.get('state') == 'LIVE'
-        recording_url = stream_data.get('health', {}).get('recordingUrl', None)
-        return is_live, recording_url
+        recording_url = stream_data.get('playbackUrl', '')
+        viewer_count = int(stream_data.get('viewerCount', 0) or 0)
+        result = (is_live, recording_url, viewer_count)
     except Exception:
-        return False, None
+        result = (False, None, 0)
+
+    _ivs_cache['result'] = result
+    _ivs_cache['ts'] = now
+    return result
 
 
 def stream(request):
-    is_live, recording_url = _check_ivs_live()
+    is_live, recording_url, viewer_count = _check_ivs_live()
     stream_config = StreamConfig.load()
     context = {
         'is_live': is_live,
         'playback_url': settings.AWS_IVS_PLAYBACK_URL,
         'recording_url': recording_url or '',
+        'viewer_count': viewer_count,
         'chat_room_id': settings.AWS_IVS_CHAT_ROOM_ARN.split('/')[-1] if settings.AWS_IVS_CHAT_ROOM_ARN else '',
         'stream_config': stream_config,
         'past_streams': StreamSession.objects.filter(is_published=True)[:3],
@@ -112,11 +127,12 @@ def stream_replay(request, pk):
 
 @require_GET
 def stream_status(request):
-    is_live, recording_url = _check_ivs_live()
+    is_live, recording_url, viewer_count = _check_ivs_live()
     return JsonResponse({
         'is_live': is_live,
         'recording_url': recording_url or '',
         'playback_url': settings.AWS_IVS_PLAYBACK_URL if is_live else '',
+        'viewer_count': viewer_count,
     })
 
 
@@ -136,7 +152,7 @@ def stream_chat_token(request):
         import boto3
         client = boto3.client(
             'ivschat',
-            region_name=settings.AWS_S3_REGION_NAME,
+            region_name=settings.AWS_IVS_REGION,
             aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
             aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
         )
@@ -542,6 +558,7 @@ def profile_list(request):
 def profile_add(request):
     if request.method == 'POST':
         image = request.FILES.get('image')
+        original = request.FILES.get('original_image')
         alt_text = request.POST.get('alt_text', '')
         order = request.POST.get('order', 0) or 0
         is_active = request.POST.get('is_active') == 'on'
@@ -552,6 +569,7 @@ def profile_add(request):
 
         ProfileImage.objects.create(
             image=image,
+            original_image=original or image,
             alt_text=alt_text,
             order=int(order),
             is_active=is_active,
@@ -570,6 +588,10 @@ def profile_edit(request, pk):
         profile.alt_text = request.POST.get('alt_text', '')
         profile.order = int(request.POST.get('order', 0) or 0)
         profile.is_active = request.POST.get('is_active') == 'on'
+
+        original = request.FILES.get('original_image')
+        if original:
+            profile.original_image = original
 
         if request.FILES.get('image'):
             profile.image = request.FILES['image']
@@ -600,6 +622,12 @@ def profile_toggle(request, pk):
     messages.success(request, f'Profile image {status}.')
     return redirect('portfolio:profile_list')
 
+
+@login_required
+def profile_image_proxy(request, pk):
+    profile = get_object_or_404(ProfileImage, pk=pk)
+    source = profile.original_image if profile.original_image else profile.image
+    return FileResponse(source.open('rb'), content_type='image/jpeg')
 
 
 @require_POST

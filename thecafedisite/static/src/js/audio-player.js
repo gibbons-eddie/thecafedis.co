@@ -72,12 +72,40 @@ document.addEventListener('alpine:init', () => {
         this.isPlaying = false;
       });
 
+      audio.addEventListener('volumechange', () => {
+        this.volume = audio.volume;
+      });
+
       this.$el.addEventListener('keydown', (e) => {
         if (e.code === 'Space' && document.activeElement === this.$el) {
           e.preventDefault();
           this.togglePlay();
         }
       });
+
+      document.addEventListener('tcd:mini-player-resume', async (e) => {
+        if (e.detail.audioEl !== audio) return;
+        if (!this.analyserConnected && this.visualizer) {
+          const ctx = AudioManager.getContext();
+          await iOSAudioPlayer.warmUpAudioContext(ctx);
+          await this.visualizer.initialize();
+          this.analyserConnected = true;
+        }
+        const success = await iOSAudioPlayer.play(audio);
+        if (success) {
+          this.isPlaying = true;
+          this.visualizer?.start();
+          GlobalMediaState.register(audio, this.trackTitle, this.coverUrl, 'audio');
+        }
+      });
+
+      const sourceEl = audio.querySelector('source');
+      const src = audio.currentSrc || audio.src || (sourceEl && sourceEl.src) || '';
+      if (src) {
+        document.dispatchEvent(new CustomEvent('tcd:audio-player-ready', {
+          detail: { audioEl: audio, src, trackTitle: this.trackTitle }
+        }));
+      }
     },
 
     async togglePlay() {

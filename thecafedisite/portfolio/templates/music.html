@@ -202,7 +202,17 @@
                              @touchstart.prevent="vinylTouchStart($event)"
                              @touchmove.prevent="vinylTouchMove($event)"
                              @touchend="vinylTouchEnd()">
-                            <img src="{% static 'images/dark-cd-vinyl.PNG' %}" alt="vinyl">
+                            <img src="{% static 'images/vinyl-flip/vinyl-flip-0.png' %}" alt="vinyl"
+                                 class="tcd-vinyl-disc-img"
+                                 :class="flipping && 'tcd-vinyl-disc-img--hidden'"
+                                 style="image-rendering: pixelated;">
+                            <div class="tcd-vinyl-disc-flip" x-show="flipping">
+                                <img src="{% static 'images/vinyl-flip/vinyl-flip-0.png' %}" alt="" x-show="flipFrame === 0">
+                                <img src="{% static 'images/vinyl-flip/vinyl-flip-1.png' %}" alt="" x-show="flipFrame === 1">
+                                <img src="{% static 'images/vinyl-flip/vinyl-flip-2.png' %}" alt="" x-show="flipFrame === 2">
+                                <img src="{% static 'images/vinyl-flip/vinyl-flip-3.png' %}" alt="" x-show="flipFrame === 3">
+                                <img src="{% static 'images/vinyl-flip/vinyl-flip-4.png' %}" alt="" x-show="flipFrame === 4">
+                            </div>
                         </div>
                         <div class="tcd-vinyl-sleeve"
                              :class="sleeveOpen && 'tcd-vinyl-sleeve--opened'">
@@ -329,7 +339,7 @@
 </script>
 
 <script>
-    const TRACK_DATA = [
+    window.TRACK_DATA = [
         {% for track in tracks %}
         {
             id: {{ track.pk }},

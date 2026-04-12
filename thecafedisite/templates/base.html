@@ -700,24 +700,15 @@
     <div id="mini-player" class="tcd-mini-player" up-keep
          x-data="miniPlayer()"
          x-show="isVisible"
-         x-cloak
->
+         x-cloak>
 
-        <div class="tcd-mini-player-drag-handle tcd-mini-player-drag-handle--tl" @mousedown="startDrag($event)"></div>
-        <div class="tcd-mini-player-drag-handle tcd-mini-player-drag-handle--tr" @mousedown="startDrag($event)"></div>
-        <div class="tcd-mini-player-drag-handle tcd-mini-player-drag-handle--bl" @mousedown="startDrag($event)"></div>
-        <div class="tcd-mini-player-drag-handle tcd-mini-player-drag-handle--br" @mousedown="startDrag($event)"></div>
+        <button class="tcd-mini-player-close" @click="close()">
+            <svg viewBox="0 0 24 24">
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+            </svg>
+        </button>
 
-        <div class="tcd-mini-player-header">
-            <span class="tcd-mini-player-title">Now Playing</span>
-            <button class="tcd-mini-player-close" @click="close()">
-                <svg viewBox="0 0 24 24">
-                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-                </svg>
-            </button>
-        </div>
-
-        <div class="tcd-mini-player-info">
+        <div class="tcd-mini-player-top">
             <div class="tcd-mini-player-cover">
                 <template x-if="coverUrl">
                     <img :src="coverUrl" alt="Cover">
@@ -726,38 +717,50 @@
                     <span class="font-monocraft text-xl" style="color: oklch(88.716% 0.09711 208.766 / 0.5);">~</span>
                 </template>
             </div>
-            <div class="tcd-mini-player-track">
-                <p class="tcd-mini-player-track-title" x-text="title"></p>
-                <p class="tcd-mini-player-track-artist" x-text="mediaType === 'video' ? 'Video' : 'thecafedisco'"></p>
+            <div class="tcd-mini-player-volume">
+                <div class="tcd-mini-player-volume-track" :class="volumeSignalsVisible && 'tcd-mini-player-volume-track--active'"
+                >
+                    <div class="tcd-mini-player-volume-bar">
+                        <div class="tcd-mini-player-volume-fill" :style="'height: ' + volumePercent + '%'"></div>
+                        <div class="tcd-mini-player-volume-head" :style="'bottom: ' + volumePercent + '%'"></div>
+                    </div>
+                    <div class="tcd-mini-player-volume-signals">
+                        <template x-for="i in 6" :key="i">
+                            <div class="tcd-mini-player-volume-signal" :class="(i / 6 * 100) <= volumePercent && 'active'">
+                                <div class="tcd-mini-player-volume-signal-bar" :style="volumeDragging && (i / 6 * 100) <= volumePercent ? 'width: ' + (4 + (i * 3)) + 'px' : 'width: 0px'"></div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+                <span class="tcd-mini-player-volume-percent" :class="volumeSignalsVisible && 'tcd-mini-player-volume-percent--active'" x-text="volumePercent + '%'"></span>
             </div>
         </div>
 
-        <div class="tcd-mini-player-progress">
-            <span class="tcd-time-display" style="min-width: 35px; text-align: left;" x-text="currentTimeDisplay"></span>
-            <div class="flex-1 tcd-progress-bar" style="height: 4px;" @click="seekTo($event)">
-                <div class="tcd-progress-fill" :style="'width: ' + progressPercent + '%'"></div>
+        <p class="tcd-mini-player-track-title" x-text="title"></p>
+
+        <div class="tcd-mini-player-timeline"
+             >
+            <div class="tcd-mini-player-timeline-track">
+                <div class="tcd-mini-player-timeline-fill" :style="'width: ' + (timelineDragging ? dragPercent : progressPercent) + '%'"></div>
+                <div class="tcd-mini-player-timeline-head" :style="'left: ' + (timelineDragging ? dragPercent : progressPercent) + '%'"></div>
             </div>
-            <span class="tcd-time-display" style="min-width: 35px; text-align: right;" x-text="durationDisplay"></span>
         </div>
 
-        <div class="tcd-mini-player-controls">
-            <button class="tcd-btn tcd-btn-sm" @click="seekBy(-10)">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M10 4H12V6H10Z M8 6H10V8H8Z M6 8H8V10H6Z M4 10H6V12H4Z M6 12H8V14H6Z M8 14H10V16H8Z M10 16H12V18H10Z M18 4H20V6H18Z M16 6H18V8H16Z M14 8H16V10H14Z M12 10H14V12H12Z M14 12H16V14H14Z M16 14H18V16H16Z M18 16H20V18H18Z"/>
-                </svg>
+        <div class="tcd-mini-player-time">
+            <span x-text="currentTimeDisplay"></span>
+            <span x-text="durationDisplay"></span>
+        </div>
+
+        <div class="tcd-mini-player-transport">
+            <button @click="seekBy(-10)" aria-label="Rewind 10 seconds">
+                <span class="font-monocraft-semibold text-white text-sm">&lt;&lt;</span>
             </button>
-            <button class="tcd-btn tcd-btn-play" @click="togglePlay()">
-                <svg x-show="!isPlaying" viewBox="0 0 24 24">
-                    <path d="M8 5v14l11-7z"/>
-                </svg>
-                <svg x-show="isPlaying" viewBox="0 0 24 24">
-                    <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
-                </svg>
+            <button class="tcd-mini-player-transport-play" @click="togglePlay()" :aria-label="isPlaying ? 'Pause' : 'Play'">
+                <svg x-show="!isPlaying" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                <svg x-show="isPlaying" viewBox="0 0 24 24"><path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/></svg>
             </button>
-            <button class="tcd-btn tcd-btn-sm" @click="seekBy(10)">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M4 4H6V6H4Z M6 6H8V8H6Z M8 8H10V10H8Z M10 10H12V12H10Z M8 12H10V14H8Z M6 14H8V16H6Z M4 16H6V18H4Z M12 4H14V6H12Z M14 6H16V8H14Z M16 8H18V10H16Z M18 10H20V12H18Z M16 12H18V14H16Z M14 14H16V16H14Z M12 16H14V18H12Z"/>
-                </svg>
+            <button @click="seekBy(10)" aria-label="Forward 10 seconds">
+                <span class="font-monocraft-semibold text-white text-sm">&gt;&gt;</span>
             </button>
         </div>
 
@@ -815,10 +818,14 @@
             currentTime: 0,
             duration: 0,
             progressPercent: 0,
-
-            isDragging: false,
-            dragOffsetX: 0,
-            dragOffsetY: 0,
+            timelineDragging: false,
+            dragPercent: 0,
+            volume: 1,
+            volumeDragging: false,
+            volumeSignalsVisible: false,
+            _activeAudio: null,
+            _currentSrc: null,
+            _listeners: [],
 
             get currentTimeDisplay() {
                 return MediaPlayerUtils.formatTime(this.currentTime);
@@ -828,152 +835,210 @@
                 return MediaPlayerUtils.formatTime(this.duration);
             },
 
-            init() {
-                const audio = this.$refs.audio;
+            get volumePercent() {
+                return Math.round(this.volume * 100);
+            },
 
-                audio.addEventListener('timeupdate', () => {
-                    this.currentTime = audio.currentTime;
-                    if (audio.duration > 0) {
-                        this.progressPercent = (audio.currentTime / audio.duration) * 100;
+            _audio() {
+                return this._activeAudio || this.$refs.audio;
+            },
+
+            _detachListeners() {
+                this._listeners.forEach(([el, evt, fn]) => el.removeEventListener(evt, fn));
+                this._listeners = [];
+            },
+
+            _attachListeners(audioEl) {
+                this._detachListeners();
+                const on = (evt, fn) => {
+                    audioEl.addEventListener(evt, fn);
+                    this._listeners.push([audioEl, evt, fn]);
+                };
+                on('timeupdate', () => {
+                    this.currentTime = audioEl.currentTime;
+                    if (audioEl.duration > 0) {
+                        this.progressPercent = (audioEl.currentTime / audioEl.duration) * 100;
                     }
                 });
+                on('loadedmetadata', () => { this.duration = audioEl.duration; });
+                on('durationchange', () => { this.duration = audioEl.duration; });
+                on('play', () => { this.isPlaying = true; });
+                on('pause', () => { this.isPlaying = false; });
+                on('ended', () => { this.isPlaying = false; });
+                on('volumechange', () => { this.volume = audioEl.volume; });
+            },
 
-                audio.addEventListener('loadedmetadata', () => {
-                    this.duration = audio.duration;
-                });
+            init() {
+                this._attachListeners(this.$refs.audio);
 
-                audio.addEventListener('play', () => {
-                    this.isPlaying = true;
-                });
+                const timelineEl = this.$el.querySelector('.tcd-mini-player-timeline');
+                const volumeEl = this.$el.querySelector('.tcd-mini-player-volume-track');
 
-                audio.addEventListener('pause', () => {
-                    this.isPlaying = false;
-                });
+                timelineEl.addEventListener('mousedown', (e) => this.startTimelineDrag(e));
+                timelineEl.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.startTimelineDrag(e.touches[0]);
+                }, { passive: false });
 
-                audio.addEventListener('ended', () => {
-                    this.isPlaying = false;
-                });
+                volumeEl.addEventListener('mousedown', (e) => this.startVolumeDrag(e));
+                volumeEl.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.startVolumeDrag(e.touches[0]);
+                }, { passive: false });
 
-                document.addEventListener('mousemove', (e) => this.onDrag(e));
-                document.addEventListener('mouseup', () => this.endDrag());
-
-                document.addEventListener('tcd:media-registered', (e) => {
-                    const info = e.detail;
-                    if (info && info.src && (!audio.src || audio.src !== info.src)) {
-                        audio.src = info.src;
-                        audio.preload = 'auto';
-                        audio.load();
+                document.addEventListener('tcd:media-registered', () => {
+                    const state = GlobalMediaState.getActive();
+                    if (!state.media || !state.info) return;
+                    this._activeAudio = state.media;
+                    this._attachListeners(state.media);
+                    this.title = state.info.title;
+                    this.coverUrl = state.info.coverUrl;
+                    this.mediaType = state.info.type;
+                    this._currentSrc = state.info.src;
+                    this.volume = state.media.volume;
+                    this.duration = state.media.duration || 0;
+                    this.currentTime = state.media.currentTime || 0;
+                    this.isPlaying = !state.media.paused;
+                    if (this.duration > 0) {
+                        this.progressPercent = (this.currentTime / this.duration) * 100;
                     }
                 });
 
                 document.addEventListener('up:link:follow', () => {
                     const state = GlobalMediaState.getActive();
                     if (state.media && !state.media.paused && state.info) {
-                        this.transferMedia(state.media, state.info);
+                        this._transferToOwn(state.media, state.info);
+                    }
+                });
+
+                document.addEventListener('tcd:audio-player-ready', (e) => {
+                    if (!this.isVisible || !this._currentSrc) return;
+                    const { audioEl, src } = e.detail;
+                    if (src !== this._currentSrc) return;
+                    const ownAudio = this._audio();
+                    const currentTime = ownAudio.currentTime;
+                    const wasPlaying = !ownAudio.paused;
+                    const vol = this.volume;
+                    if (ownAudio === this.$refs.audio) ownAudio.pause();
+                    audioEl.currentTime = currentTime;
+                    audioEl.volume = vol;
+                    this._activeAudio = audioEl;
+                    this._attachListeners(audioEl);
+                    if (wasPlaying) {
+                        document.dispatchEvent(new CustomEvent('tcd:mini-player-resume', {
+                            detail: { audioEl, src, currentTime, volume: vol }
+                        }));
                     }
                 });
             },
 
-            transferMedia(mediaEl, info) {
+            _transferToOwn(mediaEl, info) {
                 const currentTime = mediaEl.currentTime;
                 const wasPlaying = !mediaEl.paused;
+                const vol = mediaEl.volume;
                 mediaEl.pause();
 
-                const audio = this.$refs.audio;
+                const ownAudio = this.$refs.audio;
+                this._activeAudio = ownAudio;
+                this._currentSrc = info.src;
+                this._attachListeners(ownAudio);
                 this.title = info.title;
                 this.coverUrl = info.coverUrl;
                 this.mediaType = info.type;
+                this.volume = vol;
                 this.isVisible = true;
 
-                if (audio.src === info.src && audio.readyState >= 2) {
-                    audio.currentTime = currentTime;
-                    if (wasPlaying) audio.play();
+                ownAudio.volume = vol;
+                if (ownAudio.src === info.src && ownAudio.readyState >= 2) {
+                    ownAudio.currentTime = currentTime;
+                    if (wasPlaying) ownAudio.play();
                 } else {
-                    audio.src = info.src;
-                    audio.currentTime = currentTime;
-                    if (wasPlaying) audio.play();
+                    ownAudio.src = info.src;
+                    ownAudio.currentTime = currentTime;
+                    if (wasPlaying) ownAudio.play();
                 }
             },
 
             togglePlay() {
-                const audio = this.$refs.audio;
-                if (audio.paused) {
-                    audio.play();
-                } else {
-                    audio.pause();
-                }
-            },
-
-            seekTo(event) {
-                const rect = event.currentTarget.getBoundingClientRect();
-                const percent = (event.clientX - rect.left) / rect.width;
-                this.$refs.audio.currentTime = percent * this.duration;
+                const audio = this._audio();
+                if (audio.paused) { audio.play(); } else { audio.pause(); }
             },
 
             seekBy(seconds) {
-                const audio = this.$refs.audio;
-                audio.currentTime = Math.max(0, Math.min(audio.duration, audio.currentTime + seconds));
+                const audio = this._audio();
+                audio.currentTime = Math.max(0, Math.min(audio.duration || 0, audio.currentTime + seconds));
             },
 
             close() {
-                this.$refs.audio.pause();
-                this.$refs.audio.src = '';
+                const audio = this._audio();
+                audio.pause();
+                if (this._activeAudio === this.$refs.audio) {
+                    this.$refs.audio.src = '';
+                }
+                this._activeAudio = this.$refs.audio;
+                this._currentSrc = null;
+                this._attachListeners(this.$refs.audio);
                 this.isVisible = false;
                 this.title = 'No media';
                 this.coverUrl = null;
             },
 
-            startDrag(e) {
-                this.isDragging = true;
-                const rect = this.$el.getBoundingClientRect();
-                this.dragOffsetX = e.clientX - rect.left;
-                this.dragOffsetY = e.clientY - rect.top;
-                this.$el.style.transition = 'none';
+            startTimelineDrag(event) {
+                const track = this.$el.querySelector('.tcd-mini-player-timeline');
+                const rect = track.getBoundingClientRect();
+                const audio = this._audio();
+                this.timelineDragging = true;
+                const seekFromX = (cx) => {
+                    const pct = Math.max(0, Math.min(1, (cx - rect.left) / rect.width));
+                    this.dragPercent = pct * 100;
+                    if (audio.duration) audio.currentTime = pct * audio.duration;
+                };
+                seekFromX(event.clientX);
+                const onMove = (e) => {
+                    const cx = e.clientX || (e.touches && e.touches[0].clientX);
+                    seekFromX(cx);
+                };
+                const onUp = () => {
+                    this.timelineDragging = false;
+                    document.removeEventListener('mousemove', onMove);
+                    document.removeEventListener('mouseup', onUp);
+                    document.removeEventListener('touchmove', onMove);
+                    document.removeEventListener('touchend', onUp);
+                };
+                document.addEventListener('mousemove', onMove);
+                document.addEventListener('mouseup', onUp);
+                document.addEventListener('touchmove', onMove);
+                document.addEventListener('touchend', onUp);
             },
 
-            onDrag(e) {
-                if (!this.isDragging) return;
-                const x = e.clientX - this.dragOffsetX;
-                const y = e.clientY - this.dragOffsetY;
-                this.$el.style.left = x + 'px';
-                this.$el.style.top = y + 'px';
-                this.$el.style.right = 'auto';
-                this.$el.style.bottom = 'auto';
-            },
-
-            endDrag() {
-                if (!this.isDragging) return;
-                this.isDragging = false;
-
-                const rect = this.$el.getBoundingClientRect();
-                const centerX = rect.left + rect.width / 2;
-                const centerY = rect.top + rect.height / 2;
-                const midX = window.innerWidth / 2;
-                const midY = window.innerHeight / 2;
-
-                this.$el.style.transition = 'all 0.3s ease-out';
-
-                if (centerX < midX && centerY < midY) {
-                    this.$el.style.top = '120px';
-                    this.$el.style.left = '20px';
-                    this.$el.style.right = 'auto';
-                    this.$el.style.bottom = 'auto';
-                } else if (centerX >= midX && centerY < midY) {
-                    this.$el.style.top = '120px';
-                    this.$el.style.right = '20px';
-                    this.$el.style.left = 'auto';
-                    this.$el.style.bottom = 'auto';
-                } else if (centerX < midX && centerY >= midY) {
-                    this.$el.style.bottom = '20px';
-                    this.$el.style.left = '20px';
-                    this.$el.style.top = 'auto';
-                    this.$el.style.right = 'auto';
-                } else {
-                    this.$el.style.bottom = '20px';
-                    this.$el.style.right = '20px';
-                    this.$el.style.top = 'auto';
-                    this.$el.style.left = 'auto';
-                }
+            startVolumeDrag(event) {
+                const track = this.$el.querySelector('.tcd-mini-player-volume-track');
+                const rect = track.getBoundingClientRect();
+                const audio = this._audio();
+                this.volumeDragging = true;
+                this.volumeSignalsVisible = true;
+                const setFromY = (cy) => {
+                    const vol = Math.max(0, Math.min(1, (rect.bottom - cy) / rect.height));
+                    this.volume = vol;
+                    audio.volume = vol;
+                };
+                setFromY(event.clientY);
+                const onMove = (e) => {
+                    const cy = e.clientY || (e.touches && e.touches[0].clientY);
+                    setFromY(cy);
+                };
+                const onUp = () => {
+                    this.volumeDragging = false;
+                    setTimeout(() => { this.volumeSignalsVisible = false; }, 200);
+                    document.removeEventListener('mousemove', onMove);
+                    document.removeEventListener('mouseup', onUp);
+                    document.removeEventListener('touchmove', onMove);
+                    document.removeEventListener('touchend', onUp);
+                };
+                document.addEventListener('mousemove', onMove);
+                document.addEventListener('mouseup', onUp);
+                document.addEventListener('touchmove', onMove);
+                document.addEventListener('touchend', onUp);
             }
         }));
 

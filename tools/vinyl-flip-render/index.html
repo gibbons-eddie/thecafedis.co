@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Vinyl Flip Frame Renderer</title>
+  <style>
+    body {
+      margin: 0;
+      background: #1a1a1a;
+      color: #ccc;
+      font-family: monospace;
+      padding: 24px;
+    }
+    h1 { font-size: 14px; color: #8af; }
+    #canvas-wrap {
+      display: flex;
+      gap: 16px;
+      margin-top: 16px;
+    }
+    canvas {
+      image-rendering: pixelated;
+      width: 384px;
+      height: 384px;
+      background: #000;
+      border: 1px solid #333;
+    }
+    button {
+      background: #222;
+      color: #8af;
+      border: 1px solid #8af;
+      padding: 8px 16px;
+      font-family: monospace;
+      cursor: pointer;
+      margin-top: 16px;
+    }
+    button:hover { background: #8af; color: #000; }
+    #log { margin-top: 16px; font-size: 11px; color: #666; white-space: pre; }
+  </style>
+</head>
+<body>
+  <h1>vinyl flip frame renderer -- 48x48, 3 toon bands, 8-color palette</h1>
+  <p>Opens the renderer. Click the button to generate and download 5 PNGs.</p>
+
+  <div id="canvas-wrap">
+    <canvas id="render-canvas" width="48" height="48"></canvas>
+    <canvas id="quant-canvas" width="48" height="48"></canvas>
+  </div>
+  <p style="font-size: 11px; color: #666;">left: raw Three.js render &nbsp;|&nbsp; right: after palette quantization</p>
+
+  <button id="render-btn">render &amp; download 5 frames</button>
+  <div id="log"></div>
+
+  <script type="importmap">
+  { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+  </script>
+
+  <script type="module">
+  import * as THREE from 'three';
+
+  const PALETTE = [
+    [0x0a, 0x0a, 0x0a],
+    [0x1a, 0x1a, 0x22],
+    [0x2e, 0x2e, 0x3a],
+    [0x44, 0x44, 0x55],
+    [0x6a, 0x6a, 0x80],
+    [0x9a, 0xb8, 0xd8],
+    [0xcc, 0x88, 0x44],
+    [0xee, 0xcc, 0x88],
+  ];
+
+  const SIZE = 48;
+  const TEX_SIZE = 48;
+  const ANGLES_DEG = [0, 72, 144, 216, 288];
+  const DISC_COLOR = '#0a0a0a';
+  const GROOVE_COLOR = '#1e1e2a';
+  const RIM_COLOR = '#0a0a0a';
+  const GROOVE_SPACING = 2;
+  const HOLE_PUNCH_R = 3.5;
+
+  const renderCanvas = document.getElementById('render-canvas');
+  const quantCanvas = document.getElementById('quant-canvas');
+  const log = document.getElementById('log');
+
+  function fillPixelDisc(c, cx, cy, r) {
+    const r2 = r * r;
+    const rInt = Math.ceil(r) + 1;
+    const pxMin = Math.floor(cx) - rInt;
+    const pxMax = Math.floor(cx) + rInt;
+    const pyMin = Math.floor(cy) - rInt;
+    const pyMax = Math.floor(cy) + rInt;
+    for (let py = pyMin; py <= pyMax; py++) {
+      for (let px = pxMin; px <= pxMax; px++) {
+        const dx = (px + 0.5) - cx;
+        const dy = (py + 0.5) - cy;
+        if (dx * dx + dy * dy < r2) {
+          c.fillRect(px, py, 1, 1);
+        }
+      }
+    }
+  }
+
+  function buildDiscTexture() {
+    const cvs = document.createElement('canvas');
+    cvs.width = TEX_SIZE;
+    cvs.height = TEX_SIZE;
+    const c = cvs.getContext('2d');
+    c.imageSmoothingEnabled = false;
+
+    const cx = TEX_SIZE / 2;
+    const cy = TEX_SIZE / 2;
+    const outerR = TEX_SIZE / 2 - 2;
+    const holeR = 4;
+    const shadowR = holeR + 1;
+
+    c.clearRect(0, 0, TEX_SIZE, TEX_SIZE);
+
+    c.fillStyle = DISC_COLOR;
+    c.beginPath();
+    c.arc(cx, cy, outerR, 0, Math.PI * 2);
+    c.fill();
+
+    c.strokeStyle = GROOVE_COLOR;
+    c.lineWidth = 1;
+    for (let r = shadowR + 2; r < outerR - 1; r += GROOVE_SPACING) {
+      c.beginPath();
+      c.arc(cx, cy, r + 0.5, 0, Math.PI * 2);
+      c.stroke();
+    }
+
+    c.fillStyle = RIM_COLOR;
+    fillPixelDisc(c, cx, cy, shadowR);
+
+    c.globalCompositeOperation = 'destination-out';
+    c.fillStyle = '#000';
+    fillPixelDisc(c, cx, cy, HOLE_PUNCH_R);
+    c.globalCompositeOperation = 'source-over';
+
+    return cvs;
+  }
+
+  const renderer = new THREE.WebGLRenderer({
+    canvas: renderCanvas,
+    alpha: true,
+    antialias: false,
+    preserveDrawingBuffer: true
+  });
+  renderer.setSize(SIZE, SIZE, false);
+  renderer.setPixelRatio(1);
+  renderer.setClearColor(0x000000, 0);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
+  camera.position.set(0, 0, 5);
+
+  const geo = new THREE.CylinderGeometry(1, 1, 0.06, 64, 1, false);
+  geo.rotateX(Math.PI / 2);
+
+  const gradient = new Uint8Array([70, 150, 230]);
+  const gradMap = new THREE.DataTexture(gradient, gradient.length, 1, THREE.RedFormat);
+  gradMap.needsUpdate = true;
+  gradMap.magFilter = THREE.NearestFilter;
+  gradMap.minFilter = THREE.NearestFilter;
+
+  const discCanvas = buildDiscTexture();
+  const tex = new THREE.CanvasTexture(discCanvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.magFilter = THREE.NearestFilter;
+  tex.minFilter = THREE.NearestFilter;
+  tex.generateMipmaps = false;
+
+  const sideMat = new THREE.MeshToonMaterial({ color: 0x2a2a3a, gradientMap: gradMap });
+  const faceMat = new THREE.MeshToonMaterial({ map: tex, gradientMap: gradMap, transparent: true, alphaTest: 0.5 });
+  const backMat = new THREE.MeshToonMaterial({ map: tex, gradientMap: gradMap, transparent: true, alphaTest: 0.5 });
+  const mesh = new THREE.Mesh(geo, [sideMat, faceMat, backMat]);
+  scene.add(mesh);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.25));
+  const key = new THREE.DirectionalLight(0xffffff, 1.4);
+  key.position.set(3, 4, 5);
+  scene.add(key);
+  const rim = new THREE.DirectionalLight(0xaaccff, 0.9);
+  rim.position.set(-4, 1, 2);
+  scene.add(rim);
+
+  function quantize(srcCanvas, dstCanvas) {
+    const dctx = dstCanvas.getContext('2d');
+    dctx.clearRect(0, 0, SIZE, SIZE);
+    dctx.drawImage(srcCanvas, 0, 0);
+    const img = dctx.getImageData(0, 0, SIZE, SIZE);
+    const px = img.data;
+
+    for (let i = 0; i < px.length; i += 4) {
+      if (px[i + 3] < 16) { px[i + 3] = 0; continue; }
+      const r = px[i], g = px[i + 1], b = px[i + 2];
+      let best = 0, bestDist = Infinity;
+      for (let p = 0; p < PALETTE.length; p++) {
+        const dr = r - PALETTE[p][0];
+        const dg = g - PALETTE[p][1];
+        const db = b - PALETTE[p][2];
+        const d = dr * dr + dg * dg + db * db;
+        if (d < bestDist) { bestDist = d; best = p; }
+      }
+      px[i]     = PALETTE[best][0];
+      px[i + 1] = PALETTE[best][1];
+      px[i + 2] = PALETTE[best][2];
+      px[i + 3] = 255;
+    }
+    dctx.putImageData(img, 0, 0);
+  }
+
+  async function renderAllFrames(download) {
+    log.textContent = '';
+    for (let i = 0; i < ANGLES_DEG.length; i++) {
+      mesh.rotation.y = THREE.MathUtils.degToRad(ANGLES_DEG[i]);
+      renderer.render(scene, camera);
+      quantize(renderCanvas, quantCanvas);
+
+      if (download) {
+        const blob = await new Promise(r => quantCanvas.toBlob(r, 'image/png'));
+        const a = Object.assign(document.createElement('a'), {
+          href: URL.createObjectURL(blob),
+          download: `vinyl-flip-${i}.png`
+        });
+        a.click();
+        await new Promise(r => setTimeout(r, 150));
+        log.textContent += `downloaded vinyl-flip-${i}.png (${ANGLES_DEG[i]} deg)\n`;
+      } else {
+        await new Promise(r => setTimeout(r, 400));
+      }
+    }
+    if (download) log.textContent += '\ndone. move PNGs into thecafedisite/static/images/vinyl-flip/';
+  }
+
+  document.getElementById('render-btn').addEventListener('click', () => renderAllFrames(true));
+  renderAllFrames(false);
+  </script>
+</body>
+</html>

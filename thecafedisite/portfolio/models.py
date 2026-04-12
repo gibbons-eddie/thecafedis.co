@@ -69,6 +69,11 @@ class ProfileImage(models.Model):
         upload_to='profile/',
         help_text="Profile image (recommended: square, min 400x400px)"
     )
+    original_image = models.ImageField(
+        upload_to='profile/originals/',
+        blank=True,
+        help_text="Original unmodified upload for re-cropping"
+    )
     alt_text = models.CharField(
         max_length=200,
         blank=True,

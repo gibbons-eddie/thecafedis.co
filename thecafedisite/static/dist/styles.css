@@ -1402,6 +1402,11 @@ html body [x-cloak], [x-cloak][x-cloak] {
   border-color: var(--tcd-accent);
   background-color: rgba(255, 255, 255, 0.05);
 }
+.tcd-quality-btn--disabled, .tcd-quality-btn--disabled:hover {
+  cursor: default;
+  border-color: var(--tcd-accent-dim);
+  background-color: transparent;
+}
 .tcd-quality-btn svg {
   width: 10px;
   height: 10px;
@@ -1682,6 +1687,22 @@ html body [x-cloak], [x-cloak][x-cloak] {
   height: 100%;
   border-radius: 50%;
 }
+.tcd-vinyl-disc-img--hidden {
+  visibility: hidden;
+}
+.tcd-vinyl-disc-flip {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.tcd-vinyl-disc-flip img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  border-radius: 0;
+}
 .tcd-vinyl-disc--emerging {
   transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   transform: translateX(75%);
@@ -1885,74 +1906,43 @@ html body [x-cloak], [x-cloak][x-cloak] {
 .tcd-mini-player {
   position: fixed;
   z-index: 200;
-  width: 300px;
-  top: 120px;
+  width: 220px;
+  bottom: 20px;
   right: 20px;
   background-color: var(--tcd-bg-dark);
   border: 2px solid var(--tcd-accent);
-  border-radius: 0;
   padding: 0.75rem;
-  cursor: default;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
   user-select: none;
 }
-.tcd-mini-player-drag-handle {
-  position: absolute;
-  width: 20px;
-  height: 20px;
-  cursor: move;
-  z-index: 1;
-}
-.tcd-mini-player-drag-handle--tl {
-  top: 0;
-  left: 0;
-}
-.tcd-mini-player-drag-handle--tr {
-  top: 0;
-  right: 0;
-}
-.tcd-mini-player-drag-handle--bl {
-  bottom: 0;
-  left: 0;
-}
-.tcd-mini-player-drag-handle--br {
-  bottom: 0;
-  right: 0;
-}
-.tcd-mini-player-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.5rem;
-  cursor: default;
-}
-.tcd-mini-player-title {
-  font-family: 'Monocraft-SemiBold', monospace;
-  font-size: 0.75rem;
-  color: var(--tcd-accent);
-}
 .tcd-mini-player-close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
   background: none;
   border: none;
   padding: 2px;
   cursor: pointer;
+  z-index: 1;
 }
 .tcd-mini-player-close svg {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   fill: #666;
 }
 .tcd-mini-player-close:hover svg {
   fill: var(--tcd-accent);
 }
-.tcd-mini-player-info {
+.tcd-mini-player-top {
   display: flex;
-  align-items: center;
   gap: 0.75rem;
-  margin-bottom: 0.75rem;
+  align-items: stretch;
 }
 .tcd-mini-player-cover {
-  width: 48px;
-  height: 48px;
+  width: 110px;
+  height: 110px;
   background-color: var(--tcd-bg-card);
   display: flex;
   align-items: center;
@@ -1965,34 +1955,145 @@ html body [x-cloak], [x-cloak][x-cloak] {
   height: 100%;
   object-fit: cover;
 }
-.tcd-mini-player-track {
-  min-width: 0;
-  flex: 1;
-}
 .tcd-mini-player-track-title {
   font-family: 'Monocraft-SemiBold', monospace;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: white;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.tcd-mini-player-track-artist {
-  font-family: 'Monocraft-SemiBold', monospace;
-  font-size: 0.75rem;
-  color: var(--tcd-accent);
-}
-.tcd-mini-player-progress {
+.tcd-mini-player-timeline {
+  height: 24px;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
+  cursor: pointer;
 }
-.tcd-mini-player-controls {
+.tcd-mini-player-timeline-track {
+  position: relative;
+  width: 100%;
+  height: 4px;
+  background-color: oklch(22% 0.04 208.734 / 0.5);
+}
+.tcd-mini-player-timeline-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background-color: var(--tcd-accent);
+}
+.tcd-mini-player-timeline-head {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 4px;
+  height: 16px;
+  background-color: var(--tcd-accent);
+}
+.tcd-mini-player-time {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'Monocraft-SemiBold', monospace;
+  font-size: 0.625rem;
+  color: #666;
+}
+.tcd-mini-player-transport {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
+  gap: 1rem;
+}
+.tcd-mini-player-transport button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tcd-mini-player-transport-play {
+  width: 32px;
+  height: 32px;
+}
+.tcd-mini-player-transport-play svg {
+  width: 24px;
+  height: 24px;
+  fill: white;
+}
+.tcd-mini-player-volume {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  min-height: 0;
+}
+.tcd-mini-player-volume-percent {
+  font-family: 'Monocraft-SemiBold', monospace;
+  font-size: 0.5rem;
+  color: var(--tcd-accent);
+  transition: color 0.15s;
+}
+.tcd-mini-player-volume-percent--active {
+  color: var(--color-orange-clu-program);
+}
+.tcd-mini-player-volume-track {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+}
+.tcd-mini-player-volume-bar {
+  position: relative;
+  width: 4px;
+  height: 100%;
+  background-color: oklch(22% 0.04 208.734 / 0.5);
+}
+.tcd-mini-player-volume-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: var(--tcd-accent);
+}
+.tcd-mini-player-volume-track--active .tcd-mini-player-volume-fill {
+  background-color: var(--color-orange-clu-program);
+}
+.tcd-mini-player-volume-head {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, 50%);
+  width: 16px;
+  height: 4px;
+  background-color: var(--tcd-accent);
+}
+.tcd-mini-player-volume-track--active .tcd-mini-player-volume-head {
+  background-color: var(--color-orange-clu-program);
+}
+.tcd-mini-player-volume-signals {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 30px;
+  height: 100%;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-start;
+}
+.tcd-mini-player-volume-signal {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+.tcd-mini-player-volume-signal-bar {
+  height: 6px;
+  background-color: var(--color-orange-clu-program);
+  transition: width 0.15s ease-out;
 }
 .tcd-modal-backdrop {
   position: fixed;
@@ -2175,6 +2276,106 @@ html body [x-cloak], [x-cloak][x-cloak] {
   background-color: var(--tcd-bg-dark);
   border-top: 1px solid var(--tcd-accent-dim);
 }
+.tcd-stream-volume-track {
+  flex: 1;
+  max-width: 200px;
+  position: relative;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  touch-action: none;
+}
+.tcd-stream-volume-bar {
+  width: 100%;
+  height: 6px;
+  background-color: oklch(88.716% 0.09711 208.766 / 0.15);
+  position: relative;
+  pointer-events: none;
+}
+.tcd-stream-volume-fill {
+  height: 100%;
+  background-color: var(--color-blue-tron);
+  transition: background-color 0.15s ease;
+}
+.tcd-stream-volume-head {
+  position: absolute;
+  top: 50%;
+  width: 4px;
+  height: 14px;
+  background-color: var(--color-blue-tron);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  transition: background-color 0.15s ease;
+}
+.tcd-stream-volume-signals {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 5px);
+  display: flex;
+  gap: 2px;
+  align-items: flex-end;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.tcd-stream-volume-signal {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+}
+.tcd-stream-volume-signal-top {
+  width: 100%;
+  background-color: oklch(88.716% 0.09711 208.766 / 0.15);
+  transition: height 0.1s ease, background-color 0.15s ease;
+  height: 0px;
+}
+.tcd-stream-volume-signal.active .tcd-stream-volume-signal-top {
+  background-color: var(--color-orange-clu-program);
+}
+.tcd-stream-volume-track--active .tcd-stream-volume-signals {
+  opacity: 1;
+}
+.tcd-stream-volume-track--active .tcd-stream-volume-fill {
+  background-color: var(--color-orange-clu-program);
+}
+.tcd-stream-volume-track--active .tcd-stream-volume-head {
+  background-color: var(--color-orange-clu-program);
+}
+.tcd-stream-volume-percent {
+  text-align: center;
+  font-family: 'Monocraft-SemiBold', monospace;
+  font-size: 0.625rem;
+  color: oklch(88.716% 0.09711 208.766);
+  min-width: 32px;
+  margin-left: 10px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+.tcd-stream-volume-percent--visible {
+  opacity: 1;
+}
+.tcd-stream-mute-btn {
+  display: none;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: var(--tcd-accent);
+}
+.tcd-stream-mute-btn svg {
+  width: 22px;
+  height: 22px;
+}
+.tcd-stream-mute-btn .tcd-mute-bar {
+  fill: var(--color-blue-tron);
+}
 .tcd-stream-chat {
   background-color: var(--tcd-bg-dark);
   border: 1px solid var(--tcd-accent-dim);
@@ -2219,7 +2420,8 @@ html body [x-cloak], [x-cloak][x-cloak] {
   background: var(--tcd-bg-dark);
 }
 .tcd-stream-chat-messages::-webkit-scrollbar-thumb {
-  background-color: var(--tcd-accent-dim);
+  background-color: var(--color-blue-tron);
+  border-radius: 0;
 }
 .tcd-stream-player:fullscreen, .tcd-stream-player:-webkit-full-screen {
   display: flex;
@@ -2311,6 +2513,14 @@ html body [x-cloak], [x-cloak][x-cloak] {
   }
   .typewriter-header {
     font-size: 0.9em;
+  }
+  .tcd-name-heading {
+    font-size: clamp(2.5rem, 12vw, 4rem);
+    line-height: 1.1;
+    word-spacing: 100vw;
+  }
+  button.social-icon {
+    min-height: auto;
   }
   .text-3xl {
     font-size: 1.5rem;
@@ -2466,6 +2676,47 @@ html body [x-cloak], [x-cloak][x-cloak] {
   .tcd-dash-header-actions a {
     font-size: 0.75rem;
     padding: 0.375rem 0.75rem;
+  }
+  .bg-scroller-row:nth-child(3n) {
+    display: none;
+  }
+  .bg-scroller-text {
+    font-size: 1.5rem;
+  }
+  .tcd-stream-controls {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+  .tcd-stream-volume-track {
+    display: none;
+  }
+  .tcd-stream-volume-percent {
+    display: none;
+  }
+  .tcd-stream-mute-btn {
+    display: flex;
+  }
+  .tcd-quality-btn {
+    min-height: 0;
+    height: 28px;
+    padding: 2px 8px;
+    line-height: 1;
+  }
+  .tcd-stream-chat-messages {
+    height: 200px;
+  }
+  .tcd-past-stream-layout {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .tcd-past-stream-thumb {
+    width: 100%;
+    aspect-ratio: 16/9;
+  }
+  .tcd-past-stream-meta {
+    flex-wrap: wrap;
+    gap: 0.25rem 0.75rem;
   }
 }
 @media (max-width: 480px) {
