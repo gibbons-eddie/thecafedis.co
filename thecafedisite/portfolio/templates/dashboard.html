@@ -34,9 +34,9 @@
             </div>
             {% if has_2fa %}
             <p class="font-monocraft-semibold text-sm text-gray-400 mb-3">2FA is enabled. Your account requires a TOTP code on login.</p>
-            <form method="POST" action="{% url 'portfolio:disable_2fa' %}">
+            <form method="POST" action="{% url 'portfolio:disable_2fa' %}" x-data="{ showConfirm: false }">
                 {% csrf_token %}
-                <button type="submit"
+                <button type="button" @click="showConfirm = !showConfirm"
                     class="px-4 py-2 font-monocraft-semibold text-sm cursor-pointer"
                     style="color: #ef4444; border: 1px solid #ef4444; border-radius: 0.5rem; background: transparent; transition: all 0.2s;"
                     onmouseover="this.style.backgroundColor='#ef4444'; this.style.color='#000';"
@@ -44,6 +44,17 @@
                 >
                     $ disable --2fa
                 </button>
+                <div x-show="showConfirm" x-cloak class="mt-3 flex items-center gap-3">
+                    <input type="password" name="password" placeholder="enter password to confirm"
+                        class="px-3 py-2 font-monocraft-semibold text-sm"
+                        style="background: #0d0d0d; color: #fff; border: 1px solid #ef4444; border-radius: 0.375rem; outline: none;"
+                        required>
+                    <button type="submit"
+                        class="px-4 py-2 font-monocraft-semibold text-sm cursor-pointer"
+                        style="color: #000; background: #ef4444; border: 1px solid #ef4444; border-radius: 0.375rem;">
+                        confirm
+                    </button>
+                </div>
             </form>
             {% else %}
             <p class="font-monocraft-semibold text-sm text-gray-400 mb-3">2FA is not enabled. Set it up to secure your dashboard login.</p>

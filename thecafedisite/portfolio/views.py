@@ -1,5 +1,6 @@
 import re
 import io
+import time
 import base64
 import logging
 import secrets
@@ -12,11 +13,38 @@ from django.contrib import messages
 from django.http import JsonResponse, FileResponse
 from django.utils import timezone
 from django.views.decorators.http import require_POST, require_GET
+from django_ratelimit.decorators import ratelimit
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from django_otp.plugins.otp_static.models import StaticDevice, StaticToken
 from .models import CareerEntry, Skill, ProfileImage, MusicTrack, Video, Comment, StreamConfig, StreamSession
 
 logger = logging.getLogger(__name__)
+
+ALLOWED_AUDIO_SIGNATURES = {
+    b'\xff\xfb': 'audio/mpeg',      # MP3
+    b'\xff\xf3': 'audio/mpeg',      # MP3
+    b'\xff\xf2': 'audio/mpeg',      # MP3
+    b'ID3': 'audio/mpeg',           # MP3 with ID3 tag
+    b'OggS': 'audio/ogg',           # OGG
+    b'fLaC': 'audio/flac',          # FLAC
+    b'RIFF': 'audio/wav',           # WAV
+}
+
+ALLOWED_IMAGE_SIGNATURES = {
+    b'\xff\xd8\xff': 'image/jpeg',  # JPEG
+    b'\x89PNG': 'image/png',        # PNG
+    b'GIF8': 'image/gif',           # GIF
+    b'RIFF': 'image/webp',          # WebP (RIFF container)
+}
+
+
+def validate_file_type(uploaded_file, allowed_signatures):
+    header = uploaded_file.read(12)
+    uploaded_file.seek(0)
+    for sig in allowed_signatures:
+        if header.startswith(sig):
+            return True
+    return False
 
 
 def homepage(request):
@@ -47,6 +75,7 @@ def videos(request):
 
 
 @require_POST
+@ratelimit(key='ip', rate='30/h', method='POST', block=True)
 def track_play(request, pk):
     track = get_object_or_404(MusicTrack, pk=pk, is_published=True)
     track.increment_play_count()
@@ -142,6 +171,7 @@ def stream_status(request):
 
 
 @require_GET
+@ratelimit(key='ip', rate='3/m', method='GET', block=True)
 def stream_chat_token(request):
     username = request.GET.get('username', '').strip()
     if not username:
@@ -178,12 +208,14 @@ def stream_chat_token(request):
 
 
 @require_POST
+@ratelimit(key='ip', rate='30/h', method='POST', block=True)
 def stream_vod_view(request, pk):
     session = get_object_or_404(StreamSession, pk=pk, is_published=True)
     session.increment_view_count()
     return JsonResponse({'status': 'ok', 'view_count': session.view_count})
 
 
+@ratelimit(key='ip', rate='5/m', method='POST', block=True)
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('portfolio:dashboard')
@@ -197,6 +229,7 @@ def login_view(request):
             has_totp = TOTPDevice.objects.filter(user=user, confirmed=True).exists()
             if has_totp:
                 request.session['pre_2fa_user_id'] = user.pk
+                request.session['pre_2fa_timestamp'] = time.time()
                 request.session['pre_2fa_next'] = request.GET.get('next', '')
                 return redirect('portfolio:verify_2fa')
             login(request, user)
@@ -207,14 +240,25 @@ def login_view(request):
                     return redirect(next_url)
             return redirect('portfolio:dashboard')
         else:
+            ip = request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR', ''))
+            logger.warning("Failed login attempt for user '%s' from %s", username, ip)
             messages.error(request, 'Invalid username or password.')
 
     return render(request, "login.html")
 
 
+@ratelimit(key='ip', rate='5/m', method='POST', block=True)
 def verify_2fa(request):
     user_id = request.session.get('pre_2fa_user_id')
     if not user_id:
+        return redirect('portfolio:login')
+
+    pre_2fa_ts = request.session.get('pre_2fa_timestamp', 0)
+    if time.time() - pre_2fa_ts > 300:
+        request.session.pop('pre_2fa_user_id', None)
+        request.session.pop('pre_2fa_timestamp', None)
+        request.session.pop('pre_2fa_next', None)
+        messages.error(request, '2FA session expired. Please log in again.')
         return redirect('portfolio:login')
 
     from django.contrib.auth import get_user_model
@@ -239,6 +283,7 @@ def verify_2fa(request):
             login(request, user)
             next_url = request.session.pop('pre_2fa_next', '')
             request.session.pop('pre_2fa_user_id', None)
+            request.session.pop('pre_2fa_timestamp', None)
             if next_url:
                 parsed = urlparse(next_url)
                 if not parsed.netloc and not parsed.scheme:
@@ -278,13 +323,15 @@ def setup_2fa(request):
             static_device.token_set.all().delete()
             backup_codes = []
             for _ in range(8):
-                token = secrets.token_hex(4)
+                token = secrets.token_hex(6)
                 StaticToken.objects.create(device=static_device, token=token)
                 backup_codes.append(token)
 
-            return render(request, "dashboard/setup_2fa_complete.html", {
+            response = render(request, "dashboard/setup_2fa_complete.html", {
                 'backup_codes': backup_codes,
             })
+            response['Cache-Control'] = 'no-store'
+            return response
         else:
             messages.error(request, 'Invalid code. Try again.')
 
@@ -305,6 +352,10 @@ def setup_2fa(request):
 @login_required
 @require_POST
 def disable_2fa(request):
+    password = request.POST.get('password', '')
+    if not request.user.check_password(password):
+        messages.error(request, 'Incorrect password. 2FA was not disabled.')
+        return redirect('portfolio:dashboard')
     TOTPDevice.objects.filter(user=request.user).delete()
     StaticDevice.objects.filter(user=request.user).delete()
     messages.success(request, '2FA has been disabled.')
@@ -347,6 +398,14 @@ def music_add(request):
             messages.error(request, 'Title and audio file are required.')
             return render(request, "dashboard/music_form.html", {'action': 'add'})
 
+        if not validate_file_type(audio_file, ALLOWED_AUDIO_SIGNATURES):
+            messages.error(request, 'Invalid audio file format.')
+            return render(request, "dashboard/music_form.html", {'action': 'add'})
+
+        if cover_art and not validate_file_type(cover_art, ALLOWED_IMAGE_SIGNATURES):
+            messages.error(request, 'Invalid image file format.')
+            return render(request, "dashboard/music_form.html", {'action': 'add'})
+
         track = MusicTrack.objects.create(
             title=title,
             genre=genre,
@@ -373,8 +432,14 @@ def music_edit(request, pk):
         track.is_published = request.POST.get('is_published') == 'on'
 
         if request.FILES.get('audio_file'):
+            if not validate_file_type(request.FILES['audio_file'], ALLOWED_AUDIO_SIGNATURES):
+                messages.error(request, 'Invalid audio file format.')
+                return render(request, "dashboard/music_form.html", {'action': 'edit', 'track': track})
             track.audio_file = request.FILES['audio_file']
         if request.FILES.get('cover_art'):
+            if not validate_file_type(request.FILES['cover_art'], ALLOWED_IMAGE_SIGNATURES):
+                messages.error(request, 'Invalid image file format.')
+                return render(request, "dashboard/music_form.html", {'action': 'edit', 'track': track})
             track.cover_art = request.FILES['cover_art']
 
         track.save()
@@ -677,6 +742,14 @@ def profile_add(request):
             messages.error(request, 'Image file is required.')
             return render(request, "dashboard/profile_form.html", {'action': 'add'})
 
+        if not validate_file_type(image, ALLOWED_IMAGE_SIGNATURES):
+            messages.error(request, 'Invalid image file format.')
+            return render(request, "dashboard/profile_form.html", {'action': 'add'})
+
+        if original and not validate_file_type(original, ALLOWED_IMAGE_SIGNATURES):
+            messages.error(request, 'Invalid image file format.')
+            return render(request, "dashboard/profile_form.html", {'action': 'add'})
+
         ProfileImage.objects.create(
             image=image,
             original_image=original or image,
@@ -701,9 +774,15 @@ def profile_edit(request, pk):
 
         original = request.FILES.get('original_image')
         if original:
+            if not validate_file_type(original, ALLOWED_IMAGE_SIGNATURES):
+                messages.error(request, 'Invalid image file format.')
+                return render(request, "dashboard/profile_form.html", {'action': 'edit', 'profile': profile})
             profile.original_image = original
 
         if request.FILES.get('image'):
+            if not validate_file_type(request.FILES['image'], ALLOWED_IMAGE_SIGNATURES):
+                messages.error(request, 'Invalid image file format.')
+                return render(request, "dashboard/profile_form.html", {'action': 'edit', 'profile': profile})
             profile.image = request.FILES['image']
 
         profile.save()
@@ -741,15 +820,23 @@ def profile_image_proxy(request, pk):
 
 
 @require_POST
+@ratelimit(key='ip', rate='10/h', method='POST', block=True)
 def submit_track_comment(request, pk):
     track = get_object_or_404(MusicTrack, pk=pk, is_published=True)
 
     username = request.POST.get('username', '').strip()
     comment_text = request.POST.get('comment_text', '').strip()
-    honeypot = request.POST.get('website', '')  # Honeypot field for spam
+    honeypot = request.POST.get('contact_url', '')
+    form_ts = request.POST.get('form_ts', '')
 
     if honeypot:
-        return JsonResponse({'status': 'ok'})  # Silently ignore spam
+        return JsonResponse({'status': 'ok'})
+
+    try:
+        if abs(time.time() - float(form_ts)) < 3:
+            return JsonResponse({'status': 'ok'})
+    except (ValueError, TypeError):
+        return JsonResponse({'status': 'ok'})
 
     if not username or not comment_text:
         return JsonResponse({'status': 'error', 'message': 'Name and comment are required.'}, status=400)

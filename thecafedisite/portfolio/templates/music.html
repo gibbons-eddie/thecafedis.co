@@ -134,7 +134,8 @@
                         <h4 class="font-monocraft-semibold text-sm text-gray-400 mb-3">Leave a comment</h4>
                         <form class="comment-form" data-url="{% url 'portfolio:submit_track_comment' track.pk %}">
                             {% csrf_token %}
-                            <input type="text" name="website" style="display: none;" tabindex="-1" autocomplete="off">
+                            <input type="text" name="contact_url" style="display: none;" tabindex="-1" autocomplete="off">
+                            <input type="hidden" name="form_ts" value="">
                             <div class="mb-3 tcd-float-group">
                                 <input type="text" name="username" placeholder=" " required maxlength="50"
                                        class="w-full p-2 font-miracode text-sm tcd-input-focus"
@@ -286,6 +287,8 @@
         document.querySelectorAll('.comment-form').forEach(form => {
             if (form.dataset.initialized) return;
             form.dataset.initialized = 'true';
+            const tsField = form.querySelector('input[name="form_ts"]');
+            if (tsField) tsField.value = String(Math.floor(Date.now() / 1000));
 
             form.addEventListener('submit', async function(e) {
                 e.preventDefault();

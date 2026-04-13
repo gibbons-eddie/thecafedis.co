@@ -34,13 +34,29 @@ if DEBUG:
     ALLOWED_HOSTS = ['*']
 else:
     ALLOWED_HOSTS = [host.strip() for host in os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if host.strip()]
+    CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if origin.strip()]
     SECURE_SSL_REDIRECT = True
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
     SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
     CSRF_COOKIE_SECURE = True
+    CSRF_COOKIE_SAMESITE = 'Lax'
     SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+    CONTENT_SECURITY_POLICY = {
+        'DIRECTIVES': {
+            'default-src': ["'self'"],
+            'script-src': ["'self'", "'unsafe-inline'", "https://unpkg.com", "https://cdn.jsdelivr.net", "https://player.live-video.net"],
+            'style-src': ["'self'", "'unsafe-inline'", "https://unpkg.com"],
+            'img-src': ["'self'", "data:", "https://*.s3.amazonaws.com"],
+            'media-src': ["'self'", "https://*.s3.amazonaws.com"],
+            'frame-src': ["https://www.youtube.com", "https://embed.music.apple.com"],
+            'connect-src': ["'self'", "https://*.amazonaws.com", "wss://*.amazonaws.com"],
+            'font-src': ["'self'"],
+        }
+    }
 
 
 # Application definition
@@ -69,6 +85,7 @@ MIDDLEWARE = [
     'django_otp.middleware.OTPMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'csp.middleware.CSPMiddleware',
     'unpoly.contrib.django.UnpolyMiddleware',
 ]
 
