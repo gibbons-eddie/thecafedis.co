@@ -26,6 +26,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+if not SECRET_KEY:
+    from django.core.exceptions import ImproperlyConfigured
+    raise ImproperlyConfigured("DJANGO_SECRET_KEY environment variable is required")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
@@ -33,8 +36,9 @@ DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 if DEBUG:
     ALLOWED_HOSTS = ['*']
 else:
-    ALLOWED_HOSTS = [host.strip() for host in os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if host.strip()]
-    CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if origin.strip()]
+    ALLOWED_HOSTS = [host.strip() for host in os.getenv('ALLOWED_HOSTS', 'thecafedis.co,www.thecafedis.co').split(',') if host.strip()]
+    CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.getenv('CSRF_TRUSTED_ORIGINS', 'https://thecafedis.co,https://www.thecafedis.co').split(',') if origin.strip()]
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_SSL_REDIRECT = True
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
@@ -48,10 +52,10 @@ else:
     CONTENT_SECURITY_POLICY = {
         'DIRECTIVES': {
             'default-src': ["'self'"],
-            'script-src': ["'self'", "'unsafe-inline'", "https://unpkg.com", "https://cdn.jsdelivr.net", "https://player.live-video.net"],
+            'script-src': ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://unpkg.com", "https://cdn.jsdelivr.net", "https://player.live-video.net"],
             'style-src': ["'self'", "'unsafe-inline'", "https://unpkg.com"],
-            'img-src': ["'self'", "data:", "https://*.s3.amazonaws.com"],
-            'media-src': ["'self'", "https://*.s3.amazonaws.com"],
+            'img-src': ["'self'", "data:", "https://*.s3.amazonaws.com", "https://*.s3.us-east-2.amazonaws.com"],
+            'media-src': ["'self'", "https://*.s3.amazonaws.com", "https://*.s3.us-east-2.amazonaws.com"],
             'frame-src': ["https://www.youtube.com", "https://embed.music.apple.com"],
             'connect-src': ["'self'", "https://*.amazonaws.com", "wss://*.amazonaws.com"],
             'font-src': ["'self'"],

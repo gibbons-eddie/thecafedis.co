@@ -56,6 +56,6 @@ class VideoAdmin(admin.ModelAdmin):
     list_display = ['title', 'category', 'youtube_video_id', 'duration', 'order', 'is_published']
     list_filter = ['is_published', 'category']
     list_editable = ['order', 'is_published']
-    search_fields = ['title', 'category', 'tags']
+    search_fields = ['title', 'category']
     readonly_fields = ['created_at', 'updated_at']
     ordering = ['order', '-created_at']

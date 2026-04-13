@@ -241,15 +241,15 @@
     </script>
 
     {% block extra_head %}{% endblock %}
-    <link rel="stylesheet" href={%static './dist/styles.css'%}/>
-    <script src={% static './src/js/media-player-core.js' %}></script>
-    <script src={% static './src/js/audio-player.js' %}></script>
-    <script src={% static './src/js/vinyl-player.js' %}></script>
-    <script src={% static './src/js/text-scramble.js' %}></script>
-    <script src={% static './src/js/scroll-controller.js' %}></script>
-    <script src={% static './src/js/background-scroller.js' %}></script>
+    <link rel="stylesheet" href="{% static 'dist/styles.css' %}"/>
+    <script src="{% static 'src/js/media-player-core.js' %}"></script>
+    <script src="{% static 'src/js/audio-player.js' %}"></script>
+    <script src="{% static 'src/js/vinyl-player.js' %}"></script>
+    <script src="{% static 'src/js/text-scramble.js' %}"></script>
+    <script src="{% static 'src/js/scroll-controller.js' %}"></script>
+    <script src="{% static 'src/js/background-scroller.js' %}"></script>
     <title>{% block title %}thecafedisco{% endblock %}</title>
-    <link rel="icon" type="image/x-icon" href={%static './images/alt-cd-favicon.ico'%}/>
+    <link rel="icon" type="image/x-icon" href="{% static 'images/alt-cd-favicon.ico' %}"/>
 </head>
 
 <body style="background-color: var(--color-blue-deep-tron);">
@@ -505,7 +505,7 @@
         {% comment %} Logo + Mini Terminal - Fixed center, outside shrinking container {% endcomment %}
         <div class="flex items-center gap-4 logo-container"
              style="position: absolute; left: 50%; top: 50%; transform: translate(calc(-50% - 3px), -50%); z-index: 10;">
-            <img src={%static './images/alt-cd-apple-touch-icon.png' %}
+            <img src="{% static 'images/alt-cd-apple-touch-icon.png' %}"
                  class="w-20 h-20 animate-spin-slow cursor-pointer flex-shrink-0"
                  style="min-width: 80px; min-height: 80px;"
                  @click="handleLogoClick()">
@@ -541,7 +541,7 @@
             </div>
             <div class="tcd-mobile-nav">
                 <div class="tcd-mobile-nav-logo">
-                    <img src={% static './images/alt-cd-apple-touch-icon.png' %}
+                    <img src="{% static 'images/alt-cd-apple-touch-icon.png' %}"
                          class="animate-spin-slow">
                 </div>
                 <div class="tcd-mobile-nav-center"
@@ -774,13 +774,13 @@
         <template x-if="isOpen">
             <div class="tcd-modal-backdrop" @click.self="close()">
                 <div class="tcd-modal" @click.stop>
+                    <button class="tcd-modal-close" @click="close()" aria-label="Close">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                        </svg>
+                    </button>
                     <div class="tcd-modal-header">
                         <span class="tcd-modal-title">All my favorite songs at the moment. Updated weekly.</span>
-                        <button class="tcd-modal-close" @click="close()" aria-label="Close">
-                            <svg viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-                            </svg>
-                        </button>
                     </div>
 
                     <div class="tcd-modal-body">

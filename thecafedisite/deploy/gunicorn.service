@@ -1,0 +1,23 @@
+[Unit]
+Description=gunicorn daemon for thecafedisco
+After=network.target
+
+[Service]
+User=ubuntu
+Group=www-data
+WorkingDirectory=/home/ubuntu/thecafedisite/thecafedisite
+EnvironmentFile=/home/ubuntu/thecafedisite/thecafedisite/.env
+ExecStart=/home/ubuntu/thecafedisite/venv/bin/gunicorn \
+    --workers 3 \
+    --timeout 30 \
+    --bind unix:/run/gunicorn.sock \
+    --access-logfile /var/log/gunicorn/access.log \
+    --error-logfile /var/log/gunicorn/error.log \
+    thecafedisite.wsgi:application
+Restart=on-failure
+RestartSec=5s
+PrivateTmp=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

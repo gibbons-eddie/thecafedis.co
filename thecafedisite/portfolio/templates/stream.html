@@ -641,12 +641,16 @@
         if (overlay) overlay.remove();
         video.style.opacity = '0';
         video.style.transition = 'opacity 0.8s ease-in';
+        var played = false;
         function mobilePlay() {
+            if (played) return;
+            played = true;
             video.play().catch(function() {});
             video.style.opacity = '1';
         }
         video.addEventListener('canplay', mobilePlay, { once: true });
         if (video.readyState >= 3) mobilePlay();
+        setTimeout(mobilePlay, 3000);
         return;
     }
 
