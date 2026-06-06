@@ -58,7 +58,7 @@ else:
             'img-src': ["'self'", "data:", "https://*.s3.amazonaws.com", "https://*.s3.us-east-2.amazonaws.com"],
             'media-src': ["'self'", "https://*.s3.amazonaws.com", "https://*.s3.us-east-2.amazonaws.com"],
             'frame-src': ["https://www.youtube.com", "https://embed.music.apple.com"],
-            'connect-src': ["'self'", "https://*.amazonaws.com", "wss://*.amazonaws.com"],
+            'connect-src': ["'self'", "https://*.amazonaws.com", "wss://*.amazonaws.com", "https://*.live-video.net"],
             'font-src': ["'self'"],
         }
     }

@@ -47,13 +47,6 @@
                                 <div class="tcd-stream-volume-bar">
                                     <div class="tcd-stream-volume-fill" :style="'width: ' + (muted ? 0 : volume * 100) + '%'"></div>
                                     <div class="tcd-stream-volume-head" :style="'left: ' + (muted ? 0 : volume * 100) + '%'"></div>
-                                    <div class="tcd-stream-volume-signals">
-                                        <template x-for="i in 20" :key="i">
-                                            <div class="tcd-stream-volume-signal" :class="(i / 20 * 100) <= (muted ? 0 : volume * 100) && 'active'">
-                                                <div class="tcd-stream-volume-signal-top" :style="((volumeDragging || isMobile) && (i / 20 * 100) <= (muted ? 0 : volume * 100)) ? 'height: ' + (2 + (i * 0.6)) + 'px' : 'height: 0px'"></div>
-                                            </div>
-                                        </template>
-                                    </div>
                                 </div>
                             </div>
                             <div class="tcd-stream-volume-percent" :class="(volumeDragging || isMobile) && 'tcd-stream-volume-percent--visible'" x-text="Math.round((muted ? 0 : volume) * 100) + '%'"></div>
