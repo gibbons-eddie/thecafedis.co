@@ -233,3 +233,24 @@ class StreamSession(models.Model):
     def increment_view_count(self):
         StreamSession.objects.filter(pk=self.pk).update(view_count=F('view_count') + 1)
         self.refresh_from_db(fields=['view_count'])
+
+
+class StreamChatPresence(models.Model):
+    username_lower = models.CharField(max_length=50, unique=True)
+    username_display = models.CharField(max_length=50)
+    session_key = models.CharField(max_length=64, blank=True)
+    joined_at = models.DateTimeField(auto_now_add=True)
+
+
+class StreamPresenceState(models.Model):
+    last_start_time = models.CharField(max_length=64, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj

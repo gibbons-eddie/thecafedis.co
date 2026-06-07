@@ -61,6 +61,11 @@
                             </button>
                         </div>
 
+                        <div class="tcd-stream-timer font-monocraft-semibold text-sm"
+                             x-show="streamStartTime"
+                             x-text="elapsedDisplay"
+                             x-cloak></div>
+
                         <div class="flex items-center gap-3">
                             <!-- Quality selector -->
                             <div class="tcd-quality-dropdown" x-data="{ open: false }">
@@ -109,9 +114,11 @@
                     <div class="tcd-stream-chat-input" x-show="!chatJoined">
                         <input type="text" x-model="chatUsername"
                                class="flex-1 px-3 py-2 font-monocraft-semibold text-sm text-white tcd-input-focus"
+                               :class="chatError && 'tcd-input-error'"
                                style="background-color: #0d0d0d; border-radius: 0; outline: none;"
                                placeholder="enter username"
                                maxlength="50"
+                               @input="chatError = ''"
                                @keydown.enter="joinChat()">
                         <button class="tcd-btn px-4 py-2 font-monocraft-semibold text-sm"
                                 @click="joinChat()"
@@ -240,6 +247,9 @@
         pollInterval: null,
         dotInterval: null,
         viewerPollInterval: null,
+        streamStartTime: {{ stream_start_time_ms|default:"null" }},
+        elapsedDisplay: '',
+        timerInterval: null,
 
         init() {
             if (this._initialized) return;
@@ -252,10 +262,31 @@
             if (this.isLive) {
                 this.$nextTick(() => this.initPlayer());
                 this.startViewerPolling();
+                this.startTimer();
             } else {
                 sessionStorage.removeItem('tcd-chat-username');
                 this.startPolling();
             }
+        },
+
+        startTimer() {
+            if (!this.streamStartTime) return;
+            const tick = () => {
+                const seconds = Math.max(0, Math.floor((Date.now() - this.streamStartTime) / 1000));
+                this.elapsedDisplay = this.formatElapsed(seconds);
+            };
+            tick();
+            this.timerInterval = setInterval(tick, 1000);
+            this._timerVisHandler = () => { if (!document.hidden) tick(); };
+            document.addEventListener('visibilitychange', this._timerVisHandler);
+        },
+
+        formatElapsed(totalSeconds) {
+            const h = Math.floor(totalSeconds / 3600);
+            const m = Math.floor((totalSeconds % 3600) / 60);
+            const s = totalSeconds % 60;
+            const pad = (n) => n.toString().padStart(2, '0');
+            return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
         },
 
         destroy() {
@@ -275,6 +306,8 @@
             if (this.pollInterval) clearInterval(this.pollInterval);
             if (this.dotInterval) clearInterval(this.dotInterval);
             if (this.viewerPollInterval) clearInterval(this.viewerPollInterval);
+            if (this.timerInterval) clearInterval(this.timerInterval);
+            if (this._timerVisHandler) document.removeEventListener('visibilitychange', this._timerVisHandler);
         },
 
         startViewerPolling() {
@@ -530,10 +563,13 @@
             if (!username) return;
 
             fetch('{% url "portfolio:stream_chat_token" %}?username=' + encodeURIComponent(username))
-                .then(r => r.json())
-                .then(data => {
+                .then(r => r.json().then(data => ({ status: r.status, data })))
+                .then(({ status, data }) => {
                     if (data.error) {
                         this.chatError = data.error;
+                        if (status === 409) {
+                            sessionStorage.removeItem('tcd-chat-username');
+                        }
                         return;
                     }
                     this.chatError = '';

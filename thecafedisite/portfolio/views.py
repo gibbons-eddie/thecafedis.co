@@ -16,7 +16,14 @@ from django.views.decorators.http import require_POST, require_GET
 from django_ratelimit.decorators import ratelimit
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from django_otp.plugins.otp_static.models import StaticDevice, StaticToken
-from .models import CareerEntry, Skill, ProfileImage, MusicTrack, Video, Comment, StreamConfig, StreamSession
+from django.db import IntegrityError
+from .models import (
+    CareerEntry, Skill, ProfileImage, MusicTrack, Video, Comment,
+    StreamConfig, StreamSession, StreamChatPresence, StreamPresenceState,
+)
+
+RESERVED_USERNAMES = {'thecafedisco'}
+USERNAME_TAKEN_MESSAGE = 'that username has been taken, please choose another'
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +104,18 @@ def _extract_youtube_id(url_or_id):
     return url_or_id
 
 
-_ivs_cache = {'result': (False, None, 0), 'ts': 0}
+_ivs_cache = {'result': (False, None, 0, None), 'ts': 0}
+
+
+def _sync_chat_presence(is_live, start_time):
+    marker = start_time.isoformat() if (is_live and start_time) else ''
+    state = StreamPresenceState.load()
+    if state.last_start_time == marker:
+        return
+    StreamChatPresence.objects.all().delete()
+    state.last_start_time = marker
+    state.save()
+
 
 def _check_ivs_live():
     import time
@@ -107,7 +125,7 @@ def _check_ivs_live():
 
     channel_arn = settings.AWS_IVS_CHANNEL_ARN
     if not channel_arn:
-        return False, None, 0
+        return False, None, 0, None
 
     try:
         import boto3
@@ -124,9 +142,11 @@ def _check_ivs_live():
         is_live = stream_data.get('state') == 'LIVE'
         recording_url = stream_data.get('playbackUrl', '')
         viewer_count = int(stream_data.get('viewerCount', 0) or 0)
-        result = (is_live, recording_url, viewer_count)
+        start_time = stream_data.get('startTime')
+        _sync_chat_presence(is_live, start_time)
+        result = (is_live, recording_url, viewer_count, start_time if is_live else None)
     except Exception:
-        result = (False, None, 0)
+        result = (False, None, 0, None)
 
     _ivs_cache['result'] = result
     _ivs_cache['ts'] = now
@@ -134,13 +154,14 @@ def _check_ivs_live():
 
 
 def stream(request):
-    is_live, recording_url, viewer_count = _check_ivs_live()
+    is_live, recording_url, viewer_count, start_time = _check_ivs_live()
     stream_config = StreamConfig.load()
     context = {
         'is_live': is_live,
         'playback_url': settings.AWS_IVS_PLAYBACK_URL,
         'recording_url': recording_url or '',
         'viewer_count': viewer_count,
+        'stream_start_time_ms': int(start_time.timestamp() * 1000) if start_time else None,
         'chat_room_id': settings.AWS_IVS_CHAT_ROOM_ARN.split('/')[-1] if settings.AWS_IVS_CHAT_ROOM_ARN else '',
         'stream_config': stream_config,
         'past_streams': StreamSession.objects.filter(is_published=True)[:3],
@@ -161,12 +182,13 @@ def stream_replay(request, pk):
 
 @require_GET
 def stream_status(request):
-    is_live, recording_url, viewer_count = _check_ivs_live()
+    is_live, recording_url, viewer_count, start_time = _check_ivs_live()
     return JsonResponse({
         'is_live': is_live,
         'recording_url': recording_url or '',
         'playback_url': settings.AWS_IVS_PLAYBACK_URL if is_live else '',
         'viewer_count': viewer_count,
+        'stream_start_time_ms': int(start_time.timestamp() * 1000) if start_time else None,
     })
 
 
@@ -182,6 +204,29 @@ def stream_chat_token(request):
     chat_room_arn = settings.AWS_IVS_CHAT_ROOM_ARN
     if not chat_room_arn:
         return JsonResponse({'error': 'Chat not configured'}, status=503)
+
+    username_lower = username.lower()
+
+    if username_lower in RESERVED_USERNAMES:
+        if not request.user.is_authenticated:
+            return JsonResponse({'error': USERNAME_TAKEN_MESSAGE}, status=409)
+    else:
+        if not request.session.session_key:
+            request.session.create()
+        my_key = request.session.session_key
+
+        existing = StreamChatPresence.objects.filter(username_lower=username_lower).first()
+        if existing and existing.session_key != my_key:
+            return JsonResponse({'error': USERNAME_TAKEN_MESSAGE}, status=409)
+        if not existing:
+            try:
+                StreamChatPresence.objects.create(
+                    username_lower=username_lower,
+                    username_display=username,
+                    session_key=my_key,
+                )
+            except IntegrityError:
+                return JsonResponse({'error': USERNAME_TAKEN_MESSAGE}, status=409)
 
     try:
         import boto3

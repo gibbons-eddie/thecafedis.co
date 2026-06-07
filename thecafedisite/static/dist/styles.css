@@ -974,6 +974,9 @@ h1 {
 .tcd-input-focus:focus {
   border-color: var(--color-blue-tron);
 }
+.tcd-input-error, .tcd-input-error:focus {
+  border-color: oklch(74.443% 0.17237 51.252);
+}
 .tcd-float-group {
   position: relative;
 }
@@ -2331,7 +2334,16 @@ html body [x-cloak], [x-cloak][x-cloak] {
   display: block;
   object-fit: contain;
 }
+.tcd-stream-timer {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: #ffffff;
+  pointer-events: none;
+}
 .tcd-stream-controls {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.75rem;
