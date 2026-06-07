@@ -104,7 +104,7 @@
                     <div class="tcd-stream-chat-messages" x-ref="chatMessages">
                         <template x-for="msg in chatMessages" :key="msg.id">
                             <div class="tcd-stream-chat-msg">
-                                <span class="font-monocraft-semibold text-sm" style="color: oklch(88.716% 0.09711 208.766);" x-text="msg.username + ':'"></span>
+                                <span class="font-monocraft-semibold text-sm" :style="'color: ' + msg.color" x-text="msg.username + ':'"></span>
                                 <span class="font-monocraft text-sm text-white" x-text="msg.text"></span>
                             </div>
                         </template>
@@ -549,6 +549,15 @@
         chatMessages: [],
         chatError: '',
         chatConnection: null,
+        chatColors: [
+            'oklch(85% 0.18 145)',                  // light green
+            'oklch(74.443% 0.17237 51.252)',        // orange (matches existing orange)
+            'oklch(0.86 0.1389 86.82)',             // light yellow
+            '#ffffff',                              // white
+            'oklch(0.64 0.1751 245.65)',            // standard blue
+            'oklch(88.716% 0.09711 208.766)',       // tron blue (matches --color-blue-tron)
+        ],
+        lastMessageColor: null,
 
         init() {
             const saved = sessionStorage.getItem('tcd-chat-username');
@@ -556,6 +565,11 @@
                 this.chatUsername = saved;
                 this.joinChat();
             }
+        },
+
+        pickColor() {
+            const available = this.chatColors.filter(c => c !== this.lastMessageColor);
+            return available[Math.floor(Math.random() * available.length)];
         },
 
         joinChat() {
@@ -596,9 +610,13 @@
                 this.chatConnection.onmessage = (event) => {
                     const data = JSON.parse(event.data);
                     if (data.Type === 'MESSAGE') {
+                        const username = data.Sender?.Attributes?.displayName || data.Sender?.UserId || 'anon';
+                        const color = this.pickColor();
+                        this.lastMessageColor = color;
                         this.chatMessages.push({
                             id: data.Id,
-                            username: data.Sender?.Attributes?.displayName || data.Sender?.UserId || 'anon',
+                            username,
+                            color,
                             text: data.Content,
                         });
                         this.$nextTick(() => {
