@@ -6,7 +6,7 @@ cd "$(dirname "$0")"
 source ../.venv/bin/activate
 
 # Start Tailwind watch in background
-npx tailwindcss -i static/src/styles.css -o static/dist/styles.css --watch &
+npx tailwindcss -i styles/styles.css -o static/dist/styles.css --watch &
 TAILWIND_PID=$!
 
 # Trap to kill Tailwind when script exits

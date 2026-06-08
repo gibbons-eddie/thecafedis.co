@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "watch:css": "npx @tailwindcss/cli -i ./static/src/styles.css -o ./static/dist/styles.css --watch"
+    "watch:css": "npx @tailwindcss/cli -i ./thecafedisite/styles/styles.css -o ./thecafedisite/static/dist/styles.css --watch"
   },
   "keywords": [],
   "author": "",
